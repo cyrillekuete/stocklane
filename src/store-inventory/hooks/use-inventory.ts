@@ -86,15 +86,17 @@ const stockQuery = {
 
 function useCachedMutation<TData, TVariables>(options: {
   mutationFn: (variables: TVariables) => Promise<TData>;
-  keys: QueryKey[];
+  keys: QueryKey[] | ((variables: TVariables) => QueryKey[]);
   apply?: (variables: TVariables, queryClient: QueryClient) => unknown;
   onSuccess?: (data: TData, variables: TVariables, extras: unknown) => void;
 }) {
   const queryClient = useQueryClient();
+  const resolveKeys = (variables: TVariables) =>
+    typeof options.keys === 'function' ? options.keys(variables) : options.keys;
   return useMutation({
     mutationFn: options.mutationFn,
     onMutate: async (variables) => {
-      const previous = await snapshotQueries(queryClient, ...options.keys);
+      const previous = await snapshotQueries(queryClient, ...resolveKeys(variables));
       const extras = options.apply?.(variables, queryClient) ?? null;
       return { previous, extras };
     },
@@ -105,8 +107,8 @@ function useCachedMutation<TData, TVariables>(options: {
     onSuccess: (data, variables, context) => {
       options.onSuccess?.(data, variables, context?.extras);
     },
-    onSettled: () => {
-      void invalidateKeys(queryClient, ...options.keys);
+    onSettled: (_data, _error, variables) => {
+      void invalidateKeys(queryClient, ...resolveKeys(variables));
     },
   });
 }
@@ -137,7 +139,7 @@ function productListPatch(
     featured: input.featured ?? existing.featured,
     tags: input.tags ?? existing.tags,
     barcode: input.barcode ?? existing.barcode,
-    description: input.description ?? existing.description,
+    description,
     categoryId: input.categoryId !== undefined ? input.categoryId : existing.categoryId,
     brandId: input.brandId !== undefined ? input.brandId : existing.brandId,
     image,
@@ -505,7 +507,12 @@ export function useUpdateProduct() {
   return useCachedMutation({
     mutationFn: ({ id, input }: { id: string; input: Parameters<typeof updateProduct>[1] }) =>
       updateProduct(id, input),
-    keys: [inventoryKeys.products(), inventoryKeys.stock(), inventoryKeys.categoryProducts()],
+    keys: ({ id }) => [
+      inventoryKeys.products(),
+      inventoryKeys.product(id),
+      inventoryKeys.stock(),
+      inventoryKeys.categoryProducts(),
+    ],
     apply: ({ id, input }) => {
       const categoryName = categoryNameFromCache(queryClient, input.categoryId);
       patchListById<ProductListRow>(queryClient, inventoryKeys.products(), id, (item) =>
@@ -674,7 +681,7 @@ export function useUpdateCustomer() {
   return useCachedMutation({
     mutationFn: ({ id, input }: { id: string; input: Partial<CustomerInput> }) =>
       updateCustomer(id, input),
-    keys: [inventoryKeys.customers()],
+    keys: ({ id }) => [inventoryKeys.customers(), inventoryKeys.customer(id)],
     apply: ({ id, input }) => {
       patchListById<CustomerListRow>(queryClient, inventoryKeys.customers(), id, (item) =>
         customerListPatch(input, item),
@@ -767,7 +774,12 @@ export function useUpdateOrder() {
   const queryClient = useQueryClient();
   return useCachedMutation({
     mutationFn: ({ id, input }: { id: string; input: Partial<OrderInput> }) => updateOrder(id, input),
-    keys: [inventoryKeys.orders(), inventoryKeys.orderItems(), inventoryKeys.customerOrders()],
+    keys: ({ id }) => [
+      inventoryKeys.orders(),
+      inventoryKeys.order(id),
+      inventoryKeys.orderItems(),
+      inventoryKeys.customerOrders(),
+    ],
     apply: ({ id, input }) => {
       patchListById<OrderListRow>(queryClient, inventoryKeys.orders(), id, (item) =>
         orderListPatch(input, item),
@@ -792,7 +804,7 @@ export function useUpdateOrderStatus() {
       paymentStatus: string;
       deliveryStatus?: string;
     }) => updateOrderStatus(id, paymentStatus, deliveryStatus),
-    keys: [inventoryKeys.orders()],
+    keys: ({ id }) => [inventoryKeys.orders(), inventoryKeys.order(id)],
     apply: ({ id, paymentStatus, deliveryStatus }) => {
       const patch = (item: OrderListRow): OrderListRow => ({
         ...item,
