@@ -1,0 +1,391 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Category {
+  id            String    @id @default(cuid())
+  name          String
+  code          String?
+  icon          String?
+  status        String    @default("Active")
+  featured      Boolean   @default(false)
+  description   String?
+  totalEarnings Decimal   @default(0) @map("total_earnings") @db.Decimal(12, 2)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  products      Product[]
+
+  @@index([status])
+  @@map("inventory_categories")
+}
+
+model Supplier {
+  id                 String             @id @default(cuid())
+  name               String             @unique
+  logo               String?
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  products           Product[]
+  inboundShipments   InboundShipment[]
+
+  @@map("inventory_suppliers")
+}
+
+model Warehouse {
+  id                 String              @id @default(cuid())
+  code               String              @unique
+  name               String
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  outboundShipments  OutboundShipment[]
+
+  @@map("inventory_warehouses")
+}
+
+model Carrier {
+  id                 String              @id @default(cuid())
+  name               String              @unique
+  logo               String?
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  inboundShipments   InboundShipment[]
+  outboundShipments  OutboundShipment[]
+  orders             Order[]
+
+  @@map("inventory_carriers")
+}
+
+model Brand {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  products  Product[]
+
+  @@map("inventory_brands")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  sku         String   @unique
+  name        String
+  fullName    String?  @map("full_name")
+  description String?
+  barcode     String?
+  image       String?
+  price       Decimal  @default(0) @db.Decimal(12, 2)
+  status      String   @default("Live")
+  featured    Boolean  @default(false)
+  tags        String[] @default([])
+  categoryId  String?  @map("category_id")
+  brandId     String?  @map("brand_id")
+  supplierId  String?  @map("supplier_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  category           Category?           @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  brand              Brand?              @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  supplier           Supplier?           @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  variants           ProductVariant[]
+  options            ProductOption[]
+  stockLevel         StockLevel?
+  inboundShipments   InboundShipment[]
+  outboundShipments  OutboundShipment[]
+  orderItems         OrderItem[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([supplierId])
+  @@map("inventory_products")
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  productId String   @map("product_id")
+  size      String
+  color     String
+  onHand    Int      @default(0) @map("on_hand")
+  price     Decimal  @default(0) @db.Decimal(12, 2)
+  available Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@map("inventory_product_variants")
+}
+
+model ProductOption {
+  id        String               @id @default(cuid())
+  productId String               @map("product_id")
+  name      String
+  sortOrder Int                  @default(0) @map("sort_order")
+  createdAt DateTime             @default(now()) @map("created_at")
+  updatedAt DateTime             @updatedAt @map("updated_at")
+  product   Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+  values    ProductOptionValue[]
+
+  @@index([productId])
+  @@map("inventory_product_options")
+}
+
+model ProductOptionValue {
+  id        String        @id @default(cuid())
+  optionId  String        @map("option_id")
+  value     String
+  sortOrder Int           @default(0) @map("sort_order")
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  option    ProductOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@index([optionId])
+  @@map("inventory_product_option_values")
+}
+
+model StockLevel {
+  id             String    @id @default(cuid())
+  productId      String    @unique @map("product_id")
+  qty            Int       @default(0)
+  reserved       Int       @default(0)
+  threshold      Int       @default(0)
+  inboundQty     Int       @default(0) @map("inbound_qty")
+  outboundQty    Int       @default(0) @map("outbound_qty")
+  deltaLabel     String    @default("0") @map("delta_label")
+  deltaVariant   String    @default("secondary") @map("delta_variant")
+  totalValue     Decimal   @default(0) @map("total_value") @db.Decimal(12, 2)
+  lastMoved      String?   @map("last_moved")
+  handler        String?
+  trendLabel     String    @default("Steady") @map("trend_label")
+  trendVariant   String    @default("secondary") @map("trend_variant")
+  flowRate       Decimal   @default(0) @map("flow_rate") @db.Decimal(12, 2)
+  reorderQty     Int       @default(0) @map("reorder_qty")
+  reorderInDays  Int       @default(0) @map("reorder_in_days")
+  reorderDate    String?   @map("reorder_date")
+  leadTimeDays   Int       @default(0) @map("lead_time_days")
+  leadTimeDate   String?   @map("lead_time_date")
+  autoReorder    Boolean   @default(false) @map("auto_reorder")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  product        Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("inventory_stock_levels")
+}
+
+model InboundShipment {
+  id          String    @id @default(cuid())
+  productId   String    @map("product_id")
+  supplierId  String?   @map("supplier_id")
+  carrierId   String?   @map("carrier_id")
+  orderDate   String    @map("order_date")
+  qty         Int
+  stockValue  Decimal   @default(0) @map("stock_value") @db.Decimal(12, 2)
+  status      String
+  statusVariant String  @default("secondary") @map("status_variant")
+  arrivalDate String    @map("arrival_date")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier    Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  carrier     Carrier?  @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([status])
+  @@map("inventory_inbound_shipments")
+}
+
+model OutboundShipment {
+  id                String     @id @default(cuid())
+  productId         String     @map("product_id")
+  warehouseId       String?    @map("warehouse_id")
+  carrierId         String?    @map("carrier_id")
+  orderRef          String     @map("order_ref")
+  qty               Int
+  status            String
+  statusVariant     String     @default("secondary") @map("status_variant")
+  expectedDelivery  String     @map("expected_delivery")
+  notify            Boolean    @default(false)
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+  product           Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse         Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
+  carrier           Carrier?   @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+
+  @@index([productId])
+  @@index([status])
+  @@map("inventory_outbound_shipments")
+}
+
+model Customer {
+  id              String    @id @default(cuid())
+  code            String    @unique
+  name            String
+  email           String?
+  image           String?
+  phone           String?
+  company         String?
+  timezone        String?
+  billingAddress  String?   @map("billing_address")
+  vatId           String?   @map("vat_id")
+  locationName    String?   @map("location_name")
+  locationFlag    String?   @map("location_flag")
+  statusColor     String    @default("offline") @map("status_color")
+  verified        Boolean   @default(false)
+  orderCount      String    @default("0") @map("order_count")
+  totalSpent      Decimal   @default(0) @map("total_spent") @db.Decimal(12, 2)
+  avgPrice        Decimal   @default(0) @map("avg_price") @db.Decimal(12, 2)
+  status          String    @default("Active")
+  lastVisit       DateTime? @map("last_visit")
+  paymentMethods  Json?     @map("payment_methods")
+  reviews         Json?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  orders          Order[]
+
+  @@index([status])
+  @@map("inventory_customers")
+}
+
+model Order {
+  id                     String    @id @default(cuid())
+  orderNumber            String    @unique @map("order_number")
+  date                   String
+  customerId             String?   @map("customer_id")
+  customerName           String    @map("customer_name")
+  total                  Decimal   @default(0) @db.Decimal(12, 2)
+  itemCount              Int       @default(0) @map("item_count")
+  category               String?
+  deliveryStatus         String    @default("Pending") @map("delivery_status")
+  deliveryStatusVariant  String    @default("secondary") @map("delivery_status_variant")
+  paymentStatus          String    @default("Unpaid") @map("payment_status")
+  paymentStatusVariant   String    @default("secondary") @map("payment_status_variant")
+  carrierId              String?   @map("carrier_id")
+  subtotal               Decimal   @default(0) @db.Decimal(12, 2)
+  shippingCost           Decimal   @default(0) @map("shipping_cost") @db.Decimal(12, 2)
+  tax                    Decimal   @default(0) @db.Decimal(12, 2)
+  shipmentNumber         String?   @map("shipment_number")
+  trackingNumber         String?   @map("tracking_number")
+  shippingPriority       String?   @map("shipping_priority")
+  deliveryMethod         String?   @map("delivery_method")
+  currentStep            Int       @default(1) @map("current_step")
+  originAddress          String?   @map("origin_address")
+  destinationAddress     String?   @map("destination_address")
+  shippingLabel          String?   @map("shipping_label")
+  shippingLine1          String?   @map("shipping_line1")
+  shippingLine2          String?   @map("shipping_line2")
+  totalTime              String?   @map("total_time")
+  departureTime          String?   @map("departure_time")
+  expectedArrival        String?   @map("expected_arrival")
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  customer               Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  carrier                Carrier?  @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  items                  OrderItem[]
+  trackingEvents         OrderTrackingEvent[]
+
+  @@index([customerId])
+  @@map("inventory_orders")
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String   @map("order_id")
+  productId      String?  @map("product_id")
+  category       String?
+  price          Decimal  @default(0) @db.Decimal(12, 2)
+  quantity       Int      @default(1)
+  color          String?
+  weight         String?
+  trendLabel     String?  @map("trend_label")
+  trendVariant   String?  @map("trend_variant")
+  stock          Int      @default(0)
+  reserved       Int      @default(0)
+  thresholdLevel Int      @default(0) @map("threshold_level")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+  @@map("inventory_order_items")
+}
+
+model OrderTrackingEvent {
+  id          String   @id @default(cuid())
+  orderId     String   @map("order_id")
+  title       String
+  date        String
+  description String
+  location    String?
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("inventory_order_tracking_events")
+}
+
+model StoreSettings {
+  id                     String   @id @default(cuid())
+  storeName              String   @map("store_name")
+  storeCode              String   @unique @map("store_code")
+  status                 String   @default("Live")
+  establishedAt          DateTime @map("established_at")
+  logo                   String?
+  storeUrl               String?  @map("store_url")
+  phone                  String?
+  contactEmail           String?  @map("contact_email")
+  tags                   String[] @default([])
+  automaticTimeZone      Boolean  @default(true) @map("automatic_time_zone")
+  timeZone               String   @default("GMT +01:00") @map("time_zone")
+  language               String   @default("en-us")
+  dateFormat             String   @default("DD/MM/YYYY") @map("date_format")
+  aiSemanticSearch       Boolean  @default(false) @map("ai_semantic_search")
+  aiInsight              Boolean  @default(true) @map("ai_insight")
+  contactChannels        Json     @default("[]") @map("contact_channels")
+  currency               String   @default("EUR")
+  cardMethods            String[] @default([]) @map("card_methods")
+  applePay               Boolean  @default(true) @map("apple_pay")
+  googlePay              Boolean  @default(false) @map("google_pay")
+  paypal                 Boolean  @default(false)
+  taxRateScope           String   @default("country") @map("tax_rate_scope")
+  taxCalculation         String   @default("inclusive") @map("tax_calculation")
+  automaticInvoice       Boolean  @default(false) @map("automatic_invoice")
+  noReplyEmail           String?  @map("no_reply_email")
+  guestCheckout          Boolean  @default(true) @map("guest_checkout")
+  collectPhone           Boolean  @default(true) @map("collect_phone")
+  orderNotes             Boolean  @default(true) @map("order_notes")
+  termsRequired          Boolean  @default(true) @map("terms_required")
+  abandonedCartEmail     Boolean  @default(true) @map("abandoned_cart_email")
+  defaultCheckoutCountry String   @default("FR") @map("default_checkout_country")
+  freeShippingEnabled    Boolean  @default(true) @map("free_shipping_enabled")
+  freeShippingMin        Decimal  @default(0) @map("free_shipping_min") @db.Decimal(12, 2)
+  localPickup            Boolean  @default(true) @map("local_pickup")
+  expressShipping        Boolean  @default(false) @map("express_shipping")
+  shippingOrigin         String?  @map("shipping_origin")
+  defaultCarrier         String?  @map("default_carrier")
+  handlingDays           Int      @default(1) @map("handling_days")
+  shippingZones          Json     @default("[]") @map("shipping_zones")
+  locations              Json     @default("[]")
+  twoFactorRequired      Boolean  @default(false) @map("two_factor_required")
+  sessionTimeoutMinutes  Int      @default(30) @map("session_timeout_minutes")
+  loginAlerts            Boolean  @default(true) @map("login_alerts")
+  passwordMinLength      Int      @default(8) @map("password_min_length")
+  requireStrongPassword  Boolean  @default(true) @map("require_strong_password")
+  emailOrderConfirm      Boolean  @default(true) @map("email_order_confirm")
+  emailShippingUpdates   Boolean  @default(true) @map("email_shipping_updates")
+  emailLowStock          Boolean  @default(true) @map("email_low_stock")
+  emailNewCustomer       Boolean  @default(false) @map("email_new_customer")
+  smsOrderUpdates        Boolean  @default(false) @map("sms_order_updates")
+  notifyEmail            String?  @map("notify_email")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("inventory_store_settings")
+}
