@@ -59,7 +59,6 @@ export function CategoryListTable({
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'id', desc: false },
   ]);
-  const [featuredState, setFeaturedState] = useState<Record<string, boolean>>({});
 
   const [isCategoryDetailsEditOpen, setIsCategoryDetailsEditOpen] =
     useState(false);
@@ -71,10 +70,6 @@ export function CategoryListTable({
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
   const deleteCategory = useDeleteCategory();
   const updateCategory = useUpdateCategory();
-
-  useEffect(() => {
-    setFeaturedState(Object.fromEntries(data.map((item) => [item.id, item.featured])));
-  }, [data]);
 
   useEffect(() => {
     if (!displaySheet) return;
@@ -98,7 +93,6 @@ export function CategoryListTable({
   }, [data, displaySheet, selectedCategory]);
 
   const handleFeaturedChange = (id: string, checked: boolean) => {
-    setFeaturedState((prev) => ({ ...prev, [id]: checked }));
     updateCategory.mutate({ id, input: { featured: checked } });
 
     if (checked) {
@@ -259,13 +253,13 @@ export function CategoryListTable({
         ),
         enableSorting: true,
         cell: (info) => {
-          const id = info.row.getValue('id') as string;
+          const id = info.row.original.id;
           return (
             <div className="flex justify-center">
               <Checkbox
                 size="sm"
                 id={`featured-${id}`}
-                checked={!!featuredState[id]}
+                checked={info.row.original.featured}
                 onCheckedChange={(checked: unknown) =>
                   handleFeaturedChange(id, Boolean(checked))
                 }
@@ -345,7 +339,7 @@ export function CategoryListTable({
         size: 60,
       },
     ],
-    [featuredState, deleteCategory],
+    [deleteCategory, updateCategory],
   );
 
   const filteredData = useMemo(() => {

@@ -1,5 +1,21 @@
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey } from '@tanstack/react-query';
+import { withCustomerProfile } from '../data/customer-profile';
+import { formatMoney } from '../lib/format';
+import {
+  invalidateKeys,
+  patchListById,
+  patchListByIds,
+  patchQueryData,
+  prependToList,
+  removeFromList,
+  replaceListItemId,
+  restoreQueries,
+  snapshotQueries,
+  toastMutationError,
+  type QuerySnapshot,
+} from '../lib/optimistic';
+import { inventoryKeys, REFERENCE_STALE_TIME } from '../lib/query-keys';
 import {
   createCategory,
   createCustomer,
@@ -31,26 +47,286 @@ import {
   fetchProductsByCategory,
   fetchStockProducts,
   fetchVariants,
-  updateOrder,
-  updateOrderStatus,
   mapAllStock,
   mapCurrentStock,
   mapStockPlanner,
   replaceOptions,
   replaceVariants,
+  statusVariant,
   updateCategory,
   updateCustomer,
   updateCustomersStatus,
+  updateOrder,
+  updateOrderStatus,
   updateProduct,
   updateStockLevel,
+  type CustomerInput,
+  type InventoryProduct,
+  type InventoryStockLevel,
+  type OrderInput,
+  type OrderItemInput,
 } from '../services/inventory';
-import type { CustomerListRow, ProductOptionCard, ProductVariantRow } from '../types';
+import type {
+  CategoryListRow,
+  CustomerListRow,
+  InboundStockRow,
+  OrderDetailRow,
+  OrderListRow,
+  OutboundStockRow,
+  ProductListRow,
+  ProductOptionCard,
+  ProductVariantRow,
+} from '../types';
 
-const inventoryKey = ['inventory'] as const;
+const stockQuery = {
+  queryKey: inventoryKeys.stock(),
+  queryFn: fetchStockProducts,
+  enabled: isSupabaseConfigured,
+} as const;
+
+function useCachedMutation<TData, TVariables>(options: {
+  mutationFn: (variables: TVariables) => Promise<TData>;
+  keys: QueryKey[];
+  apply?: (variables: TVariables, queryClient: QueryClient) => unknown;
+  onSuccess?: (data: TData, variables: TVariables, extras: unknown) => void;
+}) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: options.mutationFn,
+    onMutate: async (variables) => {
+      const previous = await snapshotQueries(queryClient, ...options.keys);
+      const extras = options.apply?.(variables, queryClient) ?? null;
+      return { previous, extras };
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previous) restoreQueries(queryClient, context.previous as QuerySnapshot);
+      toastMutationError(error);
+    },
+    onSuccess: (data, variables, context) => {
+      options.onSuccess?.(data, variables, context?.extras);
+    },
+    onSettled: () => {
+      void invalidateKeys(queryClient, ...options.keys);
+    },
+  });
+}
+
+function productListPatch(
+  input: Parameters<typeof updateProduct>[1],
+  existing: ProductListRow,
+  categoryName?: string,
+): ProductListRow {
+  const name = input.name ?? existing.productInfo.title;
+  const sku = input.sku ?? existing.productInfo.label;
+  const image = input.image ?? existing.image ?? existing.productInfo.image;
+  const description = input.description ?? existing.description ?? existing.productInfo.tooltip;
+  const status = input.status ?? existing.status.label;
+  return {
+    ...existing,
+    productInfo: {
+      image,
+      title: name,
+      label: sku,
+      tooltip: description || name,
+    },
+    price: input.price !== undefined ? formatMoney(input.price) : existing.price,
+    status:
+      input.status !== undefined
+        ? { label: status, variant: statusVariant(status) }
+        : existing.status,
+    featured: input.featured ?? existing.featured,
+    tags: input.tags ?? existing.tags,
+    barcode: input.barcode ?? existing.barcode,
+    description: input.description ?? existing.description,
+    categoryId: input.categoryId !== undefined ? input.categoryId : existing.categoryId,
+    brandId: input.brandId !== undefined ? input.brandId : existing.brandId,
+    image,
+    category: categoryName ?? existing.category,
+    updated: 'Just now',
+  };
+}
+
+function categoryNameFromCache(queryClient: QueryClient, categoryId?: string | null) {
+  if (categoryId === undefined) return undefined;
+  if (!categoryId) return '';
+  const categories = queryClient.getQueryData<CategoryListRow[]>(inventoryKeys.categories());
+  return categories?.find((category) => category.id === categoryId)?.productInfo.title;
+}
+
+function optimisticProductRow(id: string, input: Parameters<typeof createProduct>[0]): ProductListRow {
+  const image = input.image ?? '11.png';
+  const status = input.status ?? 'Live';
+  return {
+    id,
+    productInfo: {
+      image,
+      title: input.name,
+      label: input.sku,
+      tooltip: input.description ?? input.name,
+    },
+    category: '',
+    price: formatMoney(input.price ?? 0),
+    status: { label: status, variant: statusVariant(status) },
+    created: 'Just now',
+    updated: 'Just now',
+    barcode: input.barcode ?? '',
+    description: input.description ?? '',
+    featured: Boolean(input.featured),
+    tags: input.tags ?? [],
+    categoryId: input.categoryId,
+    brandId: input.brandId,
+    image,
+  };
+}
+
+function optimisticCategoryRow(id: string, input: Parameters<typeof createCategory>[0]): CategoryListRow {
+  const status = input.status ?? 'Active';
+  return {
+    id,
+    productInfo: {
+      image: input.icon ?? 'running-shoes.svg',
+      title: input.name,
+      label: '',
+    },
+    productsQty: '0',
+    totalEarnings: formatMoney(0),
+    status: { label: status, variant: statusVariant(status) },
+    featured: Boolean(input.featured),
+    description: input.description ?? null,
+    created: 'Just now',
+    updated: 'Just now',
+  };
+}
+
+function optimisticCustomerRow(id: string, input: CustomerInput): CustomerListRow {
+  const status = input.status ?? 'Active';
+  return withCustomerProfile({
+    id,
+    user: 'NEW',
+    customerInfo: {
+      image: input.image ?? '300-13.png',
+      title: input.name.trim(),
+      label: input.email?.trim() ?? '',
+      statusColor: input.statusColor ?? 'offline',
+      verified: Boolean(input.verified),
+    },
+    location: {
+      name: input.locationName ?? '',
+      flag: input.locationFlag ?? 'estonia.svg',
+    },
+    total: formatMoney(0),
+    price: formatMoney(0),
+    status: { label: status, variant: statusVariant(status) },
+    created: '0',
+    updated: 'Just now',
+    phone: input.phone,
+    company: input.company,
+    timezone: input.timezone,
+    billingAddress: input.billingAddress,
+    vatId: input.vatId,
+    paymentMethods: input.paymentMethods,
+    reviews: input.reviews,
+  });
+}
+
+function orderTotal(items: OrderItemInput[] = []) {
+  const subtotal = items.reduce((sum, item) => sum + item.price * (item.quantity ?? 1), 0);
+  const shippingCost = items.length ? 10 : 0;
+  const tax = items.length ? 20 : 0;
+  return subtotal + shippingCost + tax;
+}
+
+function optimisticOrderRow(id: string, input: OrderInput): OrderListRow {
+  const items = input.items ?? [];
+  const deliveryStatus = input.deliveryStatus ?? 'Pending';
+  const paymentStatus = input.paymentStatus ?? 'Unpaid';
+  return {
+    id,
+    order: input.orderNumber?.trim() || 'New order',
+    date: input.date,
+    customer: input.customerName,
+    customerId: input.customerId,
+    total: formatMoney(orderTotal(items)),
+    items: items.length,
+    category: input.category ?? '',
+    deliveryStatus: { label: deliveryStatus, variant: statusVariant(deliveryStatus) },
+    paymentStatus: { label: paymentStatus, variant: statusVariant(paymentStatus) },
+    carrier: {
+      name: input.carrierName ?? '',
+      logo: input.carrierLogo ?? 'ups.svg',
+    },
+  };
+}
+
+function customerListPatch(input: Partial<CustomerInput>, existing: CustomerListRow): CustomerListRow {
+  const status = input.status ?? existing.status.label;
+  return {
+    ...existing,
+    customerInfo: {
+      ...existing.customerInfo,
+      title: input.name ?? existing.customerInfo.title,
+      label: input.email ?? existing.customerInfo.label,
+      image: input.image ?? existing.customerInfo.image,
+      statusColor: input.statusColor ?? existing.customerInfo.statusColor,
+      verified: input.verified ?? existing.customerInfo.verified,
+    },
+    location: {
+      name: input.locationName ?? existing.location.name,
+      flag: input.locationFlag ?? existing.location.flag,
+    },
+    status:
+      input.status !== undefined
+        ? { label: status, variant: statusVariant(status) }
+        : existing.status,
+    phone: input.phone ?? existing.phone,
+    company: input.company ?? existing.company,
+    timezone: input.timezone ?? existing.timezone,
+    billingAddress: input.billingAddress ?? existing.billingAddress,
+    vatId: input.vatId ?? existing.vatId,
+    paymentMethods: input.paymentMethods ?? existing.paymentMethods,
+    reviews: input.reviews ?? existing.reviews,
+    updated: 'Just now',
+  };
+}
+
+function orderListPatch(input: Partial<OrderInput>, existing: OrderListRow): OrderListRow {
+  const items = input.items;
+  const deliveryStatus = input.deliveryStatus ?? existing.deliveryStatus.label;
+  const paymentStatus = input.paymentStatus ?? existing.paymentStatus.label;
+  return {
+    ...existing,
+    order: input.orderNumber ?? existing.order,
+    date: input.date ?? existing.date,
+    customer: input.customerName ?? existing.customer,
+    customerId: input.customerId !== undefined ? input.customerId : existing.customerId,
+    category: input.category ?? existing.category,
+    items: items ? items.length : existing.items,
+    total: items ? formatMoney(orderTotal(items)) : existing.total,
+    deliveryStatus:
+      input.deliveryStatus !== undefined
+        ? { label: deliveryStatus, variant: statusVariant(deliveryStatus) }
+        : existing.deliveryStatus,
+    paymentStatus:
+      input.paymentStatus !== undefined
+        ? { label: paymentStatus, variant: statusVariant(paymentStatus) }
+        : existing.paymentStatus,
+    carrier: {
+      name: input.carrierName ?? existing.carrier.name,
+      logo: input.carrierLogo ?? existing.carrier.logo,
+    },
+    shippingPriority: input.shippingPriority ?? existing.shippingPriority,
+    deliveryMethod: input.deliveryMethod ?? existing.deliveryMethod,
+    originAddress: input.originAddress ?? existing.originAddress,
+    destinationAddress: input.destinationAddress ?? existing.destinationAddress,
+    shippingLabel: input.shippingLabel ?? existing.shippingLabel,
+    shippingLine1: input.shippingLine1 ?? existing.shippingLine1,
+    shippingLine2: input.shippingLine2 ?? existing.shippingLine2,
+  };
+}
 
 export function useProducts() {
   return useQuery({
-    queryKey: [...inventoryKey, 'products'],
+    queryKey: inventoryKeys.products(),
     queryFn: fetchProducts,
     enabled: isSupabaseConfigured,
   });
@@ -58,7 +334,7 @@ export function useProducts() {
 
 export function useProduct(id?: string) {
   return useQuery({
-    queryKey: [...inventoryKey, 'product', id],
+    queryKey: inventoryKeys.product(id ?? ''),
     queryFn: () => fetchProductById(id!),
     enabled: isSupabaseConfigured && Boolean(id),
   });
@@ -66,7 +342,7 @@ export function useProduct(id?: string) {
 
 export function useCategories() {
   return useQuery({
-    queryKey: [...inventoryKey, 'categories'],
+    queryKey: inventoryKeys.categories(),
     queryFn: fetchCategories,
     enabled: isSupabaseConfigured,
   });
@@ -74,7 +350,7 @@ export function useCategories() {
 
 export function useCategoryProducts(categoryId?: string) {
   return useQuery({
-    queryKey: [...inventoryKey, 'category-products', categoryId],
+    queryKey: inventoryKeys.categoryProducts(categoryId),
     queryFn: () => fetchProductsByCategory(categoryId!),
     enabled: isSupabaseConfigured && Boolean(categoryId),
   });
@@ -82,39 +358,37 @@ export function useCategoryProducts(categoryId?: string) {
 
 export function useBrands() {
   return useQuery({
-    queryKey: [...inventoryKey, 'brands'],
+    queryKey: inventoryKeys.brands(),
     queryFn: fetchBrands,
     enabled: isSupabaseConfigured,
+    staleTime: REFERENCE_STALE_TIME,
   });
 }
 
 export function useAllStock() {
   return useQuery({
-    queryKey: [...inventoryKey, 'all-stock'],
-    queryFn: async () => (await fetchStockProducts()).map(mapAllStock),
-    enabled: isSupabaseConfigured,
+    ...stockQuery,
+    select: (rows) => rows.map(mapAllStock),
   });
 }
 
 export function useCurrentStock() {
   return useQuery({
-    queryKey: [...inventoryKey, 'current-stock'],
-    queryFn: async () => (await fetchStockProducts()).map(mapCurrentStock),
-    enabled: isSupabaseConfigured,
+    ...stockQuery,
+    select: (rows) => rows.map(mapCurrentStock),
   });
 }
 
 export function useStockPlanner() {
   return useQuery({
-    queryKey: [...inventoryKey, 'stock-planner'],
-    queryFn: async () => (await fetchStockProducts()).map(mapStockPlanner),
-    enabled: isSupabaseConfigured,
+    ...stockQuery,
+    select: (rows) => rows.map(mapStockPlanner),
   });
 }
 
 export function useInboundStock() {
   return useQuery({
-    queryKey: [...inventoryKey, 'inbound'],
+    queryKey: inventoryKeys.inbound(),
     queryFn: fetchInboundShipments,
     enabled: isSupabaseConfigured,
   });
@@ -122,7 +396,7 @@ export function useInboundStock() {
 
 export function useOutboundStock() {
   return useQuery({
-    queryKey: [...inventoryKey, 'outbound'],
+    queryKey: inventoryKeys.outbound(),
     queryFn: fetchOutboundShipments,
     enabled: isSupabaseConfigured,
   });
@@ -130,7 +404,7 @@ export function useOutboundStock() {
 
 export function useCustomers() {
   return useQuery({
-    queryKey: [...inventoryKey, 'customers'],
+    queryKey: inventoryKeys.customers(),
     queryFn: fetchCustomers,
     enabled: isSupabaseConfigured,
   });
@@ -138,7 +412,7 @@ export function useCustomers() {
 
 export function useCustomer(id?: string) {
   return useQuery({
-    queryKey: [...inventoryKey, 'customer', id],
+    queryKey: inventoryKeys.customer(id ?? ''),
     queryFn: () => fetchCustomerById(id!),
     enabled: isSupabaseConfigured && Boolean(id),
   });
@@ -146,7 +420,7 @@ export function useCustomer(id?: string) {
 
 export function useCustomerOrders(customerId?: string) {
   return useQuery({
-    queryKey: [...inventoryKey, 'customer-orders', customerId],
+    queryKey: inventoryKeys.customerOrders(customerId),
     queryFn: () => fetchOrdersByCustomer(customerId!),
     enabled: isSupabaseConfigured && Boolean(customerId),
   });
@@ -154,7 +428,7 @@ export function useCustomerOrders(customerId?: string) {
 
 export function useOrders() {
   return useQuery({
-    queryKey: [...inventoryKey, 'orders'],
+    queryKey: inventoryKeys.orders(),
     queryFn: fetchOrders,
     enabled: isSupabaseConfigured,
   });
@@ -162,7 +436,7 @@ export function useOrders() {
 
 export function useOrder(id?: string) {
   return useQuery({
-    queryKey: [...inventoryKey, 'order', id],
+    queryKey: inventoryKeys.order(id ?? ''),
     queryFn: () => fetchOrderById(id!),
     enabled: isSupabaseConfigured && Boolean(id),
   });
@@ -170,7 +444,7 @@ export function useOrder(id?: string) {
 
 export function useOrderItems(orderId?: string) {
   return useQuery({
-    queryKey: [...inventoryKey, 'order-items', orderId],
+    queryKey: inventoryKeys.orderItems(orderId),
     queryFn: () => fetchOrderItems(orderId),
     enabled: isSupabaseConfigured && Boolean(orderId),
   });
@@ -178,7 +452,7 @@ export function useOrderItems(orderId?: string) {
 
 export function useOrderTracking(orderId?: string) {
   return useQuery({
-    queryKey: [...inventoryKey, 'order-tracking', orderId],
+    queryKey: inventoryKeys.orderTracking(orderId),
     queryFn: () => fetchOrderTracking(orderId!),
     enabled: isSupabaseConfigured && Boolean(orderId),
   });
@@ -186,15 +460,16 @@ export function useOrderTracking(orderId?: string) {
 
 export function useCarriers() {
   return useQuery({
-    queryKey: [...inventoryKey, 'carriers'],
+    queryKey: inventoryKeys.carriers(),
     queryFn: fetchCarriers,
     enabled: isSupabaseConfigured,
+    staleTime: REFERENCE_STALE_TIME,
   });
 }
 
 export function useProductVariants(productId?: string) {
   return useQuery({
-    queryKey: [...inventoryKey, 'variants', productId],
+    queryKey: inventoryKeys.variants(productId),
     queryFn: () => fetchVariants(productId!),
     enabled: isSupabaseConfigured && Boolean(productId),
   });
@@ -202,167 +477,312 @@ export function useProductVariants(productId?: string) {
 
 export function useProductOptions(productId?: string) {
   return useQuery({
-    queryKey: [...inventoryKey, 'options', productId],
+    queryKey: inventoryKeys.options(productId),
     queryFn: () => fetchOptions(productId!),
     enabled: isSupabaseConfigured && Boolean(productId),
   });
 }
 
-function useInvalidateInventory() {
-  const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: inventoryKey });
-}
-
 export function useCreateProduct() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: createProduct,
-    onSuccess: invalidate,
+    keys: [inventoryKeys.products(), inventoryKeys.stock(), inventoryKeys.categories(), inventoryKeys.categoryProducts()],
+    apply: (input) => {
+      const tempId = crypto.randomUUID();
+      prependToList(queryClient, inventoryKeys.products(), optimisticProductRow(tempId, input));
+      return { tempId };
+    },
+    onSuccess: (id, _input, extras) => {
+      const tempId = (extras as { tempId?: string } | null)?.tempId;
+      if (tempId) replaceListItemId(queryClient, inventoryKeys.products(), tempId, id);
+    },
   });
 }
 
 export function useUpdateProduct() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: ({ id, input }: { id: string; input: Parameters<typeof updateProduct>[1] }) =>
       updateProduct(id, input),
-    onSuccess: invalidate,
+    keys: [inventoryKeys.products(), inventoryKeys.stock(), inventoryKeys.categoryProducts()],
+    apply: ({ id, input }) => {
+      const categoryName = categoryNameFromCache(queryClient, input.categoryId);
+      patchListById<ProductListRow>(queryClient, inventoryKeys.products(), id, (item) =>
+        productListPatch(input, item, categoryName),
+      );
+      patchQueryData<ProductListRow>(queryClient, inventoryKeys.product(id), (item) =>
+        productListPatch(input, item, categoryName),
+      );
+      patchListById<InventoryProduct>(queryClient, inventoryKeys.stock(), id, (product) => ({
+        ...product,
+        name: input.name ?? product.name,
+        sku: input.sku ?? product.sku,
+        barcode: input.barcode !== undefined ? input.barcode || null : product.barcode,
+        description: input.description !== undefined ? input.description || null : product.description,
+        category_id: input.categoryId !== undefined ? input.categoryId : product.category_id,
+        brand_id: input.brandId !== undefined ? input.brandId : product.brand_id,
+        price: input.price ?? product.price,
+        status: input.status ?? product.status,
+        featured: input.featured ?? product.featured,
+        tags: input.tags ?? product.tags,
+        image: input.image ?? product.image,
+      }));
+    },
   });
 }
 
 export function useDeleteProduct() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: deleteProduct,
-    onSuccess: invalidate,
+    keys: [
+      inventoryKeys.products(),
+      inventoryKeys.stock(),
+      inventoryKeys.categories(),
+      inventoryKeys.categoryProducts(),
+    ],
+    apply: (id) => {
+      removeFromList(queryClient, inventoryKeys.products(), id);
+      removeFromList(queryClient, inventoryKeys.stock(), id);
+      queryClient.removeQueries({ queryKey: inventoryKeys.product(id) });
+      queryClient.removeQueries({ queryKey: inventoryKeys.variants(id) });
+      queryClient.removeQueries({ queryKey: inventoryKeys.options(id) });
+    },
   });
 }
 
 export function useCreateCategory() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: createCategory,
-    onSuccess: invalidate,
+    keys: [inventoryKeys.categories()],
+    apply: (input) => {
+      const tempId = crypto.randomUUID();
+      prependToList(queryClient, inventoryKeys.categories(), optimisticCategoryRow(tempId, input));
+      return { tempId };
+    },
+    onSuccess: (id, _input, extras) => {
+      const tempId = (extras as { tempId?: string } | null)?.tempId;
+      if (tempId) replaceListItemId(queryClient, inventoryKeys.categories(), tempId, id);
+    },
   });
 }
 
 export function useUpdateCategory() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: ({ id, input }: { id: string; input: Parameters<typeof updateCategory>[1] }) =>
       updateCategory(id, input),
-    onSuccess: invalidate,
+    keys: [inventoryKeys.categories(), inventoryKeys.products()],
+    apply: ({ id, input }) => {
+      patchListById<CategoryListRow>(queryClient, inventoryKeys.categories(), id, (item) => {
+        const status = input.status ?? item.status.label;
+        return {
+          ...item,
+          featured: input.featured ?? item.featured,
+          description: input.description !== undefined ? input.description : item.description,
+          productInfo: {
+            image: input.icon ?? item.productInfo.image,
+            title: input.name ?? item.productInfo.title,
+            label: item.productInfo.label,
+          },
+          status:
+            input.status !== undefined
+              ? { label: status, variant: statusVariant(status) }
+              : item.status,
+          updated: 'Just now',
+        };
+      });
+    },
   });
 }
 
 export function useDeleteCategory() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: deleteCategory,
-    onSuccess: invalidate,
+    keys: [inventoryKeys.categories(), inventoryKeys.products(), inventoryKeys.categoryProducts()],
+    apply: (id) => {
+      removeFromList(queryClient, inventoryKeys.categories(), id);
+      queryClient.removeQueries({ queryKey: inventoryKeys.categoryProducts(id) });
+    },
   });
 }
 
 export function useUpdateStockLevel() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: ({
       productId,
       input,
     }: {
       productId: string;
-      input: Parameters<typeof updateStockLevel>[1];
+      input: Partial<InventoryStockLevel>;
     }) => updateStockLevel(productId, input),
-    onSuccess: invalidate,
+    keys: [inventoryKeys.stock()],
+    apply: ({ productId, input }) => {
+      patchListById<InventoryProduct>(queryClient, inventoryKeys.stock(), productId, (product) => ({
+        ...product,
+        stock_level: product.stock_level ? { ...product.stock_level, ...input } : product.stock_level,
+      }));
+    },
   });
 }
 
 export function useDeleteInboundShipment() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: deleteInboundShipment,
-    onSuccess: invalidate,
+    keys: [inventoryKeys.inbound(), inventoryKeys.stock()],
+    apply: (id) => {
+      removeFromList<InboundStockRow>(queryClient, inventoryKeys.inbound(), id);
+    },
   });
 }
 
 export function useDeleteOutboundShipment() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: deleteOutboundShipment,
-    onSuccess: invalidate,
+    keys: [inventoryKeys.outbound(), inventoryKeys.stock()],
+    apply: (id) => {
+      removeFromList<OutboundStockRow>(queryClient, inventoryKeys.outbound(), id);
+    },
   });
 }
 
 export function useCreateCustomer() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: createCustomer,
-    onSuccess: invalidate,
+    keys: [inventoryKeys.customers()],
+    apply: (input) => {
+      const tempId = crypto.randomUUID();
+      prependToList(queryClient, inventoryKeys.customers(), optimisticCustomerRow(tempId, input));
+      return { tempId };
+    },
+    onSuccess: (id, _input, extras) => {
+      const tempId = (extras as { tempId?: string } | null)?.tempId;
+      if (tempId) replaceListItemId(queryClient, inventoryKeys.customers(), tempId, id);
+    },
   });
 }
 
 export function useUpdateCustomer() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: Parameters<typeof updateCustomer>[1] }) =>
+  const queryClient = useQueryClient();
+  return useCachedMutation({
+    mutationFn: ({ id, input }: { id: string; input: Partial<CustomerInput> }) =>
       updateCustomer(id, input),
-    onSuccess: invalidate,
+    keys: [inventoryKeys.customers()],
+    apply: ({ id, input }) => {
+      patchListById<CustomerListRow>(queryClient, inventoryKeys.customers(), id, (item) =>
+        customerListPatch(input, item),
+      );
+      patchQueryData<CustomerListRow>(queryClient, inventoryKeys.customer(id), (item) =>
+        customerListPatch(input, item),
+      );
+    },
   });
 }
 
 export function useDeleteCustomer() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: deleteCustomer,
-    onSuccess: invalidate,
+    keys: [inventoryKeys.customers(), inventoryKeys.customerOrders()],
+    apply: (id) => {
+      removeFromList(queryClient, inventoryKeys.customers(), id);
+      queryClient.removeQueries({ queryKey: inventoryKeys.customer(id) });
+      queryClient.removeQueries({ queryKey: inventoryKeys.customerOrders(id) });
+    },
   });
 }
 
 export function useUpdateCustomersStatus() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: ({ ids, status }: { ids: string[]; status: string }) =>
       updateCustomersStatus(ids, status),
-    onSuccess: invalidate,
+    keys: [inventoryKeys.customers()],
+    apply: ({ ids, status }) => {
+      patchListByIds<CustomerListRow>(queryClient, inventoryKeys.customers(), ids, (item) => ({
+        ...item,
+        status: { label: status, variant: statusVariant(status) },
+      }));
+    },
   });
 }
 
 export function useDeleteCustomers() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: deleteCustomers,
-    onSuccess: invalidate,
+    keys: [inventoryKeys.customers()],
+    apply: (ids) => {
+      removeFromList(queryClient, inventoryKeys.customers(), ids);
+    },
   });
 }
 
 export function useDuplicateCustomers() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: (customers: CustomerListRow[]) => duplicateCustomers(customers),
-    onSuccess: invalidate,
+    keys: [inventoryKeys.customers()],
+    apply: (customers) => {
+      const copies = customers.map((customer) => ({
+        ...customer,
+        id: crypto.randomUUID(),
+        customerInfo: {
+          ...customer.customerInfo,
+          title: `${customer.customerInfo.title} (Copy)`,
+        },
+        created: '0',
+        total: formatMoney(0),
+      }));
+      copies.forEach((copy) => prependToList(queryClient, inventoryKeys.customers(), copy));
+    },
   });
 }
 
 export function useCreateOrder() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: createOrder,
-    onSuccess: invalidate,
+    keys: [inventoryKeys.orders(), inventoryKeys.customerOrders()],
+    apply: (input) => {
+      const tempId = crypto.randomUUID();
+      prependToList(queryClient, inventoryKeys.orders(), optimisticOrderRow(tempId, input));
+      return { tempId };
+    },
+    onSuccess: (id, _input, extras) => {
+      const tempId = (extras as { tempId?: string } | null)?.tempId;
+      if (tempId) replaceListItemId(queryClient, inventoryKeys.orders(), tempId, id);
+    },
   });
 }
 
 export function useUpdateOrder() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: Parameters<typeof updateOrder>[1] }) =>
-      updateOrder(id, input),
-    onSuccess: invalidate,
+  const queryClient = useQueryClient();
+  return useCachedMutation({
+    mutationFn: ({ id, input }: { id: string; input: Partial<OrderInput> }) => updateOrder(id, input),
+    keys: [inventoryKeys.orders(), inventoryKeys.orderItems(), inventoryKeys.customerOrders()],
+    apply: ({ id, input }) => {
+      patchListById<OrderListRow>(queryClient, inventoryKeys.orders(), id, (item) =>
+        orderListPatch(input, item),
+      );
+      patchQueryData<OrderDetailRow>(queryClient, inventoryKeys.order(id), (item) => ({
+        ...item,
+        ...orderListPatch(input, item),
+      }));
+    },
   });
 }
 
 export function useUpdateOrderStatus() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: ({
       id,
       paymentStatus,
@@ -372,32 +792,72 @@ export function useUpdateOrderStatus() {
       paymentStatus: string;
       deliveryStatus?: string;
     }) => updateOrderStatus(id, paymentStatus, deliveryStatus),
-    onSuccess: invalidate,
+    keys: [inventoryKeys.orders()],
+    apply: ({ id, paymentStatus, deliveryStatus }) => {
+      const patch = (item: OrderListRow): OrderListRow => ({
+        ...item,
+        paymentStatus: { label: paymentStatus, variant: statusVariant(paymentStatus) },
+        deliveryStatus: deliveryStatus
+          ? { label: deliveryStatus, variant: statusVariant(deliveryStatus) }
+          : item.deliveryStatus,
+      });
+      patchListById<OrderListRow>(queryClient, inventoryKeys.orders(), id, patch);
+      patchQueryData<OrderDetailRow>(queryClient, inventoryKeys.order(id), (item) => ({
+        ...item,
+        ...patch(item),
+      }));
+    },
   });
 }
 
 export function useDeleteOrder() {
-  const invalidate = useInvalidateInventory();
-  return useMutation({
+  const queryClient = useQueryClient();
+  return useCachedMutation({
     mutationFn: deleteOrder,
-    onSuccess: invalidate,
+    keys: [
+      inventoryKeys.orders(),
+      inventoryKeys.orderItems(),
+      inventoryKeys.orderTracking(),
+      inventoryKeys.customerOrders(),
+    ],
+    apply: (id) => {
+      removeFromList(queryClient, inventoryKeys.orders(), id);
+      queryClient.removeQueries({ queryKey: inventoryKeys.order(id) });
+      queryClient.removeQueries({ queryKey: inventoryKeys.orderItems(id) });
+      queryClient.removeQueries({ queryKey: inventoryKeys.orderTracking(id) });
+    },
   });
 }
 
 export function useReplaceVariants() {
-  const invalidate = useInvalidateInventory();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ productId, variants }: { productId: string; variants: ProductVariantRow[] }) =>
       replaceVariants(productId, variants),
-    onSuccess: invalidate,
+    onError: (error) => toastMutationError(error),
+    onSettled: (_data, _error, variables) => {
+      void invalidateKeys(
+        queryClient,
+        inventoryKeys.variants(variables.productId),
+        inventoryKeys.product(variables.productId),
+        inventoryKeys.products(),
+      );
+    },
   });
 }
 
 export function useReplaceOptions() {
-  const invalidate = useInvalidateInventory();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ productId, options }: { productId: string; options: ProductOptionCard[] }) =>
       replaceOptions(productId, options),
-    onSuccess: invalidate,
+    onError: (error) => toastMutationError(error),
+    onSettled: (_data, _error, variables) => {
+      void invalidateKeys(
+        queryClient,
+        inventoryKeys.options(variables.productId),
+        inventoryKeys.product(variables.productId),
+      );
+    },
   });
 }

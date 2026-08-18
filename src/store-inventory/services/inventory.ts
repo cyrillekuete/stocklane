@@ -315,7 +315,7 @@ function displayDate(value?: string | null) {
   return format(parsed, 'd MMM, yyyy');
 }
 
-function statusVariant(label: string) {
+export function statusVariant(label: string) {
   const normalized = label.toLowerCase();
   if (['live', 'active', 'paid', 'delivered', 'allocated', 'success'].includes(normalized)) {
     return 'success';
@@ -1004,8 +1004,9 @@ export async function createCategory(input: {
   icon?: string;
 }) {
   const client = requireClient();
+  const id = crypto.randomUUID();
   const { error } = await client.from('inventory_categories').insert({
-    id: crypto.randomUUID(),
+    id,
     name: input.name,
     status: input.status ?? 'Active',
     featured: Boolean(input.featured),
@@ -1014,6 +1015,7 @@ export async function createCategory(input: {
     code: stableId('code', input.name).replace('code_', '').slice(0, 12).toUpperCase(),
   });
   if (error) throw error;
+  return id;
 }
 
 export async function updateCategory(
@@ -1064,8 +1066,9 @@ export async function createCustomer(input: CustomerInput) {
   const location = locationProfile(input.locationName);
   const name = input.name.trim();
   const email = input.email?.trim() || null;
+  const id = crypto.randomUUID();
   const { error } = await client.from('inventory_customers').insert({
-    id: crypto.randomUUID(),
+    id,
     code: generateCustomerCode(),
     name,
     email,
@@ -1084,6 +1087,7 @@ export async function createCustomer(input: CustomerInput) {
     reviews: input.reviews ?? defaultCustomerReviews,
   });
   if (error) throw error;
+  return id;
 }
 
 export async function updateCustomer(id: string, input: Partial<CustomerInput>) {
@@ -1130,7 +1134,7 @@ export async function deleteCustomers(ids: string[]) {
 }
 
 export async function duplicateCustomers(customers: CustomerListRow[]) {
-  if (!customers.length) return;
+  if (!customers.length) return [];
   const client = requireClient();
   const rows = customers.map((customer) => {
     const name = `${customer.customerInfo.title} (Copy)`;
@@ -1159,6 +1163,7 @@ export async function duplicateCustomers(customers: CustomerListRow[]) {
   });
   const { error } = await client.from('inventory_customers').insert(rows);
   if (error) throw error;
+  return rows.map((row) => row.id);
 }
 
 async function resolveCarrierId(input: Pick<OrderInput, 'carrierId' | 'carrierName' | 'carrierLogo'>) {
