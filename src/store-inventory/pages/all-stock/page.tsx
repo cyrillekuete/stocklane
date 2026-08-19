@@ -6,14 +6,14 @@ import { StockNavbar } from '../components/stock-navbar';
 
 export function AllStock() {
   const { warehouseId } = useWarehouseFilter();
-  const { data } = useAllStock(warehouseId);
+  const { data, isLoading, isError } = useAllStock(warehouseId);
   return (
     <>
       <StockNavbar />
       <div className="container-fluid">
         <div className="grid gap-5 lg:gap-7.5">
           <Inventory />
-          <AllStockTable mockData={data} />
+          <AllStockTable mockData={data} isLoading={isLoading} isError={isError} />
         </div>
       </div>
     </>

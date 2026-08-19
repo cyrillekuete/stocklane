@@ -77,6 +77,16 @@ export function PosRegister() {
     }
   }, [defaultWarehouse, warehouseId]);
 
+  const handleWarehouseChange = (next: string | null) => {
+    if (next !== warehouseId) {
+      if (cart.length) {
+        setCart([]);
+        toast.message('Cart cleared because the warehouse changed');
+      }
+      setWarehouseId(next);
+    }
+  };
+
   const settings = settingsQuery.data;
   const catalog = isSupabaseConfigured ? (catalogQuery.data ?? []) : mockCatalog;
   const customers = customersQuery.data ?? [];
@@ -165,6 +175,14 @@ export function PosRegister() {
       toast.error('Amount tendered is less than the total');
       return;
     }
+    const unavailable = cart.some((line) => {
+      const product = catalog.find((row) => row.id === line.productId);
+      return !product || line.quantity > product.qty;
+    });
+    if (unavailable) {
+      toast.error('Cart items are not available in this warehouse');
+      return;
+    }
     const warehouse = warehouses?.find((row) => row.id === warehouseId);
     const saleNumber = generateSaleNumber();
     const payload = {
@@ -248,7 +266,7 @@ export function PosRegister() {
           <p className="text-sm text-muted-foreground">Sell inventory from the selected warehouse.</p>
         </div>
         <div className="flex items-center gap-2">
-          <WarehouseSelect allowAll={false} value={warehouseId} onValueChange={setWarehouseId} />
+          <WarehouseSelect allowAll={false} value={warehouseId} onValueChange={handleWarehouseChange} />
           <Button variant="outline" asChild>
             <Link to="/store-inventory/pos/sales">Sale history</Link>
           </Button>

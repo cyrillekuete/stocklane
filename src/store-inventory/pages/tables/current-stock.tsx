@@ -25,6 +25,7 @@ import {
 import { DateRange } from 'react-day-picker';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
@@ -110,12 +111,18 @@ export interface IData {
 
 interface CurrentStockProps {
   mockData?: IData[];
+  isLoading?: boolean;
+  isError?: boolean;
 }
 
 const mockData: IData[] = currentStockMockData;
 
-const CurrentStockTable = ({ mockData: propsMockData }: CurrentStockProps) => {
-  const data = propsMockData || mockData;
+const CurrentStockTable = ({
+  mockData: propsMockData,
+  isLoading = false,
+  isError = false,
+}: CurrentStockProps) => {
+  const data = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
   const deleteProduct = useDeleteProduct();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -654,6 +661,13 @@ const CurrentStockTable = ({ mockData: propsMockData }: CurrentStockProps) => {
   });
 
   return (
+    <div className="space-y-3">
+      {isError && (
+        <p className="text-sm text-destructive">Unable to load warehouse stock. Check your connection and try again.</p>
+      )}
+      {isLoading && (
+        <p className="text-sm text-muted-foreground">Loading stock...</p>
+      )}
     <DataGrid
       table={table}
       recordCount={filteredData?.length || 0}
@@ -901,6 +915,7 @@ const CurrentStockTable = ({ mockData: propsMockData }: CurrentStockProps) => {
         data={selectedProduct}
       />
     </DataGrid>
+    </div>
   );
 };
 

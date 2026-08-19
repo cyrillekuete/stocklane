@@ -1103,41 +1103,31 @@ export async function createInboundShipment(input: {
   const id = crypto.randomUUID();
   const orderDate = input.orderDate ?? format(new Date(), 'd MMM, yyyy');
   const arrivalDate = input.arrivalDate ?? orderDate;
-  const { error } = await client.from('inventory_inbound_shipments').insert({
-    id,
-    product_id: input.productId,
-    warehouse_id: input.warehouseId,
-    supplier_id: input.supplierId ?? null,
-    carrier_id: input.carrierId ?? null,
-    order_date: orderDate,
-    qty: input.qty,
-    stock_value: input.stockValue ?? 0,
-    status: input.status ?? 'Received',
-    status_variant: statusVariant(input.status ?? 'Received'),
-    arrival_date: arrivalDate,
+  const status = input.status ?? 'Received';
+  const { data, error } = await client.rpc('inventory_receive_inbound_shipment', {
+    payload: {
+      id,
+      product_id: input.productId,
+      warehouse_id: input.warehouseId,
+      supplier_id: input.supplierId ?? '',
+      carrier_id: input.carrierId ?? '',
+      order_date: orderDate,
+      qty: input.qty,
+      stock_value: input.stockValue ?? 0,
+      status,
+      status_variant: statusVariant(status),
+      arrival_date: arrivalDate,
+    },
   });
   if (error) throw error;
-  const { error: qtyError } = await client.rpc('inventory_adjust_warehouse_qty', {
-    p_warehouse_id: input.warehouseId,
-    p_product_id: input.productId,
-    p_delta: input.qty,
-  });
-  if (qtyError) throw qtyError;
-  const { data: stock } = await client
-    .from('inventory_stock_levels')
-    .select('inbound_qty')
-    .eq('product_id', input.productId)
-    .maybeSingle();
-  await client
-    .from('inventory_stock_levels')
-    .update({ inbound_qty: Number(stock?.inbound_qty ?? 0) + input.qty })
-    .eq('product_id', input.productId);
-  return id;
+  return (typeof data === 'string' && data) || id;
 }
 
 export async function deleteInboundShipment(id: string) {
   const client = requireClient();
-  const { error } = await client.from('inventory_inbound_shipments').delete().eq('id', id);
+  const { error } = await client.rpc('inventory_delete_inbound_shipment', {
+    p_id: id,
+  });
   if (error) throw error;
 }
 

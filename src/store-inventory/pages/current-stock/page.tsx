@@ -5,12 +5,12 @@ import { useWarehouseFilter } from '@/store-inventory/lib/warehouse-filter';
 
 export function CurrentStock() {
   const { warehouseId } = useWarehouseFilter();
-  const { data } = useCurrentStock(warehouseId);
+  const { data, isLoading, isError } = useCurrentStock(warehouseId);
   return (
     <>
       <StockNavbar />
       <div className="container-fluid">
-        <CurrentStockTable mockData={data} />
+        <CurrentStockTable mockData={data} isLoading={isLoading} isError={isError} />
       </div>
     </>
   );

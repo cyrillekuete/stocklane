@@ -504,7 +504,7 @@ async function main() {
     qty: row.qty,
     reserved: row.reserved ?? 0,
   }));
-  await upsert('inventory_warehouse_stock', warehouseStock);
+  await upsert('inventory_warehouse_stock', warehouseStock, 'warehouse_id,product_id');
   await upsert('inventory_inbound_shipments', inbound);
   await upsert('inventory_outbound_shipments', outbound);
   await upsert('inventory_customers', customers);

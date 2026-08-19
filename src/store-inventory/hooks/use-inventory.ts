@@ -1,5 +1,12 @@
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { useMutation, useQuery, useQueryClient, type QueryClient, type QueryKey } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+  type QueryKey,
+  type UseQueryResult,
+} from '@tanstack/react-query';
 import { withCustomerProfile } from '../data/customer-profile';
 import { formatMoney } from '../lib/format';
 import {
@@ -78,6 +85,7 @@ import type {
   ProductListRow,
   ProductOptionCard,
   ProductVariantRow,
+  WarehouseStockRow,
 } from '../types';
 
 const stockQuery = {
@@ -369,23 +377,21 @@ export function useBrands() {
   });
 }
 
-export function useAllStock(warehouseId?: string | null) {
-  const stock = useQuery({
-    ...stockQuery,
-  });
-  const warehouseStock = useQuery({
-    queryKey: inventoryKeys.warehouseStock(warehouseId ?? ''),
-    queryFn: () => fetchWarehouseStock(warehouseId!),
-    enabled: isSupabaseConfigured && Boolean(warehouseId),
-  });
+function overlayWarehouseQty<T>(
+  stock: UseQueryResult<InventoryProduct[]>,
+  warehouseStock: UseQueryResult<WarehouseStockRow[]>,
+  warehouseId: string | null | undefined,
+  mapRow: (product: InventoryProduct) => T,
+) {
+  const needsOverlay = isSupabaseConfigured && Boolean(warehouseId);
+  const overlayReady = !needsOverlay || warehouseStock.isSuccess;
   const qtyMap = new Map((warehouseStock.data ?? []).map((row) => [row.productId, row]));
-  return {
-    ...stock,
-    data: stock.data
+  const data =
+    stock.data && overlayReady
       ? stock.data.map((product) => {
-          if (!warehouseId) return mapAllStock(product);
+          if (!warehouseId) return mapRow(product);
           const overlay = qtyMap.get(product.id);
-          return mapAllStock({
+          return mapRow({
             ...product,
             stock_level: product.stock_level
               ? {
@@ -396,11 +402,24 @@ export function useAllStock(warehouseId?: string | null) {
               : product.stock_level,
           });
         })
-      : stock.data,
+      : undefined;
+
+  return {
+    ...stock,
+    isPending: stock.isPending || (needsOverlay && warehouseStock.isPending),
+    isLoading: stock.isLoading || (needsOverlay && warehouseStock.isLoading),
+    isFetching: stock.isFetching || (needsOverlay && warehouseStock.isFetching),
+    isError: stock.isError || (needsOverlay && warehouseStock.isError),
+    isSuccess: stock.isSuccess && overlayReady,
+    error: stock.error ?? (needsOverlay && warehouseStock.isError ? warehouseStock.error : null),
+    data,
   };
 }
 
-export function useCurrentStock(warehouseId?: string | null) {
+function useStockWithWarehouseOverlay<T>(
+  warehouseId: string | null | undefined,
+  mapRow: (product: InventoryProduct) => T,
+) {
   const stock = useQuery({
     ...stockQuery,
   });
@@ -409,26 +428,15 @@ export function useCurrentStock(warehouseId?: string | null) {
     queryFn: () => fetchWarehouseStock(warehouseId!),
     enabled: isSupabaseConfigured && Boolean(warehouseId),
   });
-  const qtyMap = new Map((warehouseStock.data ?? []).map((row) => [row.productId, row]));
-  return {
-    ...stock,
-    data: stock.data
-      ? stock.data.map((product) => {
-          if (!warehouseId) return mapCurrentStock(product);
-          const overlay = qtyMap.get(product.id);
-          return mapCurrentStock({
-            ...product,
-            stock_level: product.stock_level
-              ? {
-                  ...product.stock_level,
-                  qty: overlay?.qty ?? 0,
-                  reserved: overlay?.reserved ?? 0,
-                }
-              : product.stock_level,
-          });
-        })
-      : stock.data,
-  };
+  return overlayWarehouseQty(stock, warehouseStock, warehouseId, mapRow);
+}
+
+export function useAllStock(warehouseId?: string | null) {
+  return useStockWithWarehouseOverlay(warehouseId, mapAllStock);
+}
+
+export function useCurrentStock(warehouseId?: string | null) {
+  return useStockWithWarehouseOverlay(warehouseId, mapCurrentStock);
 }
 
 export function useStockPlanner() {
@@ -698,7 +706,7 @@ export function useDeleteInboundShipment() {
   const queryClient = useQueryClient();
   return useCachedMutation({
     mutationFn: deleteInboundShipment,
-    keys: [inventoryKeys.inbound(), inventoryKeys.stock()],
+    keys: [inventoryKeys.inbound(), inventoryKeys.stock(), inventoryKeys.warehouseStock()],
     apply: (id) => {
       removeFromList<InboundStockRow>(queryClient, inventoryKeys.inbound(), id);
     },

@@ -318,6 +318,90 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION inventory_receive_inbound_shipment(payload JSONB)
+RETURNS TEXT
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_id TEXT;
+  v_product_id TEXT;
+  v_warehouse_id TEXT;
+  v_qty INTEGER;
+  v_status TEXT;
+BEGIN
+  v_id := COALESCE(NULLIF(payload->>'id', ''), gen_random_uuid()::TEXT);
+  v_product_id := NULLIF(payload->>'product_id', '');
+  v_warehouse_id := NULLIF(payload->>'warehouse_id', '');
+  v_qty := COALESCE((payload->>'qty')::INTEGER, 0);
+  v_status := COALESCE(NULLIF(payload->>'status', ''), 'Received');
+
+  IF v_product_id IS NULL OR v_warehouse_id IS NULL THEN
+    RAISE EXCEPTION 'Product and warehouse are required'
+      USING ERRCODE = 'P0001';
+  END IF;
+  IF v_qty < 1 THEN
+    RAISE EXCEPTION 'Quantity must be at least 1'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  INSERT INTO inventory_inbound_shipments (
+    id, product_id, warehouse_id, supplier_id, carrier_id,
+    order_date, qty, stock_value, status, status_variant, arrival_date
+  ) VALUES (
+    v_id,
+    v_product_id,
+    v_warehouse_id,
+    NULLIF(payload->>'supplier_id', ''),
+    NULLIF(payload->>'carrier_id', ''),
+    COALESCE(NULLIF(payload->>'order_date', ''), to_char(now(), 'FMDD Mon, YYYY')),
+    v_qty,
+    COALESCE((payload->>'stock_value')::NUMERIC, 0),
+    v_status,
+    COALESCE(NULLIF(payload->>'status_variant', ''), 'success'),
+    COALESCE(
+      NULLIF(payload->>'arrival_date', ''),
+      NULLIF(payload->>'order_date', ''),
+      to_char(now(), 'FMDD Mon, YYYY')
+    )
+  );
+
+  PERFORM inventory_adjust_warehouse_qty(v_warehouse_id, v_product_id, v_qty);
+
+  UPDATE inventory_stock_levels
+  SET inbound_qty = inbound_qty + v_qty
+  WHERE product_id = v_product_id;
+
+  RETURN v_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION inventory_delete_inbound_shipment(p_id TEXT)
+RETURNS JSONB
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_row inventory_inbound_shipments%ROWTYPE;
+BEGIN
+  SELECT * INTO v_row FROM inventory_inbound_shipments WHERE id = p_id FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Inbound shipment not found'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF v_row.warehouse_id IS NOT NULL THEN
+    PERFORM inventory_adjust_warehouse_qty(v_row.warehouse_id, v_row.product_id, -v_row.qty);
+  END IF;
+
+  UPDATE inventory_stock_levels
+  SET inbound_qty = GREATEST(inbound_qty - v_row.qty, 0)
+  WHERE product_id = v_row.product_id;
+
+  DELETE FROM inventory_inbound_shipments WHERE id = p_id;
+
+  RETURN jsonb_build_object('id', p_id);
+END;
+$$;
+
 GRANT ALL ON TABLE inventory_warehouse_stock TO anon, authenticated;
 GRANT ALL ON TABLE inventory_pos_sales TO anon, authenticated;
 GRANT ALL ON TABLE inventory_pos_sale_items TO anon, authenticated;
@@ -359,3 +443,5 @@ GRANT EXECUTE ON FUNCTION inventory_adjust_warehouse_qty(TEXT, TEXT, INTEGER) TO
 GRANT EXECUTE ON FUNCTION inventory_set_warehouse_qty(TEXT, TEXT, INTEGER) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION inventory_complete_pos_sale(JSONB) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION inventory_void_pos_sale(TEXT) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION inventory_receive_inbound_shipment(JSONB) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION inventory_delete_inbound_shipment(TEXT) TO anon, authenticated;
