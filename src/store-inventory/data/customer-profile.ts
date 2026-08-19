@@ -331,6 +331,7 @@ export function withCustomerProfile(row: CustomerListRow): CustomerListRow {
     joined: row.joined ?? row.updated,
     lastVisit: row.lastVisit ?? row.updated,
     lastVisitAt: row.lastVisitAt ?? null,
+    accountBalance: row.accountBalance ?? 0,
     paymentMethods: row.paymentMethods ?? defaultPaymentMethods(name, email),
     reviews: row.reviews ?? defaultCustomerReviews,
   };

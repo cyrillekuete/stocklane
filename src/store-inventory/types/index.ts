@@ -223,8 +223,24 @@ export interface CustomerListRow {
   joined?: string;
   lastVisit?: string;
   lastVisitAt?: string | null;
+  accountBalance?: number;
   paymentMethods?: CustomerPaymentMethod[];
   reviews?: CustomerReviewGroup[];
+}
+
+export type CustomerAccountTransactionType = 'deposit' | 'sale' | 'void';
+
+export interface CustomerAccountTransaction {
+  id: string;
+  customerId: string;
+  type: CustomerAccountTransactionType;
+  amount: number;
+  balanceAfter: number;
+  paymentMethod: string | null;
+  notes: string | null;
+  posSaleId: string | null;
+  posSaleNumber: string | null;
+  createdAt: string;
 }
 
 export interface OrderItemRow {
@@ -503,13 +519,21 @@ export interface WarehouseListRow {
   updated?: string;
 }
 
-export type PosPaymentMethod = 'cash' | 'card' | 'mobile';
+export type PosPaymentMethod =
+  | 'cash'
+  | 'credit'
+  | 'mtn_mobile_money'
+  | 'orange_money'
+  | 'bank_transfer';
 export type PosSaleStatus = 'completed' | 'voided';
 
 export interface PosSaleItemRow {
   id: string;
   saleId: string;
   productId?: string | null;
+  warehouseId: string;
+  warehouseName: string;
+  warehouseCode: string;
   sku: string;
   name: string;
   unitPrice: number;
@@ -552,6 +576,9 @@ export interface WarehouseStockRow {
 
 export interface PosCatalogProduct {
   id: string;
+  warehouseId: string;
+  warehouseName: string;
+  warehouseCode: string;
   name: string;
   sku: string;
   barcode: string;

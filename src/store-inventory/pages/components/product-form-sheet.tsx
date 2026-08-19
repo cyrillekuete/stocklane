@@ -13,6 +13,7 @@ import {
   useReplaceVariants,
   useUpdateProduct,
 } from '@/store-inventory/hooks/use-inventory';
+import { useActiveWarehouses } from '@/store-inventory/hooks/use-warehouses';
 import type { ProductListRow, ProductVariantRow } from '@/store-inventory/types';
 import { Badge, BadgeButton } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -128,6 +129,7 @@ export function ProductFormSheet({
   const isEditMode = mode === 'edit';
   const { data: categories } = useCategories();
   const { data: brands } = useBrands();
+  const { data: warehouses } = useActiveWarehouses();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const replaceVariants = useReplaceVariants();
@@ -145,7 +147,9 @@ export function ProductFormSheet({
   const [tags, setTags] = useState<string[]>([]);
   const [image, setImage] = useState('11.png');
   const [variants, setVariants] = useState<ProductVariantRow[]>([]);
+  const [warehouseId, setWarehouseId] = useState('');
   const [saving, setSaving] = useState(false);
+  const defaultWarehouse = warehouses?.find((row) => row.isDefault) ?? warehouses?.[0];
 
   useEffect(() => {
     if (!open) return;
@@ -166,6 +170,11 @@ export function ProductFormSheet({
   }, [open, product, isEditMode]);
 
   useEffect(() => {
+    if (!open || isEditMode) return;
+    setWarehouseId(defaultWarehouse?.id ?? '');
+  }, [open, isEditMode, defaultWarehouse?.id]);
+
+  useEffect(() => {
     if (!open || !isEditMode) return;
     if (savedVariants) setVariants(savedVariants);
   }, [open, isEditMode, savedVariants]);
@@ -175,6 +184,10 @@ export function ProductFormSheet({
   const handleSave = async () => {
     if (!name.trim() || !sku.trim()) {
       toast.error('Product name and SKU are required');
+      return;
+    }
+    if (isNewMode && !warehouseId) {
+      toast.error('Select a warehouse to add this product to');
       return;
     }
     setSaving(true);
@@ -202,6 +215,7 @@ export function ProductFormSheet({
       } else {
         await createProduct.mutateAsync({
           ...payload,
+          warehouseId,
           variants,
         });
       }
@@ -355,6 +369,29 @@ export function ProductFormSheet({
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {isNewMode && (
+                      <div className="flex flex-col gap-2">
+                        <Label className="text-xs">Warehouse</Label>
+                        <Select
+                          value={warehouseId}
+                          onValueChange={setWarehouseId}
+                          indicatorPosition="right"
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Warehouse" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(warehouses ?? []).map((warehouse) => (
+                              <SelectItem key={warehouse.id} value={warehouse.id}>
+                                {warehouse.name} ({warehouse.code})
+                                {warehouse.isDefault ? ' · Default' : ''}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 

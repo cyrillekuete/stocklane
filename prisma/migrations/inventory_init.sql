@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS inventory_stock_levels (
   handler TEXT,
   trend_label TEXT NOT NULL DEFAULT 'Steady',
   trend_variant TEXT NOT NULL DEFAULT 'secondary',
-  flow_rate INTEGER NOT NULL DEFAULT 0,
+  flow_rate NUMERIC(12, 2) NOT NULL DEFAULT 0,
   reorder_qty INTEGER NOT NULL DEFAULT 0,
   reorder_in_days INTEGER NOT NULL DEFAULT 0,
   reorder_date TEXT,

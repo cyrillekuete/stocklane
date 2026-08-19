@@ -20,12 +20,13 @@ import {
   Copy,
   Download,
   Link,
+  Wallet,
   X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { isRemoteAsset } from '@/store-inventory/lib/format';
+import { isRemoteAsset, formatMoney } from '@/store-inventory/lib/format';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -64,6 +65,7 @@ import { Input, InputWrapper } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { customerListMockData } from '@/store-inventory/data/customers';
 import { CustomerDetailsSheet } from '../components/customer-details-sheet';
+import { CustomerDepositSheet } from '../components/customer-deposit-sheet';
 import { CustomerFormSheet } from '../components/customer-form-sheet';
 import { Avatar, AvatarImage, AvatarFallback, AvatarIndicator, AvatarStatus } from '@/components/ui/avatar';
 import { VariantProps } from 'class-variance-authority';
@@ -82,6 +84,8 @@ interface IColumnFilterProps<TData, TValue> {
 
 export type IData = CustomerListRow;
 export type CustomerListDisplaySheet = 'customerDetails' | 'createCustomer' | 'editCustomer';
+
+const EMPTY_CUSTOMERS: CustomerListRow[] = [];
 
 interface CustomerListProps {
   mockData?: CustomerListRow[];
@@ -154,12 +158,13 @@ export function CustomerListTable({
   onSheetClose,
   onSelectedRowsChange,
 }: CustomerListProps) {
-  const data = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || customerListMockData);
+  const data = isSupabaseConfigured ? (propsMockData ?? EMPTY_CUSTOMERS) : (propsMockData || customerListMockData);
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const [isCustomerSheetOpen, setIsCustomerSheetOpen] = useState(false);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
+  const [isDepositSheetOpen, setIsDepositSheetOpen] = useState(false);
   const [customerFormMode, setCustomerFormMode] = useState<'new' | 'edit'>('new');
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerListRow | undefined>();
   const [customerToDelete, setCustomerToDelete] = useState<CustomerListRow | null>(null);
@@ -193,7 +198,7 @@ export function CustomerListTable({
         ? data[0]
         : undefined;
     if (!match) return;
-    setSelectedCustomer(match);
+    setSelectedCustomer((current) => (current?.id === match.id ? current : match));
     if (displaySheet === 'customerDetails' && shouldOpenSheet !== false) {
       setIsCustomerSheetOpen(true);
     }
@@ -203,9 +208,18 @@ export function CustomerListTable({
     }
   }, [selectedCustomerId, data, displaySheet, shouldOpenSheet]);
 
+  const liveCustomer = selectedCustomer
+    ? (data.find((customer) => customer.id === selectedCustomer.id) ?? selectedCustomer)
+    : undefined;
+
   const handleOpenCustomerDetails = (customer: CustomerListRow) => {
     setSelectedCustomer(customer);
     setIsCustomerSheetOpen(true);
+  };
+
+  const handleOpenDeposit = (customer: CustomerListRow) => {
+    setSelectedCustomer(customer);
+    setIsDepositSheetOpen(true);
   };
 
   const handleOpenCustomerForm = (mode: 'new' | 'edit', customer?: CustomerListRow) => {
@@ -218,10 +232,13 @@ export function CustomerListTable({
     () => data.filter((customer) => rowSelection[customer.id]),
     [data, rowSelection],
   );
+  const selectedRowKey = selectedRows.map((customer) => customer.id).join(',');
 
   useEffect(() => {
     onSelectedRowsChange?.(selectedRows);
-  }, [selectedRows, onSelectedRowsChange]);
+    // selectedRows is derived from the same ids; skip identity churn from new array instances.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRowKey, onSelectedRowsChange]);
 
   const handleConfirmDelete = () => {
     if (!customerToDelete) return;
@@ -269,7 +286,7 @@ export function CustomerListTable({
 
   const handleGroupExport = () => {
     if (!selectedRows.length) return;
-    const header = ['User ID', 'Name', 'Email', 'Country', 'Orders', 'Total Spent', 'Avg Spent', 'Status'];
+    const header = ['User ID', 'Name', 'Email', 'Country', 'Orders', 'Total Spent', 'Avg Spent', 'Balance', 'Status'];
     const lines = selectedRows.map((customer) =>
       [
         customer.user,
@@ -279,6 +296,7 @@ export function CustomerListTable({
         customer.created,
         customer.total,
         customer.price,
+        formatMoney(customer.accountBalance ?? 0),
         customer.status.label,
       ]
         .map((value) => `"${String(value).replace(/"/g, '""')}"`)
@@ -446,6 +464,22 @@ export function CustomerListTable({
         meta: { cellClassName: '' },
       },
       {
+        id: 'accountBalance',
+        accessorFn: (row) => row.accountBalance ?? 0,
+        header: ({ column }) => <DataGridColumnHeader title="Balance" column={column} />,
+        cell: (info) => {
+          const balance = info.row.original.accountBalance ?? 0;
+          return (
+            <div className={balance < 0 ? 'text-destructive font-medium' : undefined}>
+              {formatMoney(balance)}
+            </div>
+          );
+        },
+        enableSorting: true,
+        size: 110,
+        meta: { cellClassName: '' },
+      },
+      {
         id: 'status',
         accessorFn: (row) => row.status.label,
         header: ({ column }) => <DataGridColumnHeader title="Status" column={column} />,
@@ -489,6 +523,15 @@ export function CustomerListTable({
               variant="ghost"
               size="sm"
               mode="icon"
+              onClick={() => handleOpenDeposit(row.original)}
+              title="Deposit to account"
+            >
+              <Wallet className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              mode="icon"
               onClick={() => handleOpenCustomerForm('edit', row.original)}
               title="Edit customer"
             >
@@ -508,7 +551,7 @@ export function CustomerListTable({
             </Button>
           </div>
         ),
-        size: 120,
+        size: 160,
         meta: { cellClassName: '' },
       },
     ],
@@ -685,13 +728,19 @@ export function CustomerListTable({
         open={isCustomerSheetOpen}
         onOpenChange={handleCustomerDetailsClose}
         onEditClick={handleEditFromDetails}
-        customer={selectedCustomer}
+        onDepositClick={() => liveCustomer && handleOpenDeposit(liveCustomer)}
+        customer={liveCustomer}
+      />
+      <CustomerDepositSheet
+        open={isDepositSheetOpen}
+        onOpenChange={setIsDepositSheetOpen}
+        customer={liveCustomer}
       />
       <CustomerFormSheet
         mode={customerFormMode}
         open={isCustomerFormOpen}
         onOpenChange={handleCustomerFormClose}
-        customer={selectedCustomer}
+        customer={liveCustomer}
       />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

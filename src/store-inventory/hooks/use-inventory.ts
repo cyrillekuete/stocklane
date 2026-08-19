@@ -230,6 +230,7 @@ function optimisticCustomerRow(id: string, input: CustomerInput): CustomerListRo
     status: { label: status, variant: statusVariant(status) },
     created: '0',
     updated: 'Just now',
+    accountBalance: 0,
     phone: input.phone,
     company: input.company,
     timezone: input.timezone,
@@ -537,7 +538,14 @@ export function useCreateProduct() {
   const queryClient = useQueryClient();
   return useCachedMutation({
     mutationFn: createProduct,
-    keys: [inventoryKeys.products(), inventoryKeys.stock(), inventoryKeys.categories(), inventoryKeys.categoryProducts()],
+    keys: [
+      inventoryKeys.products(),
+      inventoryKeys.stock(),
+      inventoryKeys.categories(),
+      inventoryKeys.categoryProducts(),
+      inventoryKeys.warehouses(),
+      inventoryKeys.warehouseStock(),
+    ],
     apply: (input) => {
       const tempId = crypto.randomUUID();
       prependToList(queryClient, inventoryKeys.products(), optimisticProductRow(tempId, input));
@@ -757,6 +765,7 @@ export function useDeleteCustomer() {
       removeFromList(queryClient, inventoryKeys.customers(), id);
       queryClient.removeQueries({ queryKey: inventoryKeys.customer(id) });
       queryClient.removeQueries({ queryKey: inventoryKeys.customerOrders(id) });
+      queryClient.removeQueries({ queryKey: inventoryKeys.customerAccountTransactions(id) });
     },
   });
 }
@@ -802,6 +811,7 @@ export function useDuplicateCustomers() {
         },
         created: '0',
         total: formatMoney(0),
+        accountBalance: 0,
       }));
       copies.forEach((copy) => prependToList(queryClient, inventoryKeys.customers(), copy));
     },

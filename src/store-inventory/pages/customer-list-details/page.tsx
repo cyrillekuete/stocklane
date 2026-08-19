@@ -6,11 +6,16 @@ import { useCustomers } from '@/store-inventory/hooks/use-inventory';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { customerListMockData } from '@/store-inventory/data/customers';
 import { CustomerListTable } from '../tables/customer-list';
+import type { CustomerListRow } from '@/store-inventory/types';
+
+const EMPTY_CUSTOMERS: CustomerListRow[] = [];
+
+const EMPTY_CUSTOMERS: CustomerListRow[] = [];
 
 export function CustomerListDetails() {
   const [searchParams] = useSearchParams();
   const { data, isLoading, isError } = useCustomers();
-  const customers = isSupabaseConfigured ? (data ?? []) : (data ?? customerListMockData);
+  const customers = isSupabaseConfigured ? (data ?? EMPTY_CUSTOMERS) : (data ?? customerListMockData);
   const selectedCustomerId = searchParams.get('id') ?? undefined;
 
   const summary = useMemo(() => {

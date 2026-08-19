@@ -23,17 +23,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCustomers } from '@/store-inventory/hooks/use-inventory';
 import { useCompletePosSale, usePosCatalog } from '@/store-inventory/hooks/use-pos';
 import { useStoreSettings } from '@/store-inventory/hooks/use-settings';
-import { useActiveWarehouses } from '@/store-inventory/hooks/use-warehouses';
 import { formatMoney, generateSaleNumber, parseMoney } from '@/store-inventory/lib/format';
+import { POS_PAYMENT_METHODS } from '@/store-inventory/lib/payment-methods';
 import { computePosTotals } from '@/store-inventory/services/pos';
+import { fetchWarehouseStock } from '@/store-inventory/services/warehouses';
 import { currentStockMockData } from '@/store-inventory/data/stock';
 import { productListMockData } from '@/store-inventory/data/products';
+import { warehouseListMockData } from '@/store-inventory/data/warehouses';
 import type { PosCatalogProduct, PosPaymentMethod, PosSaleRow } from '@/store-inventory/types';
 import { WarehouseSelect } from '../components/warehouse-select';
 import { PosReceiptDialog } from '../components/pos-receipt-dialog';
 
 type CartLine = {
   productId: string;
+  warehouseId: string;
+  warehouseName: string;
+  warehouseCode: string;
   name: string;
   sku: string;
   unitPrice: number;
@@ -42,22 +47,25 @@ type CartLine = {
   image: string;
 };
 
-const mockCatalog: PosCatalogProduct[] = productListMockData.map((product, index) => ({
-  id: product.id,
-  name: product.productInfo.title,
-  sku: product.productInfo.label,
-  barcode: product.barcode ?? '',
-  image: product.productInfo.image,
-  price: parseMoney(product.price),
-  status: product.status.label,
-  qty: currentStockMockData[index % currentStockMockData.length]?.stock ?? 10,
-}));
+const mockCatalog: PosCatalogProduct[] = warehouseListMockData.flatMap((warehouse, warehouseIndex) =>
+  productListMockData.map((product, index) => ({
+    id: product.id,
+    warehouseId: warehouse.id,
+    warehouseName: warehouse.name,
+    warehouseCode: warehouse.code,
+    name: product.productInfo.title,
+    sku: product.productInfo.label,
+    barcode: product.barcode ?? '',
+    image: product.productInfo.image,
+    price: parseMoney(product.price),
+    status: product.status.label,
+    qty: Math.max(0, (currentStockMockData[index % currentStockMockData.length]?.stock ?? 10) - warehouseIndex * 4),
+  })),
+).filter((row) => row.qty > 0);
 
 export function PosRegister() {
-  const { data: warehouses } = useActiveWarehouses();
-  const defaultWarehouse = warehouses?.find((row) => row.isDefault) ?? warehouses?.[0];
   const [warehouseId, setWarehouseId] = useState<string | null>(null);
-  const catalogQuery = usePosCatalog(warehouseId);
+  const catalogQuery = usePosCatalog();
   const customersQuery = useCustomers();
   const settingsQuery = useStoreSettings();
   const completeSale = useCompletePosSale();
@@ -71,25 +79,36 @@ export function PosRegister() {
   const [receipt, setReceipt] = useState<PosSaleRow | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
 
-  useEffect(() => {
-    if (defaultWarehouse && !warehouseId) {
-      setWarehouseId(defaultWarehouse.id);
-    }
-  }, [defaultWarehouse, warehouseId]);
-
   const handleWarehouseChange = (next: string | null) => {
-    if (next !== warehouseId) {
-      if (cart.length) {
-        setCart([]);
-        toast.message('Cart cleared because the warehouse changed');
-      }
-      setWarehouseId(next);
-    }
+    setWarehouseId(next);
   };
 
   const settings = settingsQuery.data;
-  const catalog = isSupabaseConfigured ? (catalogQuery.data ?? []) : mockCatalog;
+  const liveCatalog = catalogQuery.data;
+  const allCatalog = isSupabaseConfigured ? (liveCatalog ?? []) : mockCatalog;
+  const catalog = warehouseId
+    ? allCatalog.filter((product) => product.warehouseId === warehouseId)
+    : allCatalog;
   const customers = customersQuery.data ?? [];
+
+  useEffect(() => {
+    const stock = isSupabaseConfigured ? (liveCatalog ?? []) : mockCatalog;
+    if (!stock.length) return;
+    setCart((current) => {
+      let changed = false;
+      const next = current.map((line) => {
+        const product = stock.find(
+          (row) => row.id === line.productId && row.warehouseId === line.warehouseId,
+        );
+        if (!product) return line;
+        const quantity = Math.min(line.quantity, product.qty);
+        if (line.available === product.qty && line.quantity === quantity) return line;
+        changed = true;
+        return { ...line, available: product.qty, quantity };
+      }).filter((line) => line.quantity > 0);
+      return changed || next.length !== current.length ? next : current;
+    });
+  }, [liveCatalog]);
 
   const filteredCatalog = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -101,25 +120,32 @@ export function PosRegister() {
   }, [catalog, search]);
 
   const addToCart = (product: PosCatalogProduct) => {
-    if (!warehouseId) {
+    if (!product.warehouseId) {
       toast.error('Select a warehouse first');
       return;
     }
     setCart((current) => {
-      const existing = current.find((line) => line.productId === product.id);
+      const existing = current.find(
+        (line) => line.productId === product.id && line.warehouseId === product.warehouseId,
+      );
       if (existing) {
         if (existing.quantity >= product.qty) {
           toast.error('Not enough stock in this warehouse');
           return current;
         }
         return current.map((line) =>
-          line.productId === product.id ? { ...line, quantity: line.quantity + 1, available: product.qty } : line,
+          line.productId === product.id && line.warehouseId === product.warehouseId
+            ? { ...line, quantity: line.quantity + 1, available: product.qty }
+            : line,
         );
       }
       return [
         ...current,
         {
           productId: product.id,
+          warehouseId: product.warehouseId,
+          warehouseName: product.warehouseName,
+          warehouseCode: product.warehouseCode,
           name: product.name,
           sku: product.sku,
           unitPrice: product.price,
@@ -132,11 +158,11 @@ export function PosRegister() {
     setSearch('');
   };
 
-  const updateQty = (productId: string, quantity: number) => {
+  const updateQty = (productId: string, lineWarehouseId: string, quantity: number) => {
     setCart((current) =>
       current
         .map((line) => {
-          if (line.productId !== productId) return line;
+          if (line.productId !== productId || line.warehouseId !== lineWarehouseId) return line;
           const next = Math.min(Math.max(quantity, 0), line.available);
           return { ...line, quantity: next };
         })
@@ -155,6 +181,9 @@ export function PosRegister() {
   const tenderedAmount = parseMoney(tendered);
   const changeDue = paymentMethod === 'cash' ? Math.max(tenderedAmount - totals.total, 0) : 0;
   const customer = customers.find((row) => row.id === customerId);
+  const customerBalance = customer?.accountBalance ?? 0;
+  const balanceAfterSale = customerBalance - totals.total;
+  const creditWouldGoNegative = paymentMethod === 'credit' && customerId !== 'walk-in' && balanceAfterSale < 0;
 
   const handleSearchKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== 'Enter') return;
@@ -163,10 +192,6 @@ export function PosRegister() {
   };
 
   const handleComplete = async () => {
-    if (!warehouseId) {
-      toast.error('Select a warehouse');
-      return;
-    }
     if (!cart.length) {
       toast.error('Add at least one item');
       return;
@@ -175,40 +200,75 @@ export function PosRegister() {
       toast.error('Amount tendered is less than the total');
       return;
     }
-    const unavailable = cart.some((line) => {
-      const product = catalog.find((row) => row.id === line.productId);
-      return !product || line.quantity > product.qty;
-    });
-    if (unavailable) {
-      toast.error('Cart items are not available in this warehouse');
+    if (paymentMethod === 'credit' && customerId === 'walk-in') {
+      toast.error('Select a customer for credit sales');
       return;
     }
-    const warehouse = warehouses?.find((row) => row.id === warehouseId);
-    const saleNumber = generateSaleNumber();
-    const payload = {
-      saleNumber,
-      warehouseId,
-      customerId: customerId === 'walk-in' ? null : customerId,
-      customerName: customer?.customerInfo.title ?? 'Walk-in',
-      subtotal: totals.subtotal,
-      discountAmount: totals.discountAmount,
-      taxAmount: totals.taxAmount,
-      total: totals.total,
-      paymentMethod,
-      amountTendered: paymentMethod === 'cash' ? tenderedAmount : totals.total,
-      changeDue,
-      notes,
-      items: cart.map((line) => ({
-        productId: line.productId,
-        sku: line.sku,
-        name: line.name,
-        unitPrice: line.unitPrice,
-        quantity: line.quantity,
-        lineTotal: line.unitPrice * line.quantity,
-      })),
-    };
+
+    const saleWarehouse = cart[0];
+    const saleWarehouseId = saleWarehouse.warehouseId;
 
     try {
+      if (isSupabaseConfigured) {
+        const otherWarehouseIds = [...new Set(cart.map((line) => line.warehouseId))].filter(
+          (id) => !allCatalog.some((product) => product.warehouseId === id),
+        );
+        const stockByWarehouse = new Map<string, Map<string, number>>();
+        for (const product of allCatalog) {
+          let qtyByProduct = stockByWarehouse.get(product.warehouseId);
+          if (!qtyByProduct) {
+            qtyByProduct = new Map();
+            stockByWarehouse.set(product.warehouseId, qtyByProduct);
+          }
+          qtyByProduct.set(product.id, product.qty);
+        }
+        await Promise.all(
+          otherWarehouseIds.map(async (id) => {
+            const rows = await fetchWarehouseStock(id);
+            stockByWarehouse.set(id, new Map(rows.map((row) => [row.productId, row.qty])));
+          }),
+        );
+        const unavailable = cart.some((line) => {
+          const qty = stockByWarehouse.get(line.warehouseId)?.get(line.productId);
+          return qty == null || line.quantity > qty;
+        });
+        if (unavailable) {
+          toast.error('Cart items are not available in their source warehouses');
+          return;
+        }
+      } else {
+        const unavailable = cart.some((line) => line.quantity > line.available);
+        if (unavailable) {
+          toast.error('Cart items are not available in their source warehouses');
+          return;
+        }
+      }
+
+      const saleNumber = generateSaleNumber();
+      const payload = {
+        saleNumber,
+        warehouseId: saleWarehouseId,
+        customerId: customerId === 'walk-in' ? null : customerId,
+        customerName: customer?.customerInfo.title ?? 'Walk-in',
+        subtotal: totals.subtotal,
+        discountAmount: totals.discountAmount,
+        taxAmount: totals.taxAmount,
+        total: totals.total,
+        paymentMethod,
+        amountTendered: paymentMethod === 'cash' ? tenderedAmount : totals.total,
+        changeDue,
+        notes,
+        items: cart.map((line) => ({
+          productId: line.productId,
+          warehouseId: line.warehouseId,
+          sku: line.sku,
+          name: line.name,
+          unitPrice: line.unitPrice,
+          quantity: line.quantity,
+          lineTotal: line.unitPrice * line.quantity,
+        })),
+      };
+
       let sale: PosSaleRow | null = null;
       if (isSupabaseConfigured) {
         sale = await completeSale.mutateAsync(payload);
@@ -216,9 +276,9 @@ export function PosRegister() {
         sale = {
           id: crypto.randomUUID(),
           saleNumber,
-          warehouseId,
-          warehouseName: warehouse?.name ?? 'Warehouse',
-          warehouseCode: warehouse?.code ?? '',
+          warehouseId: saleWarehouseId,
+          warehouseName: saleWarehouse.warehouseName,
+          warehouseCode: saleWarehouse.warehouseCode,
           customerId: payload.customerId,
           customerName: payload.customerName,
           subtotal: totals.subtotal,
@@ -236,6 +296,9 @@ export function PosRegister() {
             id: crypto.randomUUID(),
             saleId: '',
             productId: line.productId,
+            warehouseId: line.warehouseId,
+            warehouseName: line.warehouseName,
+            warehouseCode: line.warehouseCode,
             sku: line.sku,
             name: line.name,
             unitPrice: line.unitPrice,
@@ -263,10 +326,10 @@ export function PosRegister() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="text-xl font-semibold text-foreground">Point of Sale</h3>
-          <p className="text-sm text-muted-foreground">Sell inventory from the selected warehouse.</p>
+          <p className="text-sm text-muted-foreground">Sell inventory from one or more warehouses in a single sale.</p>
         </div>
         <div className="flex items-center gap-2">
-          <WarehouseSelect allowAll={false} value={warehouseId} onValueChange={handleWarehouseChange} />
+          <WarehouseSelect allowAll value={warehouseId} onValueChange={handleWarehouseChange} />
           <Button variant="outline" asChild>
             <Link to="/store-inventory/pos/sales">Sale history</Link>
           </Button>
@@ -293,7 +356,7 @@ export function PosRegister() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pr-2">
                 {filteredCatalog.map((product) => (
                   <button
-                    key={product.id}
+                    key={`${product.id}:${product.warehouseId}`}
                     type="button"
                     onClick={() => addToCart(product)}
                     className="rounded-lg border border-border bg-accent/30 p-3 text-left hover:border-primary/40 hover:bg-accent/60"
@@ -306,6 +369,9 @@ export function PosRegister() {
                       />
                     </div>
                     <div className="text-sm font-medium leading-5 line-clamp-2">{product.name}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {product.warehouseName} ({product.warehouseCode})
+                    </div>
                     <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
                       <span>{product.sku}</span>
                       <span>{product.qty} in stock</span>
@@ -315,7 +381,7 @@ export function PosRegister() {
                 ))}
                 {!filteredCatalog.length && (
                   <div className="col-span-full py-10 text-center text-sm text-muted-foreground">
-                    No sellable stock in this warehouse.
+                    No sellable stock{warehouseId ? ' in this warehouse' : ''}.
                   </div>
                 )}
               </div>
@@ -335,20 +401,22 @@ export function PosRegister() {
             <ScrollArea className="h-[220px] pr-2">
               <div className="space-y-3">
                 {cart.map((line) => (
-                  <div key={line.productId} className="flex items-start justify-between gap-3 border-b border-border pb-3">
+                  <div key={`${line.productId}:${line.warehouseId}`} className="flex items-start justify-between gap-3 border-b border-border pb-3">
                     <div>
                       <div className="text-sm font-medium">{line.name}</div>
-                      <div className="text-xs text-muted-foreground">{formatMoney(line.unitPrice)}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {formatMoney(line.unitPrice)} · {line.warehouseName} ({line.warehouseCode})
+                      </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      <Button variant="outline" size="icon" className="size-7" onClick={() => updateQty(line.productId, line.quantity - 1)}>
+                      <Button variant="outline" size="icon" className="size-7" onClick={() => updateQty(line.productId, line.warehouseId, line.quantity - 1)}>
                         <Minus className="size-3" />
                       </Button>
                       <span className="w-6 text-center text-sm">{line.quantity}</span>
-                      <Button variant="outline" size="icon" className="size-7" onClick={() => updateQty(line.productId, line.quantity + 1)}>
+                      <Button variant="outline" size="icon" className="size-7" onClick={() => updateQty(line.productId, line.warehouseId, line.quantity + 1)}>
                         <Plus className="size-3" />
                       </Button>
-                      <Button variant="dim" size="icon" className="size-7" onClick={() => updateQty(line.productId, 0)}>
+                      <Button variant="dim" size="icon" className="size-7" onClick={() => updateQty(line.productId, line.warehouseId, 0)}>
                         <Trash2 className="size-3" />
                       </Button>
                     </div>
@@ -368,7 +436,7 @@ export function PosRegister() {
                   <SelectItem value="walk-in">Walk-in</SelectItem>
                   {customers.map((row) => (
                     <SelectItem key={row.id} value={row.id}>
-                      {row.customerInfo.title}
+                      {row.customerInfo.title} · {formatMoney(row.accountBalance ?? 0)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -393,9 +461,11 @@ export function PosRegister() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="cash">Cash</SelectItem>
-                    <SelectItem value="card">Card</SelectItem>
-                    <SelectItem value="mobile">Mobile</SelectItem>
+                    {POS_PAYMENT_METHODS.map((method) => (
+                      <SelectItem key={method.value} value={method.value}>
+                        {method.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -405,6 +475,28 @@ export function PosRegister() {
               <div className="space-y-2">
                 <Label>Amount tendered</Label>
                 <Input value={tendered} onChange={(e) => setTendered(e.target.value)} placeholder={String(totals.total)} />
+              </div>
+            )}
+
+            {paymentMethod === 'credit' && customerId !== 'walk-in' && (
+              <div className="space-y-1 rounded-md bg-accent/50 p-3 text-sm">
+                <div className="flex justify-between">
+                  <span>Account balance</span>
+                  <span className={customerBalance < 0 ? 'text-destructive' : undefined}>
+                    {formatMoney(customerBalance)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>After this sale</span>
+                  <span className={balanceAfterSale < 0 ? 'text-destructive font-medium' : 'font-medium'}>
+                    {formatMoney(balanceAfterSale)}
+                  </span>
+                </div>
+                {creditWouldGoNegative && (
+                  <p className="pt-1 text-xs text-destructive">
+                    This sale will put the account in the red. The customer will owe the shop.
+                  </p>
+                )}
               </div>
             )}
 

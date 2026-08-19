@@ -172,3 +172,21 @@ html {
 [data-slot=card-title] {
   @apply font-medium;
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #pos-receipt,
+  #pos-receipt * {
+    visibility: visible;
+  }
+
+  #pos-receipt {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    background: white;
+  }
+}

@@ -169,6 +169,7 @@ export type InventoryCustomer = {
   avg_price: number | string;
   status: string;
   last_visit: string | null;
+  account_balance?: number | string | null;
   payment_methods: CustomerPaymentMethod[] | null;
   reviews: CustomerReviewGroup[] | null;
   created_at: string;
@@ -540,6 +541,7 @@ export function mapCustomer(row: InventoryCustomer): CustomerListRow {
     joined: displayDate(row.created_at),
     lastVisit: row.last_visit ? displayDate(row.last_visit) : displayDate(row.updated_at),
     lastVisitAt: row.last_visit ?? row.updated_at,
+    accountBalance: parseMoney(row.account_balance),
     paymentMethods: row.payment_methods ?? undefined,
     reviews: row.reviews ?? undefined,
   });
@@ -917,6 +919,7 @@ export async function createProduct(input: {
   featured?: boolean;
   tags?: string[];
   image?: string;
+  warehouseId?: string;
   variants?: ProductVariantRow[];
 }) {
   const client = requireClient();
@@ -943,14 +946,18 @@ export async function createProduct(input: {
     product_id: productId,
   });
 
-  const { data: defaultWarehouse } = await client
-    .from('inventory_warehouses')
-    .select('id')
-    .eq('is_default', true)
-    .maybeSingle();
-  if (defaultWarehouse?.id) {
+  let warehouseId = input.warehouseId;
+  if (!warehouseId) {
+    const { data: defaultWarehouse } = await client
+      .from('inventory_warehouses')
+      .select('id')
+      .eq('is_default', true)
+      .maybeSingle();
+    warehouseId = defaultWarehouse?.id;
+  }
+  if (warehouseId) {
     await client.rpc('inventory_set_warehouse_qty', {
-      p_warehouse_id: defaultWarehouse.id,
+      p_warehouse_id: warehouseId,
       p_product_id: productId,
       p_qty: 0,
     });
@@ -1232,6 +1239,7 @@ export async function duplicateCustomers(customers: CustomerListRow[]) {
       order_count: '0',
       total_spent: 0,
       avg_price: parseMoney(customer.price),
+      account_balance: 0,
       status: customer.status.label,
       payment_methods: defaultPaymentMethods(name, customer.customerInfo.label),
       reviews: customer.reviews ?? defaultCustomerReviews,

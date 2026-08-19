@@ -9,6 +9,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { formatMoney } from '@/store-inventory/lib/format';
+import { formatPaymentMethod } from '@/store-inventory/lib/payment-methods';
+import { formatSaleWarehouses, groupSaleItemsByWarehouse } from '@/store-inventory/services/pos';
 import type { PosSaleRow } from '@/store-inventory/types';
 
 export function PosReceiptDialog({
@@ -26,6 +28,9 @@ export function PosReceiptDialog({
 }) {
   if (!sale) return null;
 
+  const warehouseGroups = groupSaleItemsByWarehouse(sale);
+  const showWarehouseHeadings = warehouseGroups.length > 1;
+
   const handlePrint = () => {
     window.print();
   };
@@ -40,7 +45,7 @@ export function PosReceiptDialog({
           <div id="pos-receipt" className="space-y-4 text-sm">
             <div className="text-center space-y-1">
               <h2 className="text-lg font-semibold">{storeName}</h2>
-              <p className="text-muted-foreground">{sale.warehouseName} ({sale.warehouseCode})</p>
+              <p className="text-muted-foreground">{formatSaleWarehouses(sale)}</p>
               <p className="text-muted-foreground">{format(new Date(sale.createdAt), 'd MMM yyyy, HH:mm')}</p>
             </div>
             <div className="border-y border-dashed py-3 space-y-1">
@@ -54,19 +59,28 @@ export function PosReceiptDialog({
               </div>
               <div className="flex justify-between">
                 <span>Payment</span>
-                <span className="capitalize">{sale.paymentMethod}</span>
+                <span>{formatPaymentMethod(sale.paymentMethod)}</span>
               </div>
             </div>
-            <div className="space-y-2">
-              {(sale.items ?? []).map((item) => (
-                <div key={item.id} className="flex justify-between gap-3">
-                  <div>
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {item.quantity} × {formatMoney(item.unitPrice)} {item.sku}
+            <div className="space-y-4">
+              {warehouseGroups.map((group) => (
+                <div key={group.id || group.name} className="space-y-2">
+                  {showWarehouseHeadings && (
+                    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                      {group.code ? `${group.name} (${group.code})` : group.name}
                     </div>
-                  </div>
-                  <div>{formatMoney(item.lineTotal)}</div>
+                  )}
+                  {group.items.map((item) => (
+                    <div key={item.id} className="flex justify-between gap-3">
+                      <div>
+                        <div className="font-medium">{item.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {item.quantity} × {formatMoney(item.unitPrice)} {item.sku}
+                        </div>
+                      </div>
+                      <div>{formatMoney(item.lineTotal)}</div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>

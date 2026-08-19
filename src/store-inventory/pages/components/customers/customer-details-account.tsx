@@ -1,0 +1,117 @@
+'use client';
+
+import { format } from 'date-fns';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCustomerAccountTransactions } from '@/store-inventory/hooks/use-customer-accounts';
+import { formatMoney } from '@/store-inventory/lib/format';
+import { formatPaymentMethod } from '@/store-inventory/lib/payment-methods';
+import { cn } from '@/lib/utils';
+import type { CustomerAccountTransaction, CustomerAccountTransactionType, CustomerListRow } from '@/store-inventory/types';
+import { Statistics2 } from './components/statistics2';
+
+const TYPE_LABELS: Record<CustomerAccountTransactionType, string> = {
+  deposit: 'Deposit',
+  sale: 'Sale',
+  void: 'Void',
+};
+
+function typeVariant(type: CustomerAccountTransactionType): 'success' | 'secondary' | 'warning' {
+  if (type === 'deposit') return 'success';
+  if (type === 'void') return 'warning';
+  return 'secondary';
+}
+
+function formatDate(value: string) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return format(parsed, 'd MMM yyyy, HH:mm');
+}
+
+export function CustomerDetailsAccount({ customer }: { customer?: CustomerListRow }) {
+  const { data = [], isLoading, isError } = useCustomerAccountTransactions(
+    isSupabaseConfigured ? customer?.id : undefined,
+  );
+  const balance = customer?.accountBalance ?? 0;
+  const deposits = data.filter((row) => row.type === 'deposit').reduce((sum, row) => sum + row.amount, 0);
+  const charges = data
+    .filter((row) => row.type === 'sale')
+    .reduce((sum, row) => sum + Math.abs(row.amount), 0);
+
+  return (
+    <div className="space-y-5">
+      <Statistics2
+        items={[
+          { total: formatMoney(balance), label: 'Account Balance', valueClassName: balance < 0 ? 'text-destructive' : undefined },
+          { total: formatMoney(deposits), label: 'Total Deposits' },
+          { total: formatMoney(charges), label: 'Charged to Account' },
+          { total: String(data.length), label: 'Transactions' },
+        ]}
+      />
+      <Card>
+        <CardHeader className="py-3">
+          <CardTitle className="text-base">Account activity</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          {isError && (
+            <p className="px-5 py-6 text-sm text-destructive">Unable to load account activity.</p>
+          )}
+          {isLoading && <p className="px-5 py-6 text-sm text-muted-foreground">Loading account activity...</p>}
+          {!isLoading && !isError && data.length === 0 && (
+            <p className="px-5 py-6 text-sm text-muted-foreground">No deposits or account charges yet.</p>
+          )}
+          {data.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="border-y border-border bg-muted/40 text-muted-foreground">
+                  <tr>
+                    <th className="px-5 py-2.5 text-start font-medium">Date</th>
+                    <th className="px-5 py-2.5 text-start font-medium">Type</th>
+                    <th className="px-5 py-2.5 text-start font-medium">Method</th>
+                    <th className="px-5 py-2.5 text-start font-medium">Reference</th>
+                    <th className="px-5 py-2.5 text-end font-medium">Amount</th>
+                    <th className="px-5 py-2.5 text-end font-medium">Balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((row) => (
+                    <TransactionRow key={row.id} row={row} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function TransactionRow({ row }: { row: CustomerAccountTransaction }) {
+  const reference = row.posSaleNumber || row.notes || '—';
+  return (
+    <tr className="border-b border-border last:border-0">
+      <td className="px-5 py-3 whitespace-nowrap">{formatDate(row.createdAt)}</td>
+      <td className="px-5 py-3">
+        <Badge variant={typeVariant(row.type)} appearance="light">
+          {TYPE_LABELS[row.type]}
+        </Badge>
+      </td>
+      <td className="px-5 py-3">{formatPaymentMethod(row.paymentMethod)}</td>
+      <td className="px-5 py-3">{reference}</td>
+      <td
+        className={cn(
+          'px-5 py-3 text-end font-medium',
+          row.amount < 0 ? 'text-destructive' : 'text-foreground',
+        )}
+      >
+        {row.amount > 0 ? '+' : ''}
+        {formatMoney(row.amount)}
+      </td>
+      <td className={cn('px-5 py-3 text-end', row.balanceAfter < 0 && 'text-destructive')}>
+        {formatMoney(row.balanceAfter)}
+      </td>
+    </tr>
+  );
+}

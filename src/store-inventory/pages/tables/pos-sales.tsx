@@ -16,6 +16,8 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { usePosSales, useVoidPosSale } from '@/store-inventory/hooks/use-pos';
 import { useStoreSettings } from '@/store-inventory/hooks/use-settings';
 import { formatMoney } from '@/store-inventory/lib/format';
+import { formatPaymentMethod } from '@/store-inventory/lib/payment-methods';
+import { formatSaleWarehouses } from '@/store-inventory/services/pos';
 import type { PosSaleRow } from '@/store-inventory/types';
 import {
   ColumnDef,
@@ -42,7 +44,7 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
     const query = search.trim().toLowerCase();
     if (!query) return data;
     return data.filter((row) =>
-      [row.saleNumber, row.customerName, row.warehouseName, row.paymentMethod].some((value) =>
+      [row.saleNumber, row.customerName, formatSaleWarehouses(row), formatPaymentMethod(row.paymentMethod)].some((value) =>
         value.toLowerCase().includes(query),
       ),
     );
@@ -66,14 +68,10 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
       },
       {
         id: 'warehouseName',
-        accessorFn: (row) => row.warehouseName,
+        accessorFn: (row) => formatSaleWarehouses(row),
         header: ({ column }) => <DataGridColumnHeader title="Warehouse" column={column} />,
-        cell: ({ row }) => (
-          <span>
-            {row.original.warehouseName} ({row.original.warehouseCode})
-          </span>
-        ),
-        size: 160,
+        cell: ({ row }) => <span>{formatSaleWarehouses(row.original)}</span>,
+        size: 180,
       },
       {
         id: 'customerName',
@@ -92,8 +90,8 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
         id: 'paymentMethod',
         accessorFn: (row) => row.paymentMethod,
         header: ({ column }) => <DataGridColumnHeader title="Payment" column={column} />,
-        cell: ({ row }) => <span className="capitalize">{row.original.paymentMethod}</span>,
-        size: 90,
+        cell: ({ row }) => formatPaymentMethod(row.original.paymentMethod),
+        size: 150,
       },
       {
         id: 'status',

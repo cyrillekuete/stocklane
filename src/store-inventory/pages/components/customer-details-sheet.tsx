@@ -19,6 +19,7 @@ import { CustomerDetailsInvoice } from './customers/customer-details-invoice';
 import { CustomerDetailsBilling } from './customers/customer-details-billing';
 import { CustomerDetailsReviews } from './customers/customer-details-reviews';
 import { CustomerDetailsActivity } from './customers/customer-details-active';
+import { CustomerDetailsAccount } from './customers/customer-details-account';
 import { Upload } from './customers/components/upload';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useCustomerOrders } from '@/store-inventory/hooks/use-inventory';
@@ -39,11 +40,13 @@ export function CustomerDetailsSheet({
   open,
   onOpenChange,
   onEditClick,
+  onDepositClick,
   customer,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEditClick?: () => void;
+  onDepositClick?: () => void;
   customer?: CustomerListRow;
 }) {
   const { data: liveOrders = [] } = useCustomerOrders(open ? customer?.id : undefined);
@@ -89,6 +92,7 @@ export function CustomerDetailsSheet({
                 <a href={email ? `mailto:${email}` : undefined}>Send Email</a>
               </Button>
               <Button variant="mono" onClick={onEditClick} disabled={!customer}>Edit Details</Button>
+              <Button variant="outline" onClick={onDepositClick} disabled={!customer}>Deposit</Button>
             </div>
           </div>
           <ScrollArea
@@ -103,6 +107,7 @@ export function CustomerDetailsSheet({
                 <Tabs defaultValue="overview" className="w-auto text-sm text-muted-foreground">
                   <TabsList className="inline-flex w-auto grow-0 mb-2.5">
                     <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="account">Account</TabsTrigger>
                     <TabsTrigger value="orders">Orders</TabsTrigger>
                     <TabsTrigger value="invoices">Invoices</TabsTrigger>
                     <TabsTrigger value="billin">Billing Details</TabsTrigger>
@@ -111,6 +116,9 @@ export function CustomerDetailsSheet({
                   </TabsList>
                   <TabsContent value="overview">
                     <CustomerDetailsOverviews customer={customer} orders={orders} />
+                  </TabsContent>
+                  <TabsContent value="account">
+                    <CustomerDetailsAccount customer={customer} />
                   </TabsContent>
                   <TabsContent value="orders">
                     <CustomerDetailsOrders customer={customer} orders={detailsOrders} />
@@ -139,6 +147,7 @@ export function CustomerDetailsSheet({
             <a href={email ? `mailto:${email}` : undefined}>Send Email</a>
           </Button>
           <Button variant="mono" onClick={onEditClick} disabled={!customer}>Edit Details</Button>
+          <Button variant="outline" onClick={onDepositClick} disabled={!customer}>Deposit</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

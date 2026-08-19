@@ -17,6 +17,10 @@ export const inventoryKeys = {
     customerId
       ? ([...inventoryKeys.all, 'customer-orders', customerId] as const)
       : ([...inventoryKeys.all, 'customer-orders'] as const),
+  customerAccountTransactions: (customerId?: string) =>
+    customerId
+      ? ([...inventoryKeys.all, 'customer-account-transactions', customerId] as const)
+      : ([...inventoryKeys.all, 'customer-account-transactions'] as const),
   orders: () => [...inventoryKeys.all, 'orders'] as const,
   order: (id: string) => [...inventoryKeys.all, 'order', id] as const,
   orderItems: (orderId?: string) =>

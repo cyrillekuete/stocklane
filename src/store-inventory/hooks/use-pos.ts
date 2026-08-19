@@ -21,9 +21,9 @@ import type { PosSaleRow } from '../types';
 
 export function usePosCatalog(warehouseId?: string | null) {
   return useQuery({
-    queryKey: inventoryKeys.posCatalog(warehouseId ?? ''),
-    queryFn: () => fetchPosCatalog(warehouseId!),
-    enabled: isSupabaseConfigured && Boolean(warehouseId),
+    queryKey: inventoryKeys.posCatalog(warehouseId ?? undefined),
+    queryFn: () => fetchPosCatalog(warehouseId),
+    enabled: isSupabaseConfigured,
   });
 }
 
@@ -43,14 +43,17 @@ export function usePosSale(id?: string) {
   });
 }
 
+const posSaleCacheKeys = [
+  inventoryKeys.posSales(),
+  inventoryKeys.stock(),
+  inventoryKeys.warehouseStock(),
+  inventoryKeys.posCatalog(),
+  inventoryKeys.customers(),
+  inventoryKeys.customerAccountTransactions(),
+];
+
 export function useCompletePosSale() {
   const queryClient = useQueryClient();
-  const keys = [
-    inventoryKeys.posSales(),
-    inventoryKeys.stock(),
-    inventoryKeys.warehouseStock(),
-    inventoryKeys.posCatalog(),
-  ];
   return useMutation({
     mutationFn: (input: CompletePosSaleInput) => completePosSale(input),
     onError: (error) => toastMutationError(error),
@@ -60,19 +63,14 @@ export function useCompletePosSale() {
       }
     },
     onSettled: () => {
-      void invalidateKeys(queryClient, ...keys);
+      void invalidateKeys(queryClient, ...posSaleCacheKeys);
     },
   });
 }
 
 export function useVoidPosSale() {
   const queryClient = useQueryClient();
-  const keys = [
-    inventoryKeys.posSales(),
-    inventoryKeys.stock(),
-    inventoryKeys.warehouseStock(),
-    inventoryKeys.posCatalog(),
-  ];
+  const keys = posSaleCacheKeys;
   return useMutation({
     mutationFn: voidPosSale,
     onMutate: async (saleId) => {

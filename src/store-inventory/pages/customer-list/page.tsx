@@ -17,6 +17,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+const EMPTY_CUSTOMERS: CustomerListRow[] = [];
+
 export function CustomerList() {
   const [displaySheet, setDisplaySheet] = useState<CustomerListDisplaySheet | undefined>(undefined);
   const [shouldOpenSheet, setShouldOpenSheet] = useState(false);
@@ -24,7 +26,7 @@ export function CustomerList() {
   const [profileId, setProfileId] = useState<string | undefined>();
   const { data, isLoading, isError } = useCustomers();
   const deleteCustomers = useDeleteCustomers();
-  const customers = isSupabaseConfigured ? (data ?? []) : (data ?? customerListMockData);
+  const customers = isSupabaseConfigured ? (data ?? EMPTY_CUSTOMERS) : (data ?? customerListMockData);
 
   const summary = useMemo(() => {
     const total = customers.length;

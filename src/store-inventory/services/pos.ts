@@ -23,6 +23,7 @@ export type CompletePosSaleInput = {
   notes?: string;
   items: Array<{
     productId: string;
+    warehouseId: string;
     sku: string;
     name: string;
     unitPrice: number;
@@ -58,6 +59,7 @@ type PosSaleItemDbRow = {
   id: string;
   sale_id: string;
   product_id: string | null;
+  warehouse_id?: string | null;
   sku: string;
   name: string;
   unit_price: number | string;
@@ -66,6 +68,7 @@ type PosSaleItemDbRow = {
   line_total: number | string;
   color: string | null;
   size: string | null;
+  warehouse?: { id: string; name: string; code: string } | null;
 };
 
 function requireClient() {
@@ -75,11 +78,14 @@ function requireClient() {
   return supabase;
 }
 
-function mapItem(row: PosSaleItemDbRow): PosSaleItemRow {
+function mapItem(row: PosSaleItemDbRow, saleWarehouse?: { id: string; name: string; code: string } | null): PosSaleItemRow {
   return {
     id: row.id,
     saleId: row.sale_id,
     productId: row.product_id,
+    warehouseId: row.warehouse?.id ?? row.warehouse_id ?? saleWarehouse?.id ?? '',
+    warehouseName: row.warehouse?.name ?? saleWarehouse?.name ?? '',
+    warehouseCode: row.warehouse?.code ?? saleWarehouse?.code ?? '',
     sku: row.sku,
     name: row.name,
     unitPrice: parseMoney(row.unit_price),
@@ -91,8 +97,71 @@ function mapItem(row: PosSaleItemDbRow): PosSaleItemRow {
   };
 }
 
+export function uniqueSaleWarehouses(sale: PosSaleRow): Array<{ id: string; name: string; code: string }> {
+  const seen = new Map<string, { id: string; name: string; code: string }>();
+  for (const item of sale.items ?? []) {
+    if (!item.warehouseId || seen.has(item.warehouseId)) continue;
+    seen.set(item.warehouseId, {
+      id: item.warehouseId,
+      name: item.warehouseName || sale.warehouseName,
+      code: item.warehouseCode || sale.warehouseCode,
+    });
+  }
+  if (!seen.size && sale.warehouseId) {
+    seen.set(sale.warehouseId, {
+      id: sale.warehouseId,
+      name: sale.warehouseName,
+      code: sale.warehouseCode,
+    });
+  }
+  return [...seen.values()];
+}
+
+export function formatSaleWarehouses(sale: PosSaleRow): string {
+  return uniqueSaleWarehouses(sale)
+    .map((row) => (row.code ? `${row.name} (${row.code})` : row.name))
+    .join(', ');
+}
+
+export function groupSaleItemsByWarehouse(sale: PosSaleRow) {
+  const groups: Array<{
+    id: string;
+    name: string;
+    code: string;
+    items: NonNullable<PosSaleRow['items']>;
+  }> = [];
+  const indexById = new Map<string, number>();
+
+  for (const item of sale.items ?? []) {
+    const id = item.warehouseId || sale.warehouseId;
+    const existing = indexById.get(id);
+    if (existing == null) {
+      indexById.set(id, groups.length);
+      groups.push({
+        id,
+        name: item.warehouseName || sale.warehouseName,
+        code: item.warehouseCode || sale.warehouseCode,
+        items: [item],
+      });
+      continue;
+    }
+    groups[existing].items.push(item);
+  }
+
+  if (!groups.length && sale.warehouseId) {
+    groups.push({
+      id: sale.warehouseId,
+      name: sale.warehouseName,
+      code: sale.warehouseCode,
+      items: [],
+    });
+  }
+
+  return groups;
+}
+
 function mapSale(row: PosSaleDbRow): PosSaleRow {
-  const items = (row.items ?? []).map(mapItem);
+  const items = (row.items ?? []).map((item) => mapItem(item, row.warehouse));
   return {
     id: row.id,
     saleNumber: row.sale_number,
@@ -116,7 +185,7 @@ function mapSale(row: PosSaleDbRow): PosSaleRow {
   };
 }
 
-export async function fetchPosCatalog(warehouseId: string): Promise<PosCatalogProduct[]> {
+export async function fetchPosCatalog(warehouseId?: string | null): Promise<PosCatalogProduct[]> {
   const client = requireClient();
   const { data: products, error } = await client
     .from('inventory_products')
@@ -125,38 +194,59 @@ export async function fetchPosCatalog(warehouseId: string): Promise<PosCatalogPr
     .order('name');
   if (error) throw error;
 
-  const { data: stockRows, error: stockError } = await client
+  let stockQuery = client
     .from('inventory_warehouse_stock')
-    .select('product_id, qty')
-    .eq('warehouse_id', warehouseId);
+    .select('product_id, qty, warehouse:inventory_warehouses(id, name, code)')
+    .gt('qty', 0);
+  if (warehouseId) {
+    stockQuery = stockQuery.eq('warehouse_id', warehouseId);
+  }
+  const { data: stockRows, error: stockError } = await stockQuery;
   if (stockError) throw stockError;
 
-  const qtyByProduct = new Map((stockRows ?? []).map((row) => [row.product_id as string, Number(row.qty ?? 0)]));
-  return ((products ?? []) as Array<{
-    id: string;
-    name: string;
-    sku: string;
-    barcode: string | null;
-    image: string | null;
-    price: number | string;
-    status: string;
-  }>).map((product) => ({
-    id: product.id,
-    name: product.name,
-    sku: product.sku,
-    barcode: product.barcode ?? '',
-    image: product.image ?? '11.png',
-    price: parseMoney(product.price),
-    status: product.status,
-    qty: qtyByProduct.get(product.id) ?? 0,
-  }));
+  const productById = new Map(
+    ((products ?? []) as Array<{
+      id: string;
+      name: string;
+      sku: string;
+      barcode: string | null;
+      image: string | null;
+      price: number | string;
+      status: string;
+    }>).map((product) => [product.id, product]),
+  );
+
+  return ((stockRows ?? []) as Array<{
+    product_id: string;
+    qty: number | string;
+    warehouse?: { id: string; name: string; code: string } | { id: string; name: string; code: string }[] | null;
+  }>)
+    .flatMap((row) => {
+      const product = productById.get(row.product_id);
+      const warehouse = Array.isArray(row.warehouse) ? row.warehouse[0] : row.warehouse;
+      if (!product || !warehouse) return [];
+      return [{
+        id: product.id,
+        warehouseId: warehouse.id,
+        warehouseName: warehouse.name,
+        warehouseCode: warehouse.code,
+        name: product.name,
+        sku: product.sku,
+        barcode: product.barcode ?? '',
+        image: product.image ?? '11.png',
+        price: parseMoney(product.price),
+        status: product.status,
+        qty: Number(row.qty ?? 0),
+      }];
+    })
+    .sort((a, b) => a.name.localeCompare(b.name) || a.warehouseName.localeCompare(b.warehouseName));
 }
 
 export async function fetchPosSales() {
   const client = requireClient();
   const { data, error } = await client
     .from('inventory_pos_sales')
-    .select('*, warehouse:inventory_warehouses(id, name, code), items:inventory_pos_sale_items(*)')
+    .select('*, warehouse:inventory_warehouses(id, name, code), items:inventory_pos_sale_items(*, warehouse:inventory_warehouses(id, name, code))')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return ((data ?? []) as PosSaleDbRow[]).map(mapSale);
@@ -166,7 +256,7 @@ export async function fetchPosSaleById(id: string) {
   const client = requireClient();
   const { data, error } = await client
     .from('inventory_pos_sales')
-    .select('*, warehouse:inventory_warehouses(id, name, code), items:inventory_pos_sale_items(*)')
+    .select('*, warehouse:inventory_warehouses(id, name, code), items:inventory_pos_sale_items(*, warehouse:inventory_warehouses(id, name, code))')
     .eq('id', id)
     .maybeSingle();
   if (error) throw error;
@@ -194,6 +284,7 @@ export async function completePosSale(input: CompletePosSaleInput) {
       notes: input.notes ?? '',
       items: input.items.map((item) => ({
         product_id: item.productId,
+        warehouse_id: item.warehouseId,
         sku: item.sku,
         name: item.name,
         unit_price: item.unitPrice,

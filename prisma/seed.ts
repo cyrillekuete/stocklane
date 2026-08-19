@@ -24,6 +24,7 @@ import {
   stockPlannerMockData,
 } from '../src/store-inventory/data/stock';
 import { defaultProductOptions, defaultProductVariants } from '../src/store-inventory/data/variants';
+import { warehouseListMockData } from '../src/store-inventory/data/warehouses';
 import { defaultStoreSettings, storeSettingsToRow } from '../src/store-inventory/data/settings';
 import { parseMoney, parseQty, stableId } from '../src/store-inventory/lib/format';
 
@@ -63,13 +64,24 @@ function ensureProduct(sku: string, name: string, extra: Record<string, unknown>
 
 async function main() {
   const categoryByName = new Map<string, string>();
+  const usedCategoryCodes = new Set<string>();
+  const uniqueCategoryCode = (code?: string | null, fallback?: string) => {
+    if (!code) return null;
+    if (!usedCategoryCodes.has(code)) {
+      usedCategoryCodes.add(code);
+      return code;
+    }
+    const next = fallback ? `${code}-${fallback}` : `${code}-${usedCategoryCodes.size + 1}`;
+    usedCategoryCodes.add(next);
+    return next;
+  };
   const categories = categoryListMockData.map((row) => {
     const id = stableId('cat', row.productInfo.title);
     categoryByName.set(row.productInfo.title, id);
     return {
       id,
       name: row.productInfo.title,
-      code: row.productInfo.label,
+      code: uniqueCategoryCode(row.productInfo.label, row.productInfo.title),
       icon: row.productInfo.image,
       status: row.status.label,
       featured: row.featured,
@@ -123,31 +135,54 @@ async function main() {
       is_default: boolean;
     }
   >();
-  const addWarehouse = (code?: string) => {
+  const addWarehouse = (code?: string, extra?: Partial<{
+    name: string;
+    address: string | null;
+    city: string | null;
+    country: string | null;
+    phone: string | null;
+    status: string;
+    is_default: boolean;
+  }>) => {
     if (!code) return null;
-    if (!warehouses.has(code)) {
-      warehouses.set(code, {
-        id: stableId('wh', code),
-        code,
-        name: code,
-        address: null,
-        city: null,
-        country: null,
-        phone: null,
-        status: 'Active',
-        is_default: false,
-      });
+    const existingKey = [...warehouses.keys()].find((key) => key.toLowerCase() === code.toLowerCase());
+    if (existingKey) {
+      if (extra) warehouses.set(existingKey, { ...warehouses.get(existingKey)!, ...extra, code: warehouses.get(existingKey)!.code });
+      return warehouses.get(existingKey)!.id;
     }
+    warehouses.set(code, {
+      id: stableId('wh', code),
+      code,
+      name: extra?.name ?? code,
+      address: extra?.address ?? null,
+      city: extra?.city ?? null,
+      country: extra?.country ?? null,
+      phone: extra?.phone ?? null,
+      status: extra?.status ?? 'Active',
+      is_default: extra?.is_default ?? false,
+    });
     return warehouses.get(code)!.id;
   };
+  for (const row of warehouseListMockData) {
+    addWarehouse(row.code, {
+      name: row.name,
+      address: row.address,
+      city: row.city,
+      country: row.country,
+      phone: row.phone,
+      status: row.status.label,
+      is_default: row.isDefault,
+    });
+  }
   for (const row of outboundStockMockData) addWarehouse(row.warehouse);
   if (!warehouses.size) {
-    addWarehouse('MAIN');
+    addWarehouse('MAIN', { name: 'Main Warehouse', is_default: true });
   }
-  const defaultWarehouse = [...warehouses.values()][0];
+  const defaultWarehouse =
+    [...warehouses.values()].find((row) => row.is_default) ?? [...warehouses.values()][0];
   if (defaultWarehouse) {
+    for (const row of warehouses.values()) row.is_default = false;
     defaultWarehouse.is_default = true;
-    defaultWarehouse.name = defaultWarehouse.code === 'MAIN' ? 'Main Warehouse' : defaultWarehouse.name;
   }
 
   const carriers = new Map<string, { id: string; name: string; logo: string | null }>();
@@ -168,12 +203,19 @@ async function main() {
   }));
 
   const products = new Map<string, ReturnType<typeof ensureProduct>>();
+  const resolveSku = (label: string) => {
+    if (!label) return label;
+    if (products.has(label)) return label;
+    return [...products.keys()].find((sku) => sku.startsWith(label) || label.startsWith(sku)) ?? label;
+  };
   const rememberProduct = (sku: string, name: string, extra: Record<string, unknown> = {}) => {
     if (!sku) return;
-    if (!products.has(sku)) {
-      products.set(sku, ensureProduct(sku, name, extra));
+    const resolved = resolveSku(sku);
+    if (!products.has(resolved)) {
+      products.set(resolved, ensureProduct(resolved, name, extra));
     } else {
-      products.set(sku, { ...products.get(sku)!, ...extra, sku, name: products.get(sku)!.name || name });
+      const current = products.get(resolved)!;
+      products.set(resolved, { ...current, ...extra, sku: resolved, name: current.name || name });
     }
   };
 
@@ -229,12 +271,6 @@ async function main() {
     }
   }
 
-  const resolveSku = (label: string) => {
-    if (products.has(label)) return label;
-    const match = [...products.keys()].find((sku) => sku.startsWith(label) || label.startsWith(sku));
-    return match ?? label;
-  };
-
   const stockLevels = new Map<string, Record<string, unknown>>();
   const mergeStock = (sku: string, patch: Record<string, unknown>) => {
     const resolved = resolveSku(sku);
@@ -271,12 +307,12 @@ async function main() {
   }
   for (const row of stockPlannerMockData) {
     mergeStock(row.productInfo.label, {
-      qty: row.stock,
-      reserved: row.rsvd,
-      threshold: row.tlvl,
+      qty: Math.round(row.stock),
+      reserved: Math.round(row.rsvd),
+      threshold: Math.round(row.tlvl),
       delta_label: row.delta.label,
       delta_variant: row.delta.variant,
-      flow_rate: row.flow,
+      flow_rate: Math.round(Number(row.flow)),
       reorder_qty: row.reorder,
       reorder_in_days: row.reorderIn.days,
       reorder_date: row.reorderIn.date,
@@ -341,6 +377,7 @@ async function main() {
       order_count: row.created,
       total_spent: parseMoney(row.total),
       avg_price: parseMoney(row.price),
+      account_balance: 0,
       status: row.status.label,
       last_visit: lastVisit,
       payment_methods: defaultPaymentMethods(row.customerInfo.title, row.customerInfo.label),
@@ -501,8 +538,8 @@ async function main() {
     id: stableId('whs', `${defaultWarehouse?.id ?? 'main'}_${row.product_id}`),
     warehouse_id: defaultWarehouse?.id ?? stableId('wh', 'MAIN'),
     product_id: row.product_id,
-    qty: row.qty,
-    reserved: row.reserved ?? 0,
+    qty: Number(row.qty) || 0,
+    reserved: Number(row.reserved) || 0,
   }));
   await upsert('inventory_warehouse_stock', warehouseStock, 'warehouse_id,product_id');
   await upsert('inventory_inbound_shipments', inbound);
@@ -514,6 +551,7 @@ async function main() {
   await upsert('inventory_product_variants', variants);
   await upsert('inventory_product_options', options);
   await upsert('inventory_product_option_values', optionValues);
+  await supabase.from('inventory_products').delete().eq('sku', 'WM-842');
 
   console.log(`Seeded ${products.size} products, ${categories.length} categories, ${customers.length} customers, ${orders.length} orders, ${orderItems.length} order items, ${trackingEvents.length} tracking events.`);
 }

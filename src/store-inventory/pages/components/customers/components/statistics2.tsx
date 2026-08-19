@@ -10,7 +10,7 @@ export function Statistics2({
     { total: '0', label: 'Returns' },
   ],
 }: {
-  items?: { total: string; label: string }[];
+  items?: { total: string; label: string; valueClassName?: string }[];
 }) {
   return (
     <Card className="rounded-md mb-5 bg-accent/70 p-1">
@@ -18,7 +18,7 @@ export function Statistics2({
         <div className="grid sm:grid-cols-4 lg:gap-5">
           {items.map((item, index) => (
             <div key={item.label} className={`flex flex-col px-4 py-3 ${index > 0 ? 'sm:border-s border-border' : ''}`}>
-              <span className="text-2xl font-semibold text-foreground">{item.total}</span>
+              <span className={`text-2xl font-semibold ${item.valueClassName ?? 'text-foreground'}`}>{item.total}</span>
               <span className="text-xs font-normal text-secondary-foreground/70">{item.label}</span>
             </div>
           ))}

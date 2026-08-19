@@ -13,6 +13,7 @@ export type StatisticItem = {
   text: string;
   number?: string;
   icon?: 'up' | 'down';
+  valueClassName?: string;
 };
 
 const defaultItems: StatisticItem[] = [
@@ -30,7 +31,7 @@ export function Statistics1({ items = defaultItems }: { items?: StatisticItem[] 
           {items.map((item, index) => (
             <div key={item.label} className={`flex flex-col justify-between gap-5 p-4.5 pb-3.5 ${index > 0 ? 'md:border-s border-border' : ''}`}>
               <div className="flex flex-col gap-0.5">
-                <span className="text-xl lg:text-2xl font-semibold text-foreground">
+                <span className={`text-xl lg:text-2xl font-semibold ${item.valueClassName ?? 'text-foreground'}`}>
                   {item.total}
                   <span className="text-xl lg:text-2xl font-semibold text-secondary-foreground/30">{item.number}</span>
                 </span>
