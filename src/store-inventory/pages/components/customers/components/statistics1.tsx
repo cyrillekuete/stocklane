@@ -4,6 +4,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { formatMoney } from '@/store-inventory/lib/format';
 
 export type StatisticItem = {
   total: string;
@@ -18,9 +19,9 @@ export type StatisticItem = {
 
 const defaultItems: StatisticItem[] = [
   { total: '0', label: 'Total Orders', badgeLabel: '0', badgeColor: 'success', text: 'Annual trend', icon: 'up' },
-  { total: '$0.00', label: 'Cumulative Spend', badgeLabel: '0', badgeColor: 'success', text: 'Monthly trend', icon: 'up' },
-  { total: '$0.00', label: 'Avg. Order Value(AOV)', badgeLabel: '0', badgeColor: 'destructive', text: 'Weekly trend', icon: 'down' },
-  { total: '$0.00', label: 'Account Balance', badgeLabel: '0', badgeColor: 'success', text: 'Daily trend', icon: 'up' },
+  { total: formatMoney(0), label: 'Cumulative Spend', badgeLabel: '0', badgeColor: 'success', text: 'Monthly trend', icon: 'up' },
+  { total: formatMoney(0), label: 'Avg. Order Value(AOV)', badgeLabel: '0', badgeColor: 'destructive', text: 'Weekly trend', icon: 'down' },
+  { total: formatMoney(0), label: 'Account Balance', badgeLabel: '0', badgeColor: 'success', text: 'Daily trend', icon: 'up' },
 ];
 
 export function Statistics1({ items = defaultItems }: { items?: StatisticItem[] }) {

@@ -2,7 +2,7 @@ import { supabase } from '@/lib/supabase';
 import { parseMoney } from '../lib/format';
 import type { CustomerAccountTransaction, CustomerAccountTransactionType, PosPaymentMethod } from '../types';
 
-export type DepositPaymentMethod = Exclude<PosPaymentMethod, 'credit'>;
+export type DepositPaymentMethod = Exclude<PosPaymentMethod, 'credit' | 'account'>;
 
 export type DepositCustomerAccountInput = {
   customerId: string;

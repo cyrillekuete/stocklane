@@ -38,6 +38,8 @@ async function main() {
     'prisma/migrations/pos_sale_item_warehouse.sql',
     'prisma/migrations/stock_level_flow_rate_decimal.sql',
     'prisma/migrations/inventory_rls_anon.sql',
+    'prisma/migrations/store_currency_xaf.sql',
+    'prisma/migrations/pos_account_credit_payments.sql',
   ];
 
   const client = new Client({

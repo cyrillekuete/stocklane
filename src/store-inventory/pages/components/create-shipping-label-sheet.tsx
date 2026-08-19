@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { formatMoney } from '@/store-inventory/lib/format';
 import {
   Sheet,
   SheetBody,
@@ -60,9 +61,9 @@ export function CreateShippingLabelSheet({
   onOpenChange,
 }: CreateShippingLabelSheetProps) {
   const prices: Prices = {
-    Subtotal: '$19.00',
-    Discount: '$00.00',
-    Total: '$3.99',
+    Subtotal: formatMoney(19),
+    Discount: formatMoney(0),
+    Total: formatMoney(4),
   };
 
   const items: Item[] = [
@@ -138,7 +139,7 @@ export function CreateShippingLabelSheet({
                       {[
                         { label: 'Order ID', value: 'SO-AMS-4620' },
                         { label: 'Placed', value: '28 Jul, 2025' },
-                        { label: 'Total Price', value: '$320.00' },
+                        { label: 'Total Price', value: formatMoney(320) },
                         { label: 'Shipping Priority', value: 'High' },
                       ].map((item) => (
                         <div key={item.label} className="flex flex-col gap-1.5">
@@ -483,7 +484,7 @@ export function CreateShippingLabelSheet({
                         Total
                       </span>
                       <span className="text-sm font-semibold text-foreground">
-                        $22.99
+                        {formatMoney(22.99)}
                       </span>
                     </div>
                   </CardContent>

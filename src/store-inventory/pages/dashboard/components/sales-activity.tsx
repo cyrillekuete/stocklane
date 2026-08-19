@@ -24,6 +24,7 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatMoney } from '@/store-inventory/lib/format';
 
 export function SalesActivity() {
   const performance = [
@@ -35,7 +36,7 @@ export function SalesActivity() {
     },
     {
       label: 'Revenue',
-      value: '$182.4k',
+      value: formatMoney(182400),
       trend: 6,
       trendDir: 'up',
     },

@@ -1,4 +1,4 @@
-import { stableId } from '../lib/format';
+import { APP_CURRENCY, stableId } from '../lib/format';
 import type {
   ContactChannel,
   ShippingZone,
@@ -63,7 +63,7 @@ export const defaultStoreSettings: StoreSettings = {
   aiSemanticSearch: false,
   aiInsight: true,
   contactChannels: defaultContactChannels,
-  currency: 'EUR',
+  currency: APP_CURRENCY,
   cardMethods: ['visa', 'ideal'],
   applePay: true,
   googlePay: false,
@@ -160,7 +160,7 @@ export function storeSettingsToRow(settings: StoreSettings): Record<string, unkn
     ai_semantic_search: settings.aiSemanticSearch,
     ai_insight: settings.aiInsight,
     contact_channels: settings.contactChannels,
-    currency: settings.currency,
+    currency: APP_CURRENCY,
     card_methods: settings.cardMethods,
     apple_pay: settings.applePay,
     google_pay: settings.googlePay,
@@ -218,7 +218,7 @@ export function storeSettingsFromRow(row: Record<string, unknown>): StoreSetting
     aiSemanticSearch: asBoolean(row.ai_semantic_search, false),
     aiInsight: asBoolean(row.ai_insight, true),
     contactChannels: asJsonArray<ContactChannel>(row.contact_channels, defaultContactChannels),
-    currency: asString(row.currency, 'EUR'),
+    currency: APP_CURRENCY,
     cardMethods: asStringArray(row.card_methods, defaultStoreSettings.cardMethods),
     applePay: asBoolean(row.apple_pay, true),
     googlePay: asBoolean(row.google_pay, false),

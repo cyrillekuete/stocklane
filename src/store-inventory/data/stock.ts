@@ -1,3 +1,4 @@
+import { formatMoney } from '../lib/format';
 import type {
   AllStockRow,
   CurrentStockRow,
@@ -24,7 +25,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+29',
       variant: 'success',
     },
-    price: '$83.00',
+    price: formatMoney(83),
     category: 'Sneakers',
     supplier: {
       name: 'SwiftStock',
@@ -49,7 +50,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '-235',
       variant: 'destructive',
     },
-    price: '$110.00',
+    price: formatMoney(110),
     category: 'Sneakers',
     supplier: {
       name: 'NexaSource',
@@ -74,7 +75,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+8',
       variant: 'success',
     },
-    price: '$76.50',
+    price: formatMoney(76.5),
     category: 'Runners',
     supplier: {
       name: 'CoreMart',
@@ -99,7 +100,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '-11',
       variant: 'destructive',
     },
-    price: '$69.99',
+    price: formatMoney(69.99),
     category: 'Sneakers',
     supplier: {
       name: 'StockLab',
@@ -124,7 +125,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+45',
       variant: 'success',
     },
-    price: '$129.00',
+    price: formatMoney(129),
     category: 'Outdoor',
     supplier: {
       name: 'PrimeStock',
@@ -149,7 +150,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+3',
       variant: 'wa',
     },
-    price: '$59.00',
+    price: formatMoney(59),
     category: 'Sneakers',
     supplier: {
       name: 'NexaSource',
@@ -174,7 +175,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '-5',
       variant: 'war',
     },
-    price: '$72.00',
+    price: formatMoney(72),
     category: 'Runners',
     supplier: {
       name: 'NexaSource',
@@ -199,7 +200,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+12',
       variant: 'success',
     },
-    price: '$119.50',
+    price: formatMoney(119.5),
     category: 'Sneakers',
     supplier: {
       name: 'VeloSource',
@@ -224,7 +225,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+19',
       variant: 'success',
     },
-    price: '$98.75',
+    price: formatMoney(98.75),
     category: 'Outdoor',
     supplier: {
       name: 'StockLab',
@@ -249,7 +250,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '-60',
       variant: 'destructive',
     },
-    price: '$45.00',
+    price: formatMoney(45),
     category: 'Runners',
     supplier: {
       name: 'SwiftStock',
@@ -274,7 +275,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+34',
       variant: 'success',
     },
-    price: '$145.00',
+    price: formatMoney(145),
     category: 'Professional',
     supplier: {
       name: 'EliteSupply',
@@ -299,7 +300,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+15',
       variant: 'success',
     },
-    price: '$89.99',
+    price: formatMoney(89.99),
     category: 'Comfort',
     supplier: {
       name: 'ComfortCorp',
@@ -324,7 +325,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '-12',
       variant: 'destructive',
     },
-    price: '$199.00',
+    price: formatMoney(199),
     category: 'Performance',
     supplier: {
       name: 'SpeedSource',
@@ -349,7 +350,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+28',
       variant: 'success',
     },
-    price: '$75.50',
+    price: formatMoney(75.5),
     category: 'Casual',
     supplier: {
       name: 'StreetStyle',
@@ -374,7 +375,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+7',
       variant: 'success',
     },
-    price: '$165.00',
+    price: formatMoney(165),
     category: 'Outdoor',
     supplier: {
       name: 'MountainGear',
@@ -399,7 +400,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+42',
       variant: 'success',
     },
-    price: '$95.00',
+    price: formatMoney(95),
     category: 'Urban',
     supplier: {
       name: 'UrbanSupply',
@@ -424,7 +425,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '-8',
       variant: 'destructive',
     },
-    price: '$65.00',
+    price: formatMoney(65),
     category: 'Lightweight',
     supplier: {
       name: 'LightCorp',
@@ -449,7 +450,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+23',
       variant: 'success',
     },
-    price: '$125.00',
+    price: formatMoney(125),
     category: 'Premium',
     supplier: {
       name: 'PremiumStock',
@@ -474,7 +475,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+38',
       variant: 'success',
     },
-    price: '$155.00',
+    price: formatMoney(155),
     category: 'Sports',
     supplier: {
       name: 'SportSource',
@@ -499,7 +500,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+19',
       variant: 'success',
     },
-    price: '$85.00',
+    price: formatMoney(85),
     category: 'Retro',
     supplier: {
       name: 'RetroSupply',
@@ -524,7 +525,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '-5',
       variant: 'destructive',
     },
-    price: '$135.00',
+    price: formatMoney(135),
     category: 'Adventure',
     supplier: {
       name: 'AdventureGear',
@@ -549,7 +550,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+51',
       variant: 'success',
     },
-    price: '$175.00',
+    price: formatMoney(175),
     category: 'Modern',
     supplier: {
       name: 'ModernSupply',
@@ -574,7 +575,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+14',
       variant: 'success',
     },
-    price: '$105.00',
+    price: formatMoney(105),
     category: 'Eco',
     supplier: {
       name: 'EcoCorp',
@@ -599,7 +600,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '-3',
       variant: 'destructive',
     },
-    price: '$225.00',
+    price: formatMoney(225),
     category: 'Luxury',
     supplier: {
       name: 'LuxuryStock',
@@ -624,7 +625,7 @@ export const allStockMockData: AllStockRow[] = [
       label: '+32',
       variant: 'success',
     },
-    price: '$185.00',
+    price: formatMoney(185),
     category: 'Tech',
     supplier: {
       name: 'TechSupply',
@@ -650,7 +651,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+28',
       variant: 'success',
     },
-    sum: '$4,283.00',
+    sum: formatMoney(4283),
     lastMoved: '18 Aug, 2025',
     handler: 'Jordan M.',
     trend: {
@@ -673,7 +674,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '-238',
       variant: 'destructive',
     },
-    sum: '$923.00',
+    sum: formatMoney(923),
     lastMoved: '17 Aug, 2025',
     handler: 'Alexa R.',
     trend: {
@@ -696,7 +697,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+7',
       variant: 'success',
     },
-    sum: '$1,097.50 ',
+    sum: formatMoney(1097.5),
     lastMoved: '15 Aug, 2025',
     handler: 'Chris T.',
     trend: {
@@ -719,7 +720,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '-100',
       variant: 'destructive',
     },
-    sum: '$0.00',
+    sum: formatMoney(0),
     lastMoved: '14 Aug, 2025',
     handler: 'Dana L.',
     trend: {
@@ -742,7 +743,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+40',
       variant: 'success',
     },
-    sum: '$6,412.75',
+    sum: formatMoney(6412.75),
     lastMoved: '13 Aug, 2025',
     handler: 'Kevin J.',
     trend: {
@@ -765,7 +766,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+3',
       variant: 'warning',
     },
-    sum: '$3,145.20 ',
+    sum: formatMoney(3145.2),
     lastMoved: '12 Aug, 2025',
     handler: 'Priya S.',
     trend: {
@@ -788,7 +789,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '-5',
       variant: 'warning',
     },
-    sum: '$560.00 ',
+    sum: formatMoney(560),
     lastMoved: '11 Aug, 2025',
     handler: 'Marcus B.',
     trend: {
@@ -811,7 +812,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+14',
       variant: 'success',
     },
-    sum: '$2,199.00 ',
+    sum: formatMoney(2199),
     lastMoved: '10 Aug, 2025',
     handler: 'Zoe K.',
     trend: {
@@ -834,7 +835,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+19',
       variant: 'success',
     },
-    sum: '$7,009.99',
+    sum: formatMoney(7009.99),
     lastMoved: '9 Aug, 2025',
     handler: 'Lee A.',
     trend: {
@@ -857,7 +858,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '-60',
       variant: 'destructive',
     },
-    sum: '$0.00',
+    sum: formatMoney(0),
     lastMoved: '8 Aug, 2025',
     handler: 'Nina V.',
     trend: {
@@ -880,7 +881,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+34',
       variant: 'success',
     },
-    sum: '$11,310.00',
+    sum: formatMoney(11310),
     lastMoved: '7 Aug, 2025',
     handler: 'Mike R.',
     trend: {
@@ -903,7 +904,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+15',
       variant: 'success',
     },
-    sum: '$4,049.55',
+    sum: formatMoney(4049.55),
     lastMoved: '6 Aug, 2025',
     handler: 'Sarah L.',
     trend: {
@@ -926,7 +927,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '-12',
       variant: 'destructive',
     },
-    sum: '$4,577.00',
+    sum: formatMoney(4577),
     lastMoved: '5 Aug, 2025',
     handler: 'Tom H.',
     trend: {
@@ -949,7 +950,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+28',
       variant: 'success',
     },
-    sum: '$5,058.50',
+    sum: formatMoney(5058.5),
     lastMoved: '4 Aug, 2025',
     handler: 'Emma W.',
     trend: {
@@ -972,7 +973,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+7',
       variant: 'success',
     },
-    sum: '$5,610.00',
+    sum: formatMoney(5610),
     lastMoved: '3 Aug, 2025',
     handler: 'David K.',
     trend: {
@@ -995,7 +996,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+42',
       variant: 'success',
     },
-    sum: '$8,455.00',
+    sum: formatMoney(8455),
     lastMoved: '2 Aug, 2025',
     handler: 'Lisa M.',
     trend: {
@@ -1018,7 +1019,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '-8',
       variant: 'destructive',
     },
-    sum: '$780.00',
+    sum: formatMoney(780),
     lastMoved: '1 Aug, 2025',
     handler: 'John D.',
     trend: {
@@ -1041,7 +1042,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+23',
       variant: 'success',
     },
-    sum: '$7,000.00',
+    sum: formatMoney(7000),
     lastMoved: '31 Jul, 2025',
     handler: 'Anna B.',
     trend: {
@@ -1064,7 +1065,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+38',
       variant: 'success',
     },
-    sum: '$12,090.00',
+    sum: formatMoney(12090),
     lastMoved: '30 Jul, 2025',
     handler: 'Carl F.',
     trend: {
@@ -1087,7 +1088,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+19',
       variant: 'success',
     },
-    sum: '$3,655.00',
+    sum: formatMoney(3655),
     lastMoved: '29 Jul, 2025',
     handler: 'Grace T.',
     trend: {
@@ -1110,7 +1111,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '-5',
       variant: 'destructive',
     },
-    sum: '$3,915.00',
+    sum: formatMoney(3915),
     lastMoved: '28 Jul, 2025',
     handler: 'Paul S.',
     trend: {
@@ -1133,7 +1134,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+51',
       variant: 'success',
     },
-    sum: '$15,925.00',
+    sum: formatMoney(15925),
     lastMoved: '27 Jul, 2025',
     handler: 'Rachel L.',
     trend: {
@@ -1156,7 +1157,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+14',
       variant: 'success',
     },
-    sum: '$3,885.00',
+    sum: formatMoney(3885),
     lastMoved: '26 Jul, 2025',
     handler: 'Mark W.',
     trend: {
@@ -1179,7 +1180,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '-3',
       variant: 'destructive',
     },
-    sum: '$3,375.00',
+    sum: formatMoney(3375),
     lastMoved: '25 Jul, 2025',
     handler: 'Sophie K.',
     trend: {
@@ -1202,7 +1203,7 @@ export const currentStockMockData: CurrentStockRow[] = [
       label: '+32',
       variant: 'success',
     },
-    sum: '$12,580.00',
+    sum: formatMoney(12580),
     lastMoved: '24 Jul, 2025',
     handler: 'Alex M.',
     trend: {
@@ -1222,7 +1223,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '18 Aug, 2025',
     qty: 10,
-    stock: '$1100.00',
+    stock: formatMoney(1100),
     status: {
       label: 'Allocated',
       variant: 'success',
@@ -1243,7 +1244,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '17 Aug, 2025',
     qty: 45,
-    stock: '$9230.00',
+    stock: formatMoney(9230),
     status: {
       label: 'Allocated',
       variant: 'success',
@@ -1264,7 +1265,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '15 Aug, 2025',
     qty: 70,
-    stock: '$12,970.50 ',
+    stock: formatMoney(12970.5),
     status: {
       label: 'Allocated',
       variant: 'success',
@@ -1285,7 +1286,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '14 Aug, 2025',
     qty: 120,
-    stock: '$9270.00',
+    stock: formatMoney(9270),
     status: {
       label: 'Picking',
       variant: 'info',
@@ -1306,7 +1307,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '13 Aug, 2025',
     qty: 200,
-    stock: '$24,940.00',
+    stock: formatMoney(24940),
     status: {
       label: 'Packed',
       variant: 'primary',
@@ -1327,7 +1328,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '12 Aug, 2025',
     qty: 30,
-    stock: '$1,220.00 ',
+    stock: formatMoney(1220),
     status: {
       label: 'In Transit',
       variant: 'warning',
@@ -1348,7 +1349,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '11 Aug, 2025',
     qty: 100,
-    stock: '$15,900.00 ',
+    stock: formatMoney(15900),
     status: {
       label: 'Packed',
       variant: 'primary',
@@ -1369,7 +1370,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '10 Aug, 2025',
     qty: 100,
-    stock: '$21000.00',
+    stock: formatMoney(21000),
     status: {
       label: 'Allocated',
       variant: 'success',
@@ -1390,7 +1391,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '09 Aug, 2025',
     qty: 250,
-    stock: '$34,900.00',
+    stock: formatMoney(34900),
     status: {
       label: 'In Transit',
       variant: 'warning',
@@ -1411,7 +1412,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '8 Aug, 2025',
     qty: 30,
-    stock: '$2,400.00',
+    stock: formatMoney(2400),
     status: {
       label: 'Picking',
       variant: 'info',
@@ -1432,7 +1433,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '7 Aug, 2025',
     qty: 85,
-    stock: '$12,325.00',
+    stock: formatMoney(12325),
     status: {
       label: 'Allocated',
       variant: 'success',
@@ -1453,7 +1454,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '6 Aug, 2025',
     qty: 55,
-    stock: '$4,949.45',
+    stock: formatMoney(4949.45),
     status: {
       label: 'Packed',
       variant: 'primary',
@@ -1474,7 +1475,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '5 Aug, 2025',
     qty: 23,
-    stock: '$4,577.00',
+    stock: formatMoney(4577),
     status: {
       label: 'In Transit',
       variant: 'warning',
@@ -1495,7 +1496,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '4 Aug, 2025',
     qty: 67,
-    stock: '$5,058.50',
+    stock: formatMoney(5058.5),
     status: {
       label: 'Allocated',
       variant: 'success',
@@ -1516,7 +1517,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '3 Aug, 2025',
     qty: 34,
-    stock: '$5,610.00',
+    stock: formatMoney(5610),
     status: {
       label: 'Picking',
       variant: 'info',
@@ -1537,7 +1538,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '2 Aug, 2025',
     qty: 89,
-    stock: '$8,455.00',
+    stock: formatMoney(8455),
     status: {
       label: 'Packed',
       variant: 'primary',
@@ -1558,7 +1559,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '1 Aug, 2025',
     qty: 12,
-    stock: '$780.00',
+    stock: formatMoney(780),
     status: {
       label: 'In Transit',
       variant: 'warning',
@@ -1579,7 +1580,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '31 Jul, 2025',
     qty: 56,
-    stock: '$7,000.00',
+    stock: formatMoney(7000),
     status: {
       label: 'Allocated',
       variant: 'success',
@@ -1600,7 +1601,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '30 Jul, 2025',
     qty: 78,
-    stock: '$12,090.00',
+    stock: formatMoney(12090),
     status: {
       label: 'Picking',
       variant: 'info',
@@ -1621,7 +1622,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '29 Jul, 2025',
     qty: 43,
-    stock: '$3,655.00',
+    stock: formatMoney(3655),
     status: {
       label: 'Packed',
       variant: 'primary',
@@ -1642,7 +1643,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '28 Jul, 2025',
     qty: 29,
-    stock: '$3,915.00',
+    stock: formatMoney(3915),
     status: {
       label: 'In Transit',
       variant: 'warning',
@@ -1663,7 +1664,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '27 Jul, 2025',
     qty: 91,
-    stock: '$15,925.00',
+    stock: formatMoney(15925),
     status: {
       label: 'Allocated',
       variant: 'success',
@@ -1684,7 +1685,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '26 Jul, 2025',
     qty: 37,
-    stock: '$3,885.00',
+    stock: formatMoney(3885),
     status: {
       label: 'Picking',
       variant: 'info',
@@ -1705,7 +1706,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '25 Jul, 2025',
     qty: 15,
-    stock: '$3,375.00',
+    stock: formatMoney(3375),
     status: {
       label: 'Packed',
       variant: 'primary',
@@ -1726,7 +1727,7 @@ export const inboundStockMockData: InboundStockRow[] = [
     },
     dateOrder: '24 Jul, 2025',
     qty: 68,
-    stock: '$12,580.00',
+    stock: formatMoney(12580),
     status: {
       label: 'Allocated',
       variant: 'success',

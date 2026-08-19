@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CircleX, DollarSign } from 'lucide-react';
+import { CircleX } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { parseMoney } from '@/store-inventory/lib/format';
+import { APP_CURRENCY, parseMoney } from '@/store-inventory/lib/format';
 import {
   useBrands,
   useCategories,
@@ -305,11 +305,11 @@ export function ProductFormSheet({
                       <InputWrapper>
                         <Input
                           type="number"
-                          placeholder="0.00"
+                          placeholder="0"
                           value={price}
                           onChange={(e) => setPrice(e.target.value)}
                         />
-                        <DollarSign className="size-3" />
+                        <span className="text-xs text-muted-foreground">{APP_CURRENCY}</span>
                       </InputWrapper>
                     </div>
                     <div className="flex flex-col gap-2">

@@ -180,7 +180,7 @@ export function ProductDetailsAnalyticsSheet({
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-lg font-semibold text-foreground">
-                          {product?.price ?? '$0.00'}
+                          {product?.price ?? formatMoney(0)}
                         </span>
                         <Badge size="xs" variant="success" appearance="light">
                           <TrendingUp />
@@ -204,7 +204,7 @@ export function ProductDetailsAnalyticsSheet({
                                     return (
                                       <div className="bg-background/95 backdrop-blur-sm border border-border shadow-lg rounded-lg p-2 pointer-events-none">
                                         <p className="text-sm font-semibold text-foreground">
-                                          ${payload[0].value as number}
+                                          {formatMoney(payload[0].value as number)}
                                         </p>
                                       </div>
                                     );

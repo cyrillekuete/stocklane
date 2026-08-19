@@ -14,6 +14,7 @@ import {
 import { Info, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/lib/helpers';
+import { formatMoney } from '@/store-inventory/lib/format';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,7 +64,7 @@ const data: IData[] = [
     orderId: '#583920-XT',
     date: '18 Aug, 2025',
     customer: 'Mia Martinez',
-    amount: '$83.00',
+    amount: formatMoney(83),
     paymentMethod: 'Visa',
     country: {
       name: 'Estonia',
@@ -77,7 +78,7 @@ const data: IData[] = [
     orderId: '#104761-BQ',
     date: '20 Jan, 2025',
     customer: 'Alice Morgan',
-    amount: '$99.00',
+    amount: formatMoney(99),
     paymentMethod: 'Mastercard',
     country: {
       name: 'India',
@@ -91,7 +92,7 @@ const data: IData[] = [
     orderId: '#847305-ZR',
     date: '19 Feb, 2025',
     customer: 'Noah Garcia',
-    amount: '$120.00',
+    amount: formatMoney(120),
     paymentMethod: 'iDeal',
     country: {
       name: 'Malaysia',
@@ -105,7 +106,7 @@ const data: IData[] = [
     orderId: '#229176-LK',
     date: '16 Mar, 2025',
     customer: 'Liam Brown',
-    amount: '$72.00',
+    amount: formatMoney(72),
     paymentMethod: 'Paypal',
     country: {
       name: 'Ukraine',
@@ -119,7 +120,7 @@ const data: IData[] = [
     orderId: '#671452-VN',
     date: '29 Mar, 2025',
     customer: 'Emma Chen',
-    amount: '$169.00',
+    amount: formatMoney(169),
     paymentMethod: 'Mastercard',
     country: {
       name: 'Canada',
@@ -133,7 +134,7 @@ const data: IData[] = [
     orderId: '#398274-JY',
     date: '9 Aug, 2025',
     customer: 'Olivia Davis',
-    amount: '$110.00',
+    amount: formatMoney(110),
     paymentMethod: 'iDeal',
     country: {
       name: 'Malaysia',
@@ -147,7 +148,7 @@ const data: IData[] = [
     orderId: '#750163-DP',
     date: '22 Jul, 2025',
     customer: 'Lucas Anderson',
-    amount: '$49.00',
+    amount: formatMoney(49),
     paymentMethod: 'Mastercard',
     country: {
       name: 'Malaysia',
@@ -161,7 +162,7 @@ const data: IData[] = [
     orderId: '#912048-MF',
     date: '28 Apr, 2025',
     customer: 'Sophia Patel',
-    amount: '$230.00',
+    amount: formatMoney(230),
     paymentMethod: 'Visa',
     country: {
       name: 'Ukraine',
@@ -175,7 +176,7 @@ const data: IData[] = [
     orderId: '#336791-TA',
     date: '10 Jan, 2025',
     customer: 'Ethan Wilson',
-    amount: '$140.00',
+    amount: formatMoney(140),
     paymentMethod: 'Visa',
     country: {
       name: 'Canada',
@@ -189,7 +190,7 @@ const data: IData[] = [
     orderId: '#508234-WS',
     date: '22 Jul, 2025',
     customer: 'James Liu',
-    amount: '$84.00',
+    amount: formatMoney(84),
     paymentMethod: 'iDeal',
     country: {
       name: 'India',
@@ -203,7 +204,7 @@ const data: IData[] = [
     orderId: '#792547-KP',
     date: '5 Sep, 2025',
     customer: 'Isabella Rodriguez',
-    amount: '$195.00',
+    amount: formatMoney(195),
     paymentMethod: 'Visa',
     country: {
       name: 'Estonia',
@@ -217,7 +218,7 @@ const data: IData[] = [
     orderId: '#641829-MN',
     date: '12 Oct, 2025',
     customer: 'Alexander Johnson',
-    amount: '$67.50',
+    amount: formatMoney(67.5),
     paymentMethod: 'Paypal',
     country: {
       name: 'Canada',
@@ -231,7 +232,7 @@ const data: IData[] = [
     orderId: '#358147-QR',
     date: '28 Nov, 2025',
     customer: 'Charlotte Lee',
-    amount: '$156.75',
+    amount: formatMoney(156.75),
     paymentMethod: 'Mastercard',
     country: {
       name: 'Ukraine',
@@ -245,7 +246,7 @@ const data: IData[] = [
     orderId: '#496823-ST',
     date: '3 Dec, 2025',
     customer: 'Benjamin White',
-    amount: '$89.25',
+    amount: formatMoney(89.25),
     paymentMethod: 'iDeal',
     country: {
       name: 'Malaysia',
@@ -259,7 +260,7 @@ const data: IData[] = [
     orderId: '#715390-UV',
     date: '15 Dec, 2025',
     customer: 'Amelia Harris',
-    amount: '$203.00',
+    amount: formatMoney(203),
     paymentMethod: 'Visa',
     country: {
       name: 'India',
@@ -273,7 +274,7 @@ const data: IData[] = [
     orderId: '#824657-WX',
     date: '2 Jan, 2026',
     customer: 'Harper Clark',
-    amount: '$45.80',
+    amount: formatMoney(45.8),
     paymentMethod: 'Mastercard',
     country: {
       name: 'Estonia',
@@ -287,7 +288,7 @@ const data: IData[] = [
     orderId: '#937164-YZ',
     date: '18 Jan, 2026',
     customer: 'Evelyn Lewis',
-    amount: '$178.90',
+    amount: formatMoney(178.9),
     paymentMethod: 'Paypal',
     country: {
       name: 'Canada',
@@ -301,7 +302,7 @@ const data: IData[] = [
     orderId: '#048572-AB',
     date: '25 Jan, 2026',
     customer: 'Sebastian Walker',
-    amount: '$92.40',
+    amount: formatMoney(92.4),
     paymentMethod: 'iDeal',
     country: {
       name: 'Ukraine',
@@ -315,7 +316,7 @@ const data: IData[] = [
     orderId: '#159683-CD',
     date: '8 Feb, 2026',
     customer: 'Abigail Hall',
-    amount: '$134.60',
+    amount: formatMoney(134.6),
     paymentMethod: 'Visa',
     country: {
       name: 'Malaysia',
@@ -329,7 +330,7 @@ const data: IData[] = [
     orderId: '#260794-EF',
     date: '14 Feb, 2026',
     customer: 'Henry Allen',
-    amount: '$76.30',
+    amount: formatMoney(76.3),
     paymentMethod: 'Mastercard',
     country: {
       name: 'India',
@@ -343,7 +344,7 @@ const data: IData[] = [
     orderId: '#371805-GH',
     date: '22 Feb, 2026',
     customer: 'Ella Young',
-    amount: '$211.50',
+    amount: formatMoney(211.5),
     paymentMethod: 'Paypal',
     country: {
       name: 'Estonia',
@@ -357,7 +358,7 @@ const data: IData[] = [
     orderId: '#482916-IJ',
     date: '5 Mar, 2026',
     customer: 'Owen Hernandez',
-    amount: '$58.70',
+    amount: formatMoney(58.7),
     paymentMethod: 'iDeal',
     country: {
       name: 'Canada',
@@ -371,7 +372,7 @@ const data: IData[] = [
     orderId: '#593027-KL',
     date: '12 Mar, 2026',
     customer: 'Scarlett King',
-    amount: '$147.25',
+    amount: formatMoney(147.25),
     paymentMethod: 'Visa',
     country: {
       name: 'Ukraine',
@@ -385,7 +386,7 @@ const data: IData[] = [
     orderId: '#604138-MN',
     date: '20 Mar, 2026',
     customer: 'Jack Wright',
-    amount: '$103.80',
+    amount: formatMoney(103.8),
     paymentMethod: 'Mastercard',
     country: {
       name: 'Malaysia',
@@ -399,7 +400,7 @@ const data: IData[] = [
     orderId: '#715249-OP',
     date: '28 Mar, 2026',
     customer: 'Grace Lopez',
-    amount: '$189.95',
+    amount: formatMoney(189.95),
     paymentMethod: 'Paypal',
     country: {
       name: 'India',

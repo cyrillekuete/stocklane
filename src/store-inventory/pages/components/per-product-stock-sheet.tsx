@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input, InputWrapper } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { formatMoney } from '@/store-inventory/lib/format';
 import { Rating } from '@/components/ui/rating';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -72,7 +73,7 @@ export function PerProductStockSheet({
     { label: 'SKU', info: 'SH-001-BLK-42' },
     { label: 'Category', info: 'Sneakers' },
     { label: 'Rating', info: '4' },
-    { label: 'Price', info: '$99.00' },
+    { label: 'Price', info: formatMoney(99) },
   ]);
 
   const id = useId();

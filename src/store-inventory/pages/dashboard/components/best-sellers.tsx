@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatMoney } from '@/store-inventory/lib/format';
 
 type BestSellerProps = object;
 
@@ -18,25 +19,25 @@ export function BestSeller({}: BestSellerProps) {
     {
       logo: '11.png',
       title: 'Cloud Shift Lightweight Runner Pro Edition',
-      label: '$120.00',
+      label: formatMoney(120),
       sku: 'BT-A1-YLW-8',
     },
     {
       logo: '12.png',
       title: 'Titan Edge High Impact Stability Lightweight..',
-      label: '$99.00',
+      label: formatMoney(99),
       sku: 'SNK-888-RED-42',
     },
     {
       logo: '13.png',
       title: 'Cloud Shift Lightweight Runner Pro Edition',
-      label: '$120.00',
+      label: formatMoney(120),
       sku: 'SD-999-TAN-38',
     },
     {
       logo: '15.png',
       title: 'Cloud Shift Lightweight Runner Pro Edition',
-      label: '$149.00',
+      label: formatMoney(149),
       sku: 'SD-Z9-BRN-39',
     },
   ];

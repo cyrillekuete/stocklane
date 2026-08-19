@@ -77,6 +77,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { outboundStockMockData } from '@/store-inventory/data/stock';
+import { formatMoney } from '@/store-inventory/lib/format';
 import { useDeleteOutboundShipment } from '@/store-inventory/hooks/use-inventory';
 import { CreateShippingLabelSheet } from '../components/create-shipping-label-sheet';
 import { TrackShippingSheet } from '../components/track-shipping-sheet';
@@ -254,7 +255,7 @@ export function OutboundStockTable({
         label: '+0',
         variant: 'success' as const,
       },
-      sum: '$0.00', // Default value
+      sum: formatMoney(0), // Default value
       lastMoved: product.dateOrder || '',
       handler: 'N/A', // Default value
       trend: {

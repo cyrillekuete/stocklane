@@ -3,23 +3,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Euro, DollarSign, PoundSterling, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { CardPayment } from "./components/card";
 import { DigitalWallets } from "./components/digital-wallets";
-import { useSettingsForm } from "../../settings-form-context";
-
-const currencies = [
-  { value: 'EUR', label: 'Euro', icon: Euro },
-  { value: 'USD', label: 'US Dollar', icon: DollarSign },
-  { value: 'GBP', label: 'British Pound', icon: PoundSterling },
-  { value: 'CAD', label: 'Canadian Dollar', icon: DollarSign },
-  { value: 'AUD', label: 'Australian Dollar', icon: DollarSign },
-];
+import { APP_CURRENCY } from "@/store-inventory/lib/format";
 
 export function GeneralPaymentSettings() {
-  const { draft, updateDraft } = useSettingsForm();
-
   return (
     <Card className="bg-accent/70 rounded-md shadow-none h-full flex flex-col">
       <CardContent className="p-0 flex flex-col h-full">
@@ -31,21 +20,9 @@ export function GeneralPaymentSettings() {
               <span className="text-xs font-normal text-muted-foreground">Default currency used at checkout</span>
             </div>
             <div className="basis-2/3">
-              <Select value={draft.currency} onValueChange={(currency) => updateDraft({ currency })} indicatorPosition="right">
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency.value} value={currency.value}>
-                      <span className="flex items-center gap-2">
-                        <currency.icon className="size-4 opacity-60" />
-                        <span>{currency.label}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex h-9 w-full items-center rounded-md border border-input bg-muted/40 px-3 text-sm">
+                {APP_CURRENCY} (CFA Franc)
+              </div>
             </div>
           </div>
 

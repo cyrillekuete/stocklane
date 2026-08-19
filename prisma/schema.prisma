@@ -404,7 +404,7 @@ model StoreSettings {
   aiSemanticSearch       Boolean  @default(false) @map("ai_semantic_search")
   aiInsight              Boolean  @default(true) @map("ai_insight")
   contactChannels        Json     @default("[]") @map("contact_channels")
-  currency               String   @default("EUR")
+  currency               String   @default("XAF")
   cardMethods            String[] @default([]) @map("card_methods")
   applePay               Boolean  @default(true) @map("apple_pay")
   googlePay              Boolean  @default(false) @map("google_pay")

@@ -3,6 +3,7 @@ import { BadgeDot } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { formatMoney } from '@/store-inventory/lib/format';
 
 interface InventoryRow {
   name: string;
@@ -80,7 +81,7 @@ const Inventory = ({}: InventoryProps) => {
               Total Asset Value
             </span>
             <span className="text-3xl font-semibold text-foreground">
-              $329.7k
+              {formatMoney(329700)}
             </span>
           </div>
 

@@ -2,12 +2,13 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { formatMoney } from '@/store-inventory/lib/format';
 
 export function Statistics3({
   items = [
     { total: 'Lite Plan', label: 'Good for Startups & Individuals' },
-    { total: '$0.00', label: 'Annual Fee' },
-    { total: '$0.00', label: 'Next Bill Amount' },
+    { total: formatMoney(0), label: 'Annual Fee' },
+    { total: formatMoney(0), label: 'Next Bill Amount' },
     { total: '—', label: 'Next Bill Date' },
   ],
 }: {

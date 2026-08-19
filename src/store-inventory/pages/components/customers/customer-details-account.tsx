@@ -17,9 +17,16 @@ const TYPE_LABELS: Record<CustomerAccountTransactionType, string> = {
   void: 'Void',
 };
 
-function typeVariant(type: CustomerAccountTransactionType): 'success' | 'secondary' | 'warning' {
-  if (type === 'deposit') return 'success';
-  if (type === 'void') return 'warning';
+function typeLabel(row: CustomerAccountTransaction) {
+  if (row.type === 'sale' && row.paymentMethod === 'credit') return 'Credit';
+  if (row.type === 'sale' && row.paymentMethod === 'account') return 'Account';
+  return TYPE_LABELS[row.type];
+}
+
+function typeVariant(row: CustomerAccountTransaction): 'success' | 'secondary' | 'warning' {
+  if (row.type === 'deposit') return 'success';
+  if (row.type === 'void') return 'warning';
+  if (row.paymentMethod === 'credit') return 'warning';
   return 'secondary';
 }
 
@@ -35,8 +42,11 @@ export function CustomerDetailsAccount({ customer }: { customer?: CustomerListRo
   );
   const balance = customer?.accountBalance ?? 0;
   const deposits = data.filter((row) => row.type === 'deposit').reduce((sum, row) => sum + row.amount, 0);
-  const charges = data
-    .filter((row) => row.type === 'sale')
+  const accountCharges = data
+    .filter((row) => row.type === 'sale' && row.paymentMethod !== 'credit')
+    .reduce((sum, row) => sum + Math.abs(row.amount), 0);
+  const creditCharges = data
+    .filter((row) => row.type === 'sale' && row.paymentMethod === 'credit')
     .reduce((sum, row) => sum + Math.abs(row.amount), 0);
 
   return (
@@ -45,8 +55,8 @@ export function CustomerDetailsAccount({ customer }: { customer?: CustomerListRo
         items={[
           { total: formatMoney(balance), label: 'Account Balance', valueClassName: balance < 0 ? 'text-destructive' : undefined },
           { total: formatMoney(deposits), label: 'Total Deposits' },
-          { total: formatMoney(charges), label: 'Charged to Account' },
-          { total: String(data.length), label: 'Transactions' },
+          { total: formatMoney(accountCharges), label: 'Paid from Account' },
+          { total: formatMoney(creditCharges), label: 'Bought on Credit' },
         ]}
       />
       <Card>
@@ -94,8 +104,8 @@ function TransactionRow({ row }: { row: CustomerAccountTransaction }) {
     <tr className="border-b border-border last:border-0">
       <td className="px-5 py-3 whitespace-nowrap">{formatDate(row.createdAt)}</td>
       <td className="px-5 py-3">
-        <Badge variant={typeVariant(row.type)} appearance="light">
-          {TYPE_LABELS[row.type]}
+        <Badge variant={typeVariant(row)} appearance="light">
+          {typeLabel(row)}
         </Badge>
       </td>
       <td className="px-5 py-3">{formatPaymentMethod(row.paymentMethod)}</td>

@@ -1,4 +1,4 @@
-import { parseMoney } from '../lib/format';
+import { formatMoney, parseMoney } from '../lib/format';
 import type {
   DetailsInvoiceRow,
   DetailsOrdersRow,
@@ -20,7 +20,7 @@ export const orderItemsMockData: OrderItemRow[] = [
       tooltip: 'Air Max 270 React Engineered - Premium sneakers with advanced cushioning technology',
     },
     category: 'Sneakers',
-    price: '$83.00',
+    price: formatMoney(83),
     trends: {
       label: 'Fast Moving',
       variant: 'success',
@@ -42,7 +42,7 @@ export const orderItemsMockData: OrderItemRow[] = [
       tooltip: 'Trail Runner Z2 - High-performance outdoor running shoes with superior grip',
     },
     category: 'Outdoor',
-    price: '$110.00',
+    price: formatMoney(110),
     trends: {
       label: 'Promo',
       variant: 'info',
@@ -64,7 +64,7 @@ export const orderItemsMockData: OrderItemRow[] = [
       tooltip: 'Urban Flex Knit Low - Comfortable urban running shoes with flexible knit upper',
     },
     category: 'Runners',
-    price: '$76.50',
+    price: formatMoney(76.5),
     trends: {
       label: 'Clearance',
       variant: 'warning',
@@ -86,7 +86,7 @@ export const orderItemsMockData: OrderItemRow[] = [
       tooltip: 'Blaze Street Classic - Timeless street style sneakers with modern comfort',
     },
     category: 'Sneakers',
-    price: '$69.99',
+    price: formatMoney(69.99),
     trends: {
       label: 'Slow Moving',
       variant: 'destructive',
@@ -107,7 +107,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-TX-4587',
     date: '18 Aug, 2025',
     customer: 'John Smith',
-    total: '$372.93',
+    total: formatMoney(372.93),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -128,7 +128,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-TX-4590',
     date: '17 Aug, 2025',
     customer: 'Sarah Lee',
-    total: '$245.10',
+    total: formatMoney(245.1),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -149,7 +149,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-CA-1254',
     date: '16 Aug, 2025',
     customer: 'Sarah Lee',
-    total: '$1,024.50',
+    total: formatMoney(1024.5),
     paymentStatus: {
       label: 'Pending',
       variant: 'info',
@@ -170,7 +170,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-NY-8874',
     date: '12 Aug, 2025',
     customer: 'Emily Carter',
-    total: '$540.00',
+    total: formatMoney(540),
     paymentStatus: {
       label: 'Failed',
       variant: 'destructive',
@@ -191,7 +191,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-FL-5633',
     date: '5 Aug, 2025',
     customer: 'Liam Johnson',
-    total: '$120.99',
+    total: formatMoney(120.99),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -212,7 +212,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-TX-4593',
     date: '29 Jul, 2025',
     customer: 'Olivia Brown',
-    total: '$799.00',
+    total: formatMoney(799),
     paymentStatus: {
       label: 'Cancelled',
       variant: 'warning',
@@ -233,7 +233,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-CA-1255',
     date: '23 Jul, 2025',
     customer: 'Noah Wilson',
-    total: '$215.75',
+    total: formatMoney(215.75),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -254,7 +254,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-NV-7755',
     date: '20 Jul, 2025',
     customer: 'Ava Martinez',
-    total: '$430.20',
+    total: formatMoney(430.2),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -275,7 +275,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-WA-3321',
     date: '17 Jul, 2025',
     customer: 'Ethan Davis',
-    total: '$620.00',
+    total: formatMoney(620),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -296,7 +296,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-IL-9912',
     date: '11 Jul, 2025',
     customer: 'Mia Anderson',
-    total: '$980.49',
+    total: formatMoney(980.49),
     paymentStatus: {
       label: 'Pending',
       variant: 'info',
@@ -317,7 +317,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-CA-1256',
     date: '8 Jul, 2025',
     customer: 'Lucas Garcia',
-    total: '$345.67',
+    total: formatMoney(345.67),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -338,7 +338,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-TX-4594',
     date: '5 Jul, 2025',
     customer: 'Emma Wilson',
-    total: '$1,250.00',
+    total: formatMoney(1250),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -359,7 +359,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-NY-8875',
     date: '2 Jul, 2025',
     customer: 'James Taylor',
-    total: '$89.99',
+    total: formatMoney(89.99),
     paymentStatus: {
       label: 'Failed',
       variant: 'destructive',
@@ -380,7 +380,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-FL-5634',
     date: '29 Jun, 2025',
     customer: 'Sophia Rodriguez',
-    total: '$567.89',
+    total: formatMoney(567.89),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -401,7 +401,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-TX-4595',
     date: '26 Jun, 2025',
     customer: 'Benjamin Lee',
-    total: '$2,100.50',
+    total: formatMoney(2100.5),
     paymentStatus: {
       label: 'Cancelled',
       variant: 'warning',
@@ -422,7 +422,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-CA-1257',
     date: '23 Jun, 2025',
     customer: 'Isabella Martinez',
-    total: '$445.75',
+    total: formatMoney(445.75),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -443,7 +443,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-NV-7756',
     date: '20 Jun, 2025',
     customer: 'Mason Thompson',
-    total: '$789.25',
+    total: formatMoney(789.25),
     paymentStatus: {
       label: 'Pending',
       variant: 'info',
@@ -464,7 +464,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-WA-3322',
     date: '17 Jun, 2025',
     customer: 'Aria Johnson',
-    total: '$156.00',
+    total: formatMoney(156),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -485,7 +485,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-IL-9913',
     date: '14 Jun, 2025',
     customer: 'Ethan Davis',
-    total: '$890.30',
+    total: formatMoney(890.3),
     paymentStatus: {
       label: 'Failed',
       variant: 'destructive',
@@ -506,7 +506,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-CA-1258',
     date: '11 Jun, 2025',
     customer: 'Olivia Brown',
-    total: '$1,450.00',
+    total: formatMoney(1450),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -527,7 +527,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-TX-4596',
     date: '8 Jun, 2025',
     customer: 'Noah Wilson',
-    total: '$234.56',
+    total: formatMoney(234.56),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -548,7 +548,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-NY-8876',
     date: '5 Jun, 2025',
     customer: 'Ava Garcia',
-    total: '$678.90',
+    total: formatMoney(678.9),
     paymentStatus: {
       label: 'Cancelled',
       variant: 'warning',
@@ -569,7 +569,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-FL-5635',
     date: '2 Jun, 2025',
     customer: 'William Rodriguez',
-    total: '$345.67',
+    total: formatMoney(345.67),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -590,7 +590,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-TX-4597',
     date: '30 May, 2025',
     customer: 'Sofia Martinez',
-    total: '$1,890.25',
+    total: formatMoney(1890.25),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -611,7 +611,7 @@ export const orderListMockData: OrderListRow[] = [
     order: 'SO-CA-1259',
     date: '27 May, 2025',
     customer: 'Henry Thompson',
-    total: '$567.89',
+    total: formatMoney(567.89),
     paymentStatus: {
       label: 'Pending',
       variant: 'info',
@@ -634,7 +634,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '1',
     order: 'SO-TX-4587',
     date: '18 Aug, 2025',
-    total: '$372.93',
+    total: formatMoney(372.93),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -650,7 +650,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '2',
     order: 'SO-TX-4590',
     date: '17 Aug, 2025',
-    total: '$245.10',
+    total: formatMoney(245.1),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -666,7 +666,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '3',
     order: 'SO-CA-1254',
     date: '16 Aug, 2025',
-    total: '$1,024.50',
+    total: formatMoney(1024.5),
     paymentStatus: {
       label: 'Pending',
       variant: 'info',
@@ -682,7 +682,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '4',
     order: 'SO-NY-8874',
     date: '12 Aug, 2025',
-    total: '$540.00',
+    total: formatMoney(540),
     paymentStatus: {
       label: 'Failed',
       variant: 'destructive',
@@ -698,7 +698,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '5',
     order: 'SO-FL-5633',
     date: '5 Aug, 2025',
-    total: '$120.99',
+    total: formatMoney(120.99),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -714,7 +714,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '6',
     order: 'SO-WA-3321',
     date: '17 Jul, 2025',
-    total: '$620.00',
+    total: formatMoney(620),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -730,7 +730,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '7',
     order: 'SO-CA-1255',
     date: '23 Jul, 2025',
-    total: '$215.75',
+    total: formatMoney(215.75),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -746,7 +746,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '8',
     order: 'SO-NV-7755',
     date: '20 Jul, 2025',
-    total: '$430.20',
+    total: formatMoney(430.2),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -762,7 +762,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '9',
     order: 'SO-WA-3321',
     date: '17 Jul, 2025',
-    total: '$620.00',
+    total: formatMoney(620),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -778,7 +778,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '10',
     order: 'SO-IL-9912',
     date: '11 Jul, 2025',
-    total: '$980.49',
+    total: formatMoney(980.49),
     paymentStatus: {
       label: 'Pending',
       variant: 'info',
@@ -794,7 +794,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '11',
     order: 'SO-CA-1256',
     date: '8 Jul, 2025',
-    total: '$345.67',
+    total: formatMoney(345.67),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -810,7 +810,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '12',
     order: 'SO-TX-4594',
     date: '5 Jul, 2025',
-    total: '$1,250.00',
+    total: formatMoney(1250),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -826,7 +826,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '13',
     order: 'SO-NY-8875',
     date: '2 Jul, 2025',
-    total: '$89.99',
+    total: formatMoney(89.99),
     paymentStatus: {
       label: 'Failed',
       variant: 'destructive',
@@ -842,7 +842,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '14',
     order: 'SO-FL-5634',
     date: '29 Jun, 2025',
-    total: '$567.89',
+    total: formatMoney(567.89),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -858,7 +858,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '15',
     order: 'SO-TX-4595',
     date: '26 Jun, 2025',
-    total: '$2,100.50',
+    total: formatMoney(2100.5),
     paymentStatus: {
       label: 'Cancelled',
       variant: 'warning',
@@ -874,7 +874,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '16',
     order: 'SO-CA-1257',
     date: '23 Jun, 2025',
-    total: '$445.75',
+    total: formatMoney(445.75),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -890,7 +890,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '17',
     order: 'SO-NV-7756',
     date: '20 Jun, 2025',
-    total: '$789.25',
+    total: formatMoney(789.25),
     paymentStatus: {
       label: 'Pending',
       variant: 'info',
@@ -906,7 +906,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '18',
     order: 'SO-WA-3322',
     date: '17 Jun, 2025',
-    total: '$156.00',
+    total: formatMoney(156),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -922,7 +922,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '19',
     order: 'SO-IL-9913',
     date: '14 Jun, 2025',
-    total: '$890.30',
+    total: formatMoney(890.3),
     paymentStatus: {
       label: 'Failed',
       variant: 'destructive',
@@ -938,7 +938,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '20',
     order: 'SO-CA-1258',
     date: '11 Jun, 2025',
-    total: '$1,450.00',
+    total: formatMoney(1450),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -954,7 +954,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '21',
     order: 'SO-TX-4596',
     date: '8 Jun, 2025',
-    total: '$234.56',
+    total: formatMoney(234.56),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -970,7 +970,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '22',
     order: 'SO-NY-8876',
     date: '5 Jun, 2025',
-    total: '$678.90',
+    total: formatMoney(678.9),
     paymentStatus: {
       label: 'Cancelled',
       variant: 'warning',
@@ -986,7 +986,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '23',
     order: 'SO-FL-5635',
     date: '2 Jun, 2025',
-    total: '$345.67',
+    total: formatMoney(345.67),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -1002,7 +1002,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '24',
     order: 'SO-TX-4597',
     date: '30 May, 2025',
-    total: '$1,890.25',
+    total: formatMoney(1890.25),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -1018,7 +1018,7 @@ export const detailsOrdersMockData: DetailsOrdersRow[] = [
     id: '25',
     order: 'SO-CA-1259',
     date: '27 May, 2025',
-    total: '$567.89',
+    total: formatMoney(567.89),
     paymentStatus: {
       label: 'Pending',
       variant: 'info',
@@ -1040,7 +1040,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
     invoice: 'INV-7845',
     date: '18 Aug, 2025',
     dueDate: '25 Aug, 2025',
-    total: '$372.93',
+    total: formatMoney(372.93),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -1051,7 +1051,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
     invoice: 'INV-7844',
     date: '17 Aug, 2025',
     dueDate: '24 Aug, 2025',
-    total: '$245.10',
+    total: formatMoney(245.1),
     paymentStatus: {
       label: 'Paid',
       variant: 'success',
@@ -1062,7 +1062,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
     invoice: 'IINV-7843',
     date: '16 Aug, 2025',
     dueDate: '23 Aug, 2025',
-    total: '$1,024.50',
+    total: formatMoney(1024.5),
     paymentStatus: {
       label: 'Pending',
       variant: 'info',
@@ -1073,7 +1073,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
     invoice: 'INV-7842',
     date: '12 Aug, 2025',
     dueDate: '19 Aug, 2025',
-    total: '$540.00',
+    total: formatMoney(540),
     paymentStatus: {
       label: 'Overdue',
       variant: 'destructive',
@@ -1084,7 +1084,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7841',
       date: '5 Aug, 2025',
       dueDate: '12 Aug, 2025',
-      total: '$120.99',
+      total: formatMoney(120.99),
       paymentStatus: {
         label: 'Paid',
         variant: 'success',
@@ -1095,7 +1095,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7840',
       date: '4 Aug, 2025',
       dueDate: '11 Aug, 2025',
-      total: '$890.50',
+      total: formatMoney(890.5),
       paymentStatus: {
         label: 'Pending',
         variant: 'info',
@@ -1106,7 +1106,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7839',
       date: '3 Aug, 2025',
       dueDate: '10 Aug, 2025',
-      total: '$445.75',
+      total: formatMoney(445.75),
       paymentStatus: {
         label: 'Overdue',
         variant: 'destructive',
@@ -1117,7 +1117,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7838',
       date: '2 Aug, 2025',
       dueDate: '9 Aug, 2025',
-      total: '$1,250.00',
+      total: formatMoney(1250),
       paymentStatus: {
         label: 'Paid',
         variant: 'success',
@@ -1128,7 +1128,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7837',
       date: '1 Aug, 2025',
       dueDate: '8 Aug, 2025',
-      total: '$567.89',
+      total: formatMoney(567.89),
       paymentStatus: {
         label: 'Pending',
         variant: 'info',
@@ -1139,7 +1139,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7836',
       date: '31 Jul, 2025',
       dueDate: '7 Aug, 2025',
-      total: '$234.56',
+      total: formatMoney(234.56),
       paymentStatus: {
         label: 'Paid',
         variant: 'success',
@@ -1150,7 +1150,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7835',
       date: '30 Jul, 2025',
       dueDate: '6 Aug, 2025',
-      total: '$789.25',
+      total: formatMoney(789.25),
       paymentStatus: {
         label: 'Overdue',
         variant: 'destructive',
@@ -1161,7 +1161,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7834',
       date: '29 Jul, 2025',
       dueDate: '5 Aug, 2025',
-      total: '$345.67',
+      total: formatMoney(345.67),
       paymentStatus: {
         label: 'Paid',
         variant: 'success',
@@ -1172,7 +1172,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7833',
       date: '28 Jul, 2025',
       dueDate: '4 Aug, 2025',
-      total: '$1,890.25',
+      total: formatMoney(1890.25),
       paymentStatus: {
         label: 'Pending',
         variant: 'info',
@@ -1183,7 +1183,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7832',
       date: '27 Jul, 2025',
       dueDate: '3 Aug, 2025',
-      total: '$678.90',
+      total: formatMoney(678.9),
       paymentStatus: {
         label: 'Paid',
         variant: 'success',
@@ -1194,7 +1194,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7831',
       date: '26 Jul, 2025',
       dueDate: '2 Aug, 2025',
-      total: '$456.78',
+      total: formatMoney(456.78),
       paymentStatus: {
         label: 'Overdue',
         variant: 'destructive',
@@ -1205,7 +1205,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7830',
       date: '25 Jul, 2025',
       dueDate: '1 Aug, 2025',
-      total: '$2,100.50',
+      total: formatMoney(2100.5),
       paymentStatus: {
         label: 'Paid',
         variant: 'success',
@@ -1216,7 +1216,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7829',
       date: '24 Jul, 2025',
       dueDate: '31 Jul, 2025',
-      total: '$123.45',
+      total: formatMoney(123.45),
       paymentStatus: {
         label: 'Pending',
         variant: 'info',
@@ -1227,7 +1227,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7828',
       date: '23 Jul, 2025',
       dueDate: '30 Jul, 2025',
-      total: '$987.65',
+      total: formatMoney(987.65),
       paymentStatus: {
         label: 'Paid',
         variant: 'success',
@@ -1238,7 +1238,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7827',
       date: '22 Jul, 2025',
       dueDate: '29 Jul, 2025',
-      total: '$543.21',
+      total: formatMoney(543.21),
       paymentStatus: {
         label: 'Overdue',
         variant: 'destructive',
@@ -1249,7 +1249,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7826',
       date: '21 Jul, 2025',
       dueDate: '28 Jul, 2025',
-      total: '$876.54',
+      total: formatMoney(876.54),
       paymentStatus: {
         label: 'Paid',
         variant: 'success',
@@ -1260,7 +1260,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7825',
       date: '20 Jul, 2025',
       dueDate: '27 Jul, 2025',
-      total: '$321.09',
+      total: formatMoney(321.09),
       paymentStatus: {
         label: 'Pending',
         variant: 'info',
@@ -1271,7 +1271,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7824',
       date: '19 Jul, 2025',
       dueDate: '26 Jul, 2025',
-      total: '$654.32',
+      total: formatMoney(654.32),
       paymentStatus: {
         label: 'Paid',
         variant: 'success',
@@ -1282,7 +1282,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7823',
       date: '18 Jul, 2025',
       dueDate: '25 Jul, 2025',
-      total: '$1,234.56',
+      total: formatMoney(1234.56),
       paymentStatus: {
         label: 'Overdue',
         variant: 'destructive',
@@ -1293,7 +1293,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7822',
       date: '17 Jul, 2025',
       dueDate: '24 Jul, 2025',
-      total: '$789.01',
+      total: formatMoney(789.01),
       paymentStatus: {
         label: 'Paid',
         variant: 'success',
@@ -1304,7 +1304,7 @@ export const detailsInvoiceMockData: DetailsInvoiceRow[] = [
       invoice: 'INV-7821',
       date: '16 Jul, 2025',
       dueDate: '23 Jul, 2025',
-      total: '$456.78',
+      total: formatMoney(456.78),
       paymentStatus: {
         label: 'Pending',
         variant: 'info',
@@ -1324,7 +1324,7 @@ export const productInfoMockData: ProductInfoRow[] = [
       tooltip: 'Air Max 270 React Engineered',
     },
     category: 'Sneakers',
-    price: '$83.00',
+    price: formatMoney(83),
     trends: {
       label: 'Fast Moving',
       variant: 'success',
@@ -1346,7 +1346,7 @@ export const productInfoMockData: ProductInfoRow[] = [
       tooltip: '',
     },
     category: 'Outdoor',
-    price: '$110.00',
+    price: formatMoney(110),
     trends: {
       label: 'Promo',
       variant: 'info',
@@ -1368,7 +1368,7 @@ export const productInfoMockData: ProductInfoRow[] = [
       tooltip: 'Urban Flex Knit Low Sneakers',
     },
     category: 'Runners',
-    price: '$76.50',
+    price: formatMoney(76.5),
     trends: {
       label: 'Clearance',
       variant: 'warning',
@@ -1390,7 +1390,7 @@ export const productInfoMockData: ProductInfoRow[] = [
       tooltip: 'Terra Trekking Max Pro Hiker',
     },
     category: 'Sneakers',
-    price: '$69.99',
+    price: formatMoney(69.99),
     trends: {
       label: 'Slow Moving',
       variant: 'destructive',
@@ -1410,7 +1410,7 @@ export const trackingDemoOrder: OrderListRow = {
   order: 'SO-AMS-4620',
   date: '1 Aug, 2025',
   customer: 'Jeroen de Jong',
-  total: '$350.00',
+  total: formatMoney(350),
   paymentStatus: { label: 'Paid', variant: 'success' },
   items: 2,
   deliveryStatus: { label: 'Shipped', variant: 'success' },
@@ -1457,10 +1457,10 @@ export const orderDetailItemsByNumber: Record<string, OrderDetailItem[]> = {
 
 export const orderDetailsByNumber: Record<string, Partial<OrderDetailRow>> = {
   'SO-FL-5633': {
-    subtotal: '$320.00',
-    shippingCost: '$10.00',
-    tax: '$20.00',
-    total: '$350.00',
+    subtotal: formatMoney(320),
+    shippingCost: formatMoney(10),
+    tax: formatMoney(20),
+    total: formatMoney(350),
     shippingPriority: 'High',
     deliveryMethod: 'Express Delivery',
     currentStep: 3,
@@ -1476,10 +1476,10 @@ export const orderDetailsByNumber: Record<string, Partial<OrderDetailRow>> = {
     expectedArrival: '17 Apr, 2025 12:00',
   },
   'SO-AMS-4620': {
-    subtotal: '$320.00',
-    shippingCost: '$10.00',
-    tax: '$20.00',
-    total: '$350.00',
+    subtotal: formatMoney(320),
+    shippingCost: formatMoney(10),
+    tax: formatMoney(20),
+    total: formatMoney(350),
     shippingPriority: 'High',
     deliveryMethod: 'Express Delivery',
     currentStep: 3,
@@ -1624,9 +1624,9 @@ export function buildOrderDetail(
 ): OrderDetailRow {
   const extras = orderDetailsByNumber[order.order] ?? {};
   const totalAmount = parseMoney(extras.total ?? order.total);
-  const shippingCost = extras.shippingCost ?? '$10.00';
-  const tax = extras.tax ?? '$20.00';
-  const subtotal = extras.subtotal ?? `$${(totalAmount - parseMoney(shippingCost) - parseMoney(tax)).toFixed(2)}`;
+  const shippingCost = extras.shippingCost ?? formatMoney(10);
+  const tax = extras.tax ?? formatMoney(20);
+  const subtotal = extras.subtotal ?? formatMoney(totalAmount - parseMoney(shippingCost) - parseMoney(tax));
   const firstName = order.customer.split(' ')[0] || 'Customer';
   const detailItems =
     extras.detailItems ??

@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router';
-import { parseMoney } from '@/store-inventory/lib/format';
+import { formatMoney, parseMoney } from '@/store-inventory/lib/format';
 import type { OrderListRow } from '@/store-inventory/types';
 
 export function RecentOrders({
@@ -19,7 +19,6 @@ export function RecentOrders({
 }) {
   const recent = orders.slice(0, 3);
   const total = recent.reduce((sum, order) => sum + parseMoney(order.total), 0);
-  const [dollars, cents] = total.toFixed(2).split('.');
 
   return (
     <Card className="bg-accent/70 rounded-md shadow-none">
@@ -35,8 +34,7 @@ export function RecentOrders({
                   </div>
                 </div>
                 <span className="text-2xl leading-[22px] font-semibold">
-                  ${dollars}
-                  <span className="text-2xl font-semibold text-secondary-foreground/30">.{cents}</span>
+                  {formatMoney(total)}
                 </span>
               </div>
               <Badge variant="success" size="sm" appearance="light">

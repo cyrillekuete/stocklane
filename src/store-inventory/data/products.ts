@@ -1,3 +1,4 @@
+import { formatMoney } from '../lib/format';
 import type { ProductListRow } from '../types';
 
 export const productListMockData: ProductListRow[] = [
@@ -10,7 +11,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: 'Air Max 270 React Engineered',
     },
     category: 'Sneakers',
-    price: '$83.00',
+    price: formatMoney(83),
     status: {
       label: 'Live',
       variant: 'success',
@@ -27,7 +28,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Outdoor',
-    price: '$110.00',
+    price: formatMoney(110),
     status: {
       label: 'Live',
       variant: 'success',
@@ -44,7 +45,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: 'Urban Flex Knit Low Sneakers',
     },
     category: 'Runners',
-    price: '$76.50',
+    price: formatMoney(76.5),
     status: {
       label: 'Draft',
       variant: 'warning',
@@ -61,7 +62,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Sneakers',
-    price: '$69.99',
+    price: formatMoney(69.99),
     status: {
       label: 'Must Act',
       variant: 'destructive',
@@ -78,7 +79,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: 'Terra Trekking Max Pro Boots',
     },
     category: 'Outdoor',
-    price: '$129.00',
+    price: formatMoney(129),
     status: {
       label: 'Live',
       variant: 'success',
@@ -95,7 +96,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Sneakers',
-    price: '$59.00',
+    price: formatMoney(59),
     status: {
       label: 'Archived',
       variant: 'info',
@@ -112,7 +113,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: 'Classic Street Wear 2.0 Collection',
     },
     category: 'Runners',
-    price: '$72.00',
+    price: formatMoney(72),
     status: {
       label: 'Live',
       variant: 'success',
@@ -129,7 +130,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: 'Enduro All-Terrain High Sneakers',
     },
     category: 'Sneakers',
-    price: '$119.50',
+    price: formatMoney(119.5),
     status: {
       label: 'Archived',
       variant: 'info',
@@ -146,7 +147,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Outdoor',
-    price: '$98.75',
+    price: formatMoney(98.75),
     status: {
       label: 'Draft',
       variant: 'warning',
@@ -163,7 +164,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Runners',
-    price: '$45.00',
+    price: formatMoney(45),
     status: {
       label: 'Live',
       variant: 'success',
@@ -180,7 +181,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Runners',
-    price: '$95.00',
+    price: formatMoney(95),
     status: {
       label: 'Live',
       variant: 'success',
@@ -197,7 +198,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Sneakers',
-    price: '$67.50',
+    price: formatMoney(67.5),
     status: {
       label: 'Draft',
       variant: 'warning',
@@ -214,7 +215,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Runners',
-    price: '$88.00',
+    price: formatMoney(88),
     status: {
       label: 'Live',
       variant: 'success',
@@ -231,7 +232,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Sneakers',
-    price: '$54.99',
+    price: formatMoney(54.99),
     status: {
       label: 'Archived',
       variant: 'info',
@@ -248,7 +249,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Outdoor',
-    price: '$135.00',
+    price: formatMoney(135),
     status: {
       label: 'Live',
       variant: 'success',
@@ -265,7 +266,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Runners',
-    price: '$72.50',
+    price: formatMoney(72.5),
     status: {
       label: 'Draft',
       variant: 'warning',
@@ -282,7 +283,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Runners',
-    price: '$49.99',
+    price: formatMoney(49.99),
     status: {
       label: 'Live',
       variant: 'success',
@@ -299,7 +300,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Sneakers',
-    price: '$89.00',
+    price: formatMoney(89),
     status: {
       label: 'Must Act',
       variant: 'destructive',
@@ -316,7 +317,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Outdoor',
-    price: '$112.50',
+    price: formatMoney(112.5),
     status: {
       label: 'Live',
       variant: 'success',
@@ -333,7 +334,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Sneakers',
-    price: '$63.75',
+    price: formatMoney(63.75),
     status: {
       label: 'Archived',
       variant: 'info',
@@ -350,7 +351,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Outdoor',
-    price: '$98.00',
+    price: formatMoney(98),
     status: {
       label: 'Live',
       variant: 'success',
@@ -367,7 +368,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Sneakers',
-    price: '$76.25',
+    price: formatMoney(76.25),
     status: {
       label: 'Draft',
       variant: 'warning',
@@ -384,7 +385,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Runners',
-    price: '$82.50',
+    price: formatMoney(82.5),
     status: {
       label: 'Live',
       variant: 'success',
@@ -401,7 +402,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Sneakers',
-    price: '$145.00',
+    price: formatMoney(145),
     status: {
       label: 'Live',
       variant: 'success',
@@ -418,7 +419,7 @@ export const productListMockData: ProductListRow[] = [
       tooltip: '',
     },
     category: 'Runners',
-    price: '$91.99',
+    price: formatMoney(91.99),
     status: {
       label: 'Must Act',
       variant: 'destructive',

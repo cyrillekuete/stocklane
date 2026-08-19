@@ -521,6 +521,7 @@ export interface WarehouseListRow {
 
 export type PosPaymentMethod =
   | 'cash'
+  | 'account'
   | 'credit'
   | 'mtn_mobile_money'
   | 'orange_money'

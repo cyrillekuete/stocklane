@@ -79,6 +79,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { inboundStockMockData } from '@/store-inventory/data/stock';
+import { formatMoney } from '@/store-inventory/lib/format';
 import { useDeleteInboundShipment } from '@/store-inventory/hooks/use-inventory';
 import { TrackShippingSheet } from '../components/track-shipping-sheet';
 import { PerProductStockSheet } from '../components/per-product-stock-sheet';
@@ -231,7 +232,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
         label: '+0',
         variant: 'success' as const,
       },
-      sum: product.stock || '$0.00',
+      sum: product.stock || formatMoney(0),
       lastMoved: product.dateOrder || '',
       handler: 'N/A', // Default value
       trend: {

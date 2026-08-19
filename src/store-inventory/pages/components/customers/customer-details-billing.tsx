@@ -1,6 +1,6 @@
 'use client';
 
-import { parseMoney } from '@/store-inventory/lib/format';
+import { formatMoney, parseMoney } from '@/store-inventory/lib/format';
 import { Statistics3 } from './components/statistics3';
 import { BillingDetails } from './components/billing-details';
 import { PaymentMethods } from './components/payment-methods';
@@ -15,8 +15,8 @@ export function CustomerDetailsBilling({ customer }: { customer?: CustomerListRo
       <Statistics3
         items={[
           { total: plan, label: 'Good for Startups & Individuals' },
-          { total: customer?.total || '$0.00', label: 'Annual Fee' },
-          { total: customer?.price || '$0.00', label: 'Next Bill Amount' },
+          { total: customer?.total || formatMoney(0), label: 'Annual Fee' },
+          { total: customer?.price || formatMoney(0), label: 'Next Bill Amount' },
           { total: customer?.updated || '—', label: 'Next Bill Date' },
         ]}
       />

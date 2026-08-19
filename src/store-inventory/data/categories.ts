@@ -1,3 +1,4 @@
+import { formatMoney } from '../lib/format';
 import type { CategoryListRow } from '../types';
 
 export const categoryListMockData: CategoryListRow[] = [
@@ -5,7 +6,7 @@ export const categoryListMockData: CategoryListRow[] = [
     id: '1',
     productInfo: { image: 'running-shoes.svg', title: 'Running Shoes', label: 'WM-8421' },
     productsQty: '120',
-    totalEarnings: '$2,583.00',
+    totalEarnings: formatMoney(2583),
     status: { label: 'Active', variant: 'success' },
     featured: true,
   },
@@ -13,7 +14,7 @@ export const categoryListMockData: CategoryListRow[] = [
     id: '2',
     productInfo: { image: 'flip-flops.svg', title: 'Flip-flops', label: 'UC-3990' },
     productsQty: '245',
-    totalEarnings: '$10,110.00',
+    totalEarnings: formatMoney(10110),
     status: { label: 'Active', variant: 'success' },
     featured: false,
   },
@@ -21,7 +22,7 @@ export const categoryListMockData: CategoryListRow[] = [
     id: '3',
     productInfo: { image: 'slip-on-shoe.svg', title: 'Slip-on-shoe', label: 'KB-8820' },
     productsQty: '560',
-    totalEarnings: '$59,476.50',
+    totalEarnings: formatMoney(59476.5),
     status: { label: 'Inactive', variant: 'destructive' },
     featured: false,
   },
@@ -29,7 +30,7 @@ export const categoryListMockData: CategoryListRow[] = [
     id: '4',
     productInfo: { image: 'sport-sneaker.svg', title: 'Sport Sneakers', label: 'LS-1033' },
     productsQty: '98',
-    totalEarnings: '$102,369.99',
+    totalEarnings: formatMoney(102369.99),
     status: { label: 'Active', variant: 'success' },
     featured: true,
   },
@@ -37,7 +38,7 @@ export const categoryListMockData: CategoryListRow[] = [
     id: '5',
     productInfo: { image: 'ski-boots.svg', title: 'Ski Boots', label: 'WC-5510' },
     productsQty: '33',
-    totalEarnings: '$929.00',
+    totalEarnings: formatMoney(929),
     status: { label: 'Active', variant: 'success' },
     featured: true,
   },
@@ -49,7 +50,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'GH-7312',
     },
     productsQty: '140',
-    totalEarnings: '$1,659.00',
+    totalEarnings: formatMoney(1659),
     status: {
       label: 'Inactive',
       variant: 'destructive',
@@ -64,7 +65,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'GH-7312',
     },
     productsQty: '150',
-    totalEarnings: '$7,072.00',
+    totalEarnings: formatMoney(7072),
     status: {
       label: 'Active',
       variant: 'success',
@@ -79,7 +80,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'MS-8702',
     },
     productsQty: '65',
-    totalEarnings: '$37,119.50',
+    totalEarnings: formatMoney(37119.5),
     status: {
       label: 'Active',
       variant: 'success',
@@ -94,7 +95,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'BS-6112',
     },
     productsQty: '55',
-    totalEarnings: '$498.75',
+    totalEarnings: formatMoney(498.75),
     status: {
       label: 'Active',
       variant: 'success',
@@ -109,7 +110,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'HC-9031',
     },
     productsQty: '820',
-    totalEarnings: '$230,445.00',
+    totalEarnings: formatMoney(230445),
     status: {
       label: 'Active',
       variant: 'success',
@@ -124,7 +125,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'CL-1234',
     },
     productsQty: '95',
-    totalEarnings: '$8,450.00',
+    totalEarnings: formatMoney(8450),
     status: {
       label: 'Active',
       variant: 'success',
@@ -139,7 +140,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'FO-5678',
     },
     productsQty: '67',
-    totalEarnings: '$12,890.00',
+    totalEarnings: formatMoney(12890),
     status: {
       label: 'Active',
       variant: 'success',
@@ -154,7 +155,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'SD-9012',
     },
     productsQty: '234',
-    totalEarnings: '$15,670.00',
+    totalEarnings: formatMoney(15670),
     status: {
       label: 'Inactive',
       variant: 'destructive',
@@ -169,7 +170,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'WB-3456',
     },
     productsQty: '78',
-    totalEarnings: '$22,340.00',
+    totalEarnings: formatMoney(22340),
     status: {
       label: 'Active',
       variant: 'success',
@@ -184,7 +185,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'DS-7890',
     },
     productsQty: '45',
-    totalEarnings: '$6,780.00',
+    totalEarnings: formatMoney(6780),
     status: {
       label: 'Active',
       variant: 'success',
@@ -199,7 +200,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'CS-2345',
     },
     productsQty: '32',
-    totalEarnings: '$4,560.00',
+    totalEarnings: formatMoney(4560),
     status: {
       label: 'Active',
       variant: 'success',
@@ -214,7 +215,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'WB-6789',
     },
     productsQty: '156',
-    totalEarnings: '$28,900.00',
+    totalEarnings: formatMoney(28900),
     status: {
       label: 'Active',
       variant: 'success',
@@ -229,7 +230,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'PH-0123',
     },
     productsQty: '89',
-    totalEarnings: '$11,230.00',
+    totalEarnings: formatMoney(11230),
     status: {
       label: 'Inactive',
       variant: 'destructive',
@@ -244,7 +245,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'AC-4567',
     },
     productsQty: '112',
-    totalEarnings: '$18,750.00',
+    totalEarnings: formatMoney(18750),
     status: {
       label: 'Active',
       variant: 'success',
@@ -259,7 +260,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'MC-8901',
     },
     productsQty: '73',
-    totalEarnings: '$9,420.00',
+    totalEarnings: formatMoney(9420),
     status: {
       label: 'Active',
       variant: 'success',
@@ -274,7 +275,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'ES-2345',
     },
     productsQty: '54',
-    totalEarnings: '$7,890.00',
+    totalEarnings: formatMoney(7890),
     status: {
       label: 'Active',
       variant: 'success',
@@ -289,7 +290,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'BF-6789',
     },
     productsQty: '91',
-    totalEarnings: '$13,450.00',
+    totalEarnings: formatMoney(13450),
     status: {
       label: 'Active',
       variant: 'success',
@@ -304,7 +305,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'WH-0123',
     },
     productsQty: '68',
-    totalEarnings: '$10,670.00',
+    totalEarnings: formatMoney(10670),
     status: {
       label: 'Inactive',
       variant: 'destructive',
@@ -319,7 +320,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'SL-4567',
     },
     productsQty: '187',
-    totalEarnings: '$16,890.00',
+    totalEarnings: formatMoney(16890),
     status: {
       label: 'Active',
       variant: 'success',
@@ -334,7 +335,7 @@ export const categoryListMockData: CategoryListRow[] = [
       label: 'MJ-8901',
     },
     productsQty: '42',
-    totalEarnings: '$5,340.00',
+    totalEarnings: formatMoney(5340),
     status: {
       label: 'Active',
       variant: 'success',

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardToolbar } from '@/compone
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { CartesianGrid, ComposedChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { formatMoney, APP_CURRENCY } from '@/store-inventory/lib/format';
 
 // E-commerce data for different periods with balanced patterns
 const salesViewsData = {
@@ -90,7 +91,7 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
                 <ChartLabel label={label + ':'} color={entry.color} />
                 <span className="font-semibold text-foreground">
                   {entry.dataKey === 'sales'
-                    ? `$${entry.value.toLocaleString()}`
+                    ? formatMoney(entry.value)
                     : entry.value >= 0
                       ? `+${entry.value.toLocaleString()}`
                       : entry.value.toLocaleString()}
@@ -148,7 +149,7 @@ export function ProductStock() {
           <div className="flex items-center gap-3.5">
             <ChartLabel label="Sales" color="#f59e0b" />
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold">${totalSales.toLocaleString()}</span>
+              <span className="text-2xl font-bold">{formatMoney(totalSales)}</span>
               <Badge variant={salesChange >= 0 ? 'success' : 'destructive'} appearance="light">
                 {salesChange >= 0 ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
                 {Math.abs(salesChange)}%
@@ -215,7 +216,7 @@ export function ProductStock() {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                tickFormatter={(value) => (selectedPeriod === '7d' ? `$${value}` : `$${(value / 1000).toFixed(0)}k`)}
+                tickFormatter={(value) => (selectedPeriod === '7d' ? formatMoney(value) : `${(value / 1000).toFixed(0)}k ${APP_CURRENCY}`)}
                 tickMargin={10}
               />
               {/* Right Y Axis for Views */}

@@ -23,8 +23,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCustomers } from '@/store-inventory/hooks/use-inventory';
 import { useCompletePosSale, usePosCatalog } from '@/store-inventory/hooks/use-pos';
 import { useStoreSettings } from '@/store-inventory/hooks/use-settings';
-import { formatMoney, generateSaleNumber, parseMoney } from '@/store-inventory/lib/format';
-import { POS_PAYMENT_METHODS } from '@/store-inventory/lib/payment-methods';
+import { APP_CURRENCY, formatMoney, generateSaleNumber, parseMoney } from '@/store-inventory/lib/format';
+import { isCustomerAccountPayment, POS_PAYMENT_METHODS } from '@/store-inventory/lib/payment-methods';
 import { computePosTotals } from '@/store-inventory/services/pos';
 import { fetchWarehouseStock } from '@/store-inventory/services/warehouses';
 import { currentStockMockData } from '@/store-inventory/data/stock';
@@ -92,19 +92,19 @@ export function PosRegister() {
   const customers = customersQuery.data ?? [];
 
   useEffect(() => {
-    const stock = isSupabaseConfigured ? (liveCatalog ?? []) : mockCatalog;
-    if (!stock.length) return;
+    const stock = isSupabaseConfigured ? liveCatalog : mockCatalog;
+    if (stock == null) return;
     setCart((current) => {
       let changed = false;
       const next = current.map((line) => {
         const product = stock.find(
           (row) => row.id === line.productId && row.warehouseId === line.warehouseId,
         );
-        if (!product) return line;
-        const quantity = Math.min(line.quantity, product.qty);
-        if (line.available === product.qty && line.quantity === quantity) return line;
+        const available = product?.qty ?? 0;
+        const quantity = Math.min(line.quantity, available);
+        if (line.available === available && line.quantity === quantity) return line;
         changed = true;
-        return { ...line, available: product.qty, quantity };
+        return { ...line, available, quantity };
       }).filter((line) => line.quantity > 0);
       return changed || next.length !== current.length ? next : current;
     });
@@ -183,6 +183,9 @@ export function PosRegister() {
   const customer = customers.find((row) => row.id === customerId);
   const customerBalance = customer?.accountBalance ?? 0;
   const balanceAfterSale = customerBalance - totals.total;
+  const chargesCustomerAccount = isCustomerAccountPayment(paymentMethod);
+  const insufficientAccount =
+    paymentMethod === 'account' && customerId !== 'walk-in' && balanceAfterSale < 0;
   const creditWouldGoNegative = paymentMethod === 'credit' && customerId !== 'walk-in' && balanceAfterSale < 0;
 
   const handleSearchKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -200,8 +203,16 @@ export function PosRegister() {
       toast.error('Amount tendered is less than the total');
       return;
     }
-    if (paymentMethod === 'credit' && customerId === 'walk-in') {
-      toast.error('Select a customer for credit sales');
+    if (chargesCustomerAccount && customerId === 'walk-in') {
+      toast.error(
+        paymentMethod === 'account'
+          ? 'Select a customer to pay from their account'
+          : 'Select a customer for credit sales',
+      );
+      return;
+    }
+    if (insufficientAccount) {
+      toast.error('Not enough account balance for this sale');
       return;
     }
 
@@ -478,7 +489,13 @@ export function PosRegister() {
               </div>
             )}
 
-            {paymentMethod === 'credit' && customerId !== 'walk-in' && (
+            {chargesCustomerAccount && customerId === 'walk-in' && (
+              <p className="text-xs text-destructive">
+                Select a customer to {paymentMethod === 'account' ? 'pay from their account' : 'sell on credit'}.
+              </p>
+            )}
+
+            {chargesCustomerAccount && customerId !== 'walk-in' && (
               <div className="space-y-1 rounded-md bg-accent/50 p-3 text-sm">
                 <div className="flex justify-between">
                   <span>Account balance</span>
@@ -492,6 +509,21 @@ export function PosRegister() {
                     {formatMoney(balanceAfterSale)}
                   </span>
                 </div>
+                {paymentMethod === 'account' && (
+                  <p className="pt-1 text-xs text-muted-foreground">
+                    The sale total will be deducted from this customer&apos;s account.
+                  </p>
+                )}
+                {insufficientAccount && (
+                  <p className="pt-1 text-xs text-destructive">
+                    Not enough account balance. Use Credit to sell now and collect later.
+                  </p>
+                )}
+                {paymentMethod === 'credit' && (
+                  <p className="pt-1 text-xs text-muted-foreground">
+                    Recorded as bought on credit. The customer will pay later.
+                  </p>
+                )}
                 {creditWouldGoNegative && (
                   <p className="pt-1 text-xs text-destructive">
                     This sale will put the account in the red. The customer will owe the shop.
@@ -542,7 +574,7 @@ export function PosRegister() {
         onOpenChange={setReceiptOpen}
         sale={receipt}
         storeName={settings?.storeName ?? 'Store'}
-        currency={settings?.currency ?? 'EUR'}
+        currency={settings?.currency ?? APP_CURRENCY}
       />
     </div>
   );

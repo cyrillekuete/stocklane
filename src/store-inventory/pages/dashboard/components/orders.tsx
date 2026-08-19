@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { formatMoney } from '@/store-inventory/lib/format';
 
 interface IOrdersProps {
   className?: string;
@@ -174,7 +175,7 @@ const Orders = ({ className }: IOrdersProps) => {
 
           <div className="flex items-center gap-2.5 px-5 lg:px-7.5 mb-1.5">
             <span className="text-3xl font-semibold text-foreground">
-              $9,395.72
+              {formatMoney(9395.72)}
             </span>
             <Badge size="sm" variant="success" appearance="light">
               +4.7%

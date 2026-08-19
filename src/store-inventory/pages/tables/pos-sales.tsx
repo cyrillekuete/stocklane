@@ -15,7 +15,7 @@ import { Input, InputWrapper } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { usePosSales, useVoidPosSale } from '@/store-inventory/hooks/use-pos';
 import { useStoreSettings } from '@/store-inventory/hooks/use-settings';
-import { formatMoney } from '@/store-inventory/lib/format';
+import { APP_CURRENCY, formatMoney } from '@/store-inventory/lib/format';
 import { formatPaymentMethod } from '@/store-inventory/lib/payment-methods';
 import { formatSaleWarehouses } from '@/store-inventory/services/pos';
 import type { PosSaleRow } from '@/store-inventory/types';
@@ -189,7 +189,7 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
         onOpenChange={setReceiptOpen}
         sale={selected}
         storeName={settings.data?.storeName ?? 'Store'}
-        currency={settings.data?.currency ?? 'EUR'}
+        currency={settings.data?.currency ?? APP_CURRENCY}
       />
     </>
   );

@@ -113,6 +113,18 @@ export function PosReceiptDialog({
                   </div>
                 </>
               )}
+              {sale.paymentMethod === 'account' && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Paid from account</span>
+                  <span>{formatMoney(sale.total)}</span>
+                </div>
+              )}
+              {sale.paymentMethod === 'credit' && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Bought on credit</span>
+                  <span>{formatMoney(sale.total)}</span>
+                </div>
+              )}
             </div>
             {sale.notes && <p className="text-muted-foreground">Note: {sale.notes}</p>}
             <p className="text-center text-xs text-muted-foreground">Thank you for your purchase</p>

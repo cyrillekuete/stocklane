@@ -17,6 +17,7 @@ import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { toAbsoluteUrl } from '@/lib/helpers';
+import { formatMoney } from '@/store-inventory/lib/format';
 import {
   Card,
   CardFooter,
@@ -102,7 +103,7 @@ const orderItemsMockData: OrderItemData[] = [
       tooltip: 'Air Max 270 React Engineered - Premium sneakers with advanced cushioning technology',
     },
     category: 'Sneakers',
-    price: '$83.00',
+    price: formatMoney(83),
     trends: {
       label: 'Fast Moving',
       variant: 'success',
@@ -124,7 +125,7 @@ const orderItemsMockData: OrderItemData[] = [
       tooltip: 'Trail Runner Z2 - High-performance outdoor running shoes with superior grip',
     },
     category: 'Outdoor',
-    price: '$110.00',
+    price: formatMoney(110),
     trends: {
       label: 'Promo',
       variant: 'info',
@@ -146,7 +147,7 @@ const orderItemsMockData: OrderItemData[] = [
       tooltip: 'Urban Flex Knit Low - Comfortable urban running shoes with flexible knit upper',
     },
     category: 'Runners',
-    price: '$76.50',
+    price: formatMoney(76.5),
     trends: {
       label: 'Clearance',
       variant: 'warning',
@@ -168,7 +169,7 @@ const orderItemsMockData: OrderItemData[] = [
       tooltip: 'Blaze Street Classic - Timeless street style sneakers with modern comfort',
     },
     category: 'Sneakers',
-    price: '$69.99',
+    price: formatMoney(69.99),
     trends: {
       label: 'Slow Moving',
       variant: 'destructive',

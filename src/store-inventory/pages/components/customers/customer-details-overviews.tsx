@@ -23,14 +23,14 @@ export function CustomerDetailsOverviews({
       <Statistics1
         items={[
           { total: orderCount.toLocaleString(), label: 'Total Orders', badgeLabel: '23.08', badgeColor: 'success', text: 'Annual trend', icon: 'up' },
-          { total: customer?.total || '$0.00', label: 'Cumulative Spend', badgeLabel: '3.82', badgeColor: 'success', text: 'Monthly trend', icon: 'up' },
-          { total: customer?.price || '$0.00', label: 'Avg. Order Value(AOV)', badgeLabel: '0.39', badgeColor: avg >= spent / Math.max(orderCount, 1) ? 'success' : 'destructive', text: 'Weekly trend', icon: avg >= 50 ? 'up' : 'down' },
+          { total: customer?.total || formatMoney(0), label: 'Cumulative Spend', badgeLabel: '3.82', badgeColor: 'success', text: 'Monthly trend', icon: 'up' },
+          { total: customer?.price || formatMoney(0), label: 'Avg. Order Value(AOV)', badgeLabel: '0.39', badgeColor: avg >= spent / Math.max(orderCount, 1) ? 'success' : 'destructive', text: 'Weekly trend', icon: avg >= 50 ? 'up' : 'down' },
           {
             total: formatMoney(accountBalance),
             label: 'Account Balance',
             badgeLabel: '0',
             badgeColor: accountBalance < 0 ? 'destructive' : 'success',
-            text: accountBalance < 0 ? 'Customer owes the shop' : 'Available credit',
+            text: accountBalance < 0 ? 'Customer owes the shop' : 'Available on account',
             icon: accountBalance < 0 ? 'down' : 'up',
             valueClassName: accountBalance < 0 ? 'text-destructive' : 'text-foreground',
           },

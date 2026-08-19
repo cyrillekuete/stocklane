@@ -7,6 +7,8 @@ export function stableId(prefix: string, value: string) {
   return `${prefix}_${slug || 'item'}`;
 }
 
+export const APP_CURRENCY = 'XAF';
+
 export function parseMoney(value: string | number | null | undefined) {
   if (typeof value === 'number') return value;
   if (!value) return 0;
@@ -16,10 +18,13 @@ export function parseMoney(value: string | number | null | undefined) {
 
 export function formatMoney(value: string | number | null | undefined) {
   const amount = parseMoney(value);
-  return `$${amount.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  return new Intl.NumberFormat('fr-CM', {
+    style: 'currency',
+    currency: APP_CURRENCY,
+    currencyDisplay: 'code',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount));
 }
 
 export function parseQty(value: string | number | null | undefined) {

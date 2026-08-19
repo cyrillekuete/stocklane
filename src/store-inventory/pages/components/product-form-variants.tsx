@@ -4,7 +4,6 @@ import { useState } from 'react';
 import {
   CheckCircle,
   ClipboardPenLine,
-  DollarSign,
   Plus,
   Settings,
   Trash2,
@@ -31,6 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatMoney, APP_CURRENCY } from '@/store-inventory/lib/format';
 
 interface Variant {
   id: string;
@@ -268,7 +268,7 @@ export function ProductFormVariants({
                           {variant.color}
                         </TableCell>
                         <TableCell className="py-1 border-e border-border/60">
-                          ${variant.price}
+                          {formatMoney(variant.price)}
                         </TableCell>
                         <TableCell className="py-1 border-e border-border/60">
                           <span className="px-2 py-1 rounded-full text-xs">
@@ -366,7 +366,7 @@ export function ProductFormVariants({
                     <InputWrapper>
                       <Input
                         type="number"
-                        placeholder="0.00"
+                        placeholder="0"
                         value={newVariant.price}
                         onChange={(e) =>
                           setNewVariant({
@@ -375,7 +375,7 @@ export function ProductFormVariants({
                           })
                         }
                       />
-                      <DollarSign className="size-3" />
+                      <span className="text-xs text-muted-foreground">{APP_CURRENCY}</span>
                     </InputWrapper>
                   </div>
 
