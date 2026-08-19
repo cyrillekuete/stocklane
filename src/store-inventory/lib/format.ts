@@ -16,15 +16,18 @@ export function parseMoney(value: string | number | null | undefined) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
+export function roundMoney(value: string | number | null | undefined) {
+  return Math.round(parseMoney(value));
+}
+
 export function formatMoney(value: string | number | null | undefined) {
-  const amount = parseMoney(value);
   return new Intl.NumberFormat('fr-CM', {
     style: 'currency',
     currency: APP_CURRENCY,
     currencyDisplay: 'code',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(Math.round(amount));
+  }).format(roundMoney(value));
 }
 
 export function parseQty(value: string | number | null | undefined) {

@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { parseMoney } from '../lib/format';
+import { parseMoney, roundMoney } from '../lib/format';
 import type {
   PosCatalogProduct,
   PosPaymentMethod,
@@ -318,28 +318,28 @@ export function computePosTotals(options: {
   taxCalculation: string;
 }) {
   const lineSubtotal = options.items.reduce((sum, item) => {
-    const line = item.unitPrice * item.quantity - (item.lineDiscount ?? 0);
+    const line = roundMoney(item.unitPrice) * item.quantity - roundMoney(item.lineDiscount ?? 0);
     return sum + Math.max(line, 0);
   }, 0);
   const percentDiscount = options.discountPercent
     ? (lineSubtotal * options.discountPercent) / 100
     : 0;
-  const discountAmount = Math.min(lineSubtotal, Math.max(options.discountAmount ?? 0, 0) + percentDiscount);
+  const discountAmount = roundMoney(
+    Math.min(lineSubtotal, Math.max(options.discountAmount ?? 0, 0) + percentDiscount),
+  );
   const afterDiscount = Math.max(lineSubtotal - discountAmount, 0);
   const taxPercent = Math.max(options.taxPercent, 0);
   const inclusive = options.taxCalculation === 'inclusive';
-  const taxAmount = inclusive
-    ? afterDiscount - afterDiscount / (1 + taxPercent / 100)
-    : (afterDiscount * taxPercent) / 100;
+  const taxAmount = roundMoney(
+    inclusive
+      ? afterDiscount - afterDiscount / (1 + taxPercent / 100)
+      : (afterDiscount * taxPercent) / 100,
+  );
   const total = inclusive ? afterDiscount : afterDiscount + taxAmount;
   return {
     subtotal: roundMoney(lineSubtotal),
-    discountAmount: roundMoney(discountAmount),
-    taxAmount: roundMoney(taxAmount),
+    discountAmount,
+    taxAmount,
     total: roundMoney(total),
   };
-}
-
-function roundMoney(value: number) {
-  return Math.round(value * 100) / 100;
 }

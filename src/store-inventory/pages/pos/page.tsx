@@ -23,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCustomers } from '@/store-inventory/hooks/use-inventory';
 import { useCompletePosSale, usePosCatalog } from '@/store-inventory/hooks/use-pos';
 import { useStoreSettings } from '@/store-inventory/hooks/use-settings';
-import { APP_CURRENCY, formatMoney, generateSaleNumber, parseMoney } from '@/store-inventory/lib/format';
+import { APP_CURRENCY, formatMoney, generateSaleNumber, parseMoney, roundMoney } from '@/store-inventory/lib/format';
 import { isCustomerAccountPayment, POS_PAYMENT_METHODS } from '@/store-inventory/lib/payment-methods';
 import { computePosTotals } from '@/store-inventory/services/pos';
 import { fetchWarehouseStock } from '@/store-inventory/services/warehouses';
@@ -178,7 +178,7 @@ export function PosRegister() {
     taxPercent,
     taxCalculation,
   });
-  const tenderedAmount = parseMoney(tendered);
+  const tenderedAmount = roundMoney(parseMoney(tendered));
   const changeDue = paymentMethod === 'cash' ? Math.max(tenderedAmount - totals.total, 0) : 0;
   const customer = customers.find((row) => row.id === customerId);
   const customerBalance = customer?.accountBalance ?? 0;
@@ -274,9 +274,9 @@ export function PosRegister() {
           warehouseId: line.warehouseId,
           sku: line.sku,
           name: line.name,
-          unitPrice: line.unitPrice,
+          unitPrice: roundMoney(line.unitPrice),
           quantity: line.quantity,
-          lineTotal: line.unitPrice * line.quantity,
+          lineTotal: roundMoney(line.unitPrice) * line.quantity,
         })),
       };
 
@@ -312,10 +312,10 @@ export function PosRegister() {
             warehouseCode: line.warehouseCode,
             sku: line.sku,
             name: line.name,
-            unitPrice: line.unitPrice,
+            unitPrice: roundMoney(line.unitPrice),
             quantity: line.quantity,
             lineDiscount: 0,
-            lineTotal: line.unitPrice * line.quantity,
+            lineTotal: roundMoney(line.unitPrice) * line.quantity,
           })),
         };
       }
