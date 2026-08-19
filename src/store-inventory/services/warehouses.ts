@@ -95,9 +95,10 @@ export async function fetchWarehouses() {
   const warehouses = (data ?? []) as InventoryWarehouseRow[];
   if (!warehouses.length) return [];
 
-  const { data: stockRows } = await client
+  const { data: stockRows, error: stockError } = await client
     .from('inventory_warehouse_stock')
     .select('warehouse_id, qty');
+  if (stockError) throw stockError;
 
   const counts = new Map<string, { skuCount: number; onHand: number }>();
   for (const row of stockRows ?? []) {
