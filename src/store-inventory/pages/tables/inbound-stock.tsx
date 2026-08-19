@@ -103,6 +103,7 @@ export interface IData {
   };
   arrivalDate: string;
   carrier: string;
+  warehouse?: string;
   supplier: {
     logo: string;
     name: string;
@@ -584,6 +585,16 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
         meta: {
           cellClassName: '',
         },
+      },
+      {
+        id: 'warehouse',
+        accessorFn: (row) => row.warehouse,
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Warehouse" column={column} />
+        ),
+        cell: (info) => info.row.original.warehouse || '—',
+        enableSorting: true,
+        size: 100,
       },
       {
         id: 'tracking',

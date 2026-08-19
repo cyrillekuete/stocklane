@@ -40,11 +40,38 @@ model Warehouse {
   id                 String              @id @default(cuid())
   code               String              @unique
   name               String
+  address            String?
+  city               String?
+  country            String?
+  phone              String?
+  status             String              @default("Active")
+  isDefault          Boolean             @default(false) @map("is_default")
   createdAt          DateTime            @default(now()) @map("created_at")
   updatedAt          DateTime            @updatedAt @map("updated_at")
   outboundShipments  OutboundShipment[]
+  inboundShipments   InboundShipment[]
+  stock              WarehouseStock[]
+  posSales           PosSale[]
 
+  @@index([status])
   @@map("inventory_warehouses")
+}
+
+model WarehouseStock {
+  id          String    @id @default(cuid())
+  warehouseId String    @map("warehouse_id")
+  productId   String    @map("product_id")
+  qty         Int       @default(0)
+  reserved    Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([warehouseId, productId])
+  @@index([productId])
+  @@index([warehouseId])
+  @@map("inventory_warehouse_stock")
 }
 
 model Carrier {
@@ -97,6 +124,8 @@ model Product {
   inboundShipments   InboundShipment[]
   outboundShipments  OutboundShipment[]
   orderItems         OrderItem[]
+  warehouseStock     WarehouseStock[]
+  posSaleItems       PosSaleItem[]
 
   @@index([status])
   @@index([categoryId])
@@ -177,24 +206,27 @@ model StockLevel {
 }
 
 model InboundShipment {
-  id          String    @id @default(cuid())
-  productId   String    @map("product_id")
-  supplierId  String?   @map("supplier_id")
-  carrierId   String?   @map("carrier_id")
-  orderDate   String    @map("order_date")
-  qty         Int
-  stockValue  Decimal   @default(0) @map("stock_value") @db.Decimal(12, 2)
-  status      String
-  statusVariant String  @default("secondary") @map("status_variant")
-  arrivalDate String    @map("arrival_date")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  product     Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
-  supplier    Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
-  carrier     Carrier?  @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  id            String     @id @default(cuid())
+  productId     String     @map("product_id")
+  supplierId    String?    @map("supplier_id")
+  carrierId     String?    @map("carrier_id")
+  warehouseId   String?    @map("warehouse_id")
+  orderDate     String     @map("order_date")
+  qty           Int
+  stockValue    Decimal    @default(0) @map("stock_value") @db.Decimal(12, 2)
+  status        String
+  statusVariant String     @default("secondary") @map("status_variant")
+  arrivalDate   String     @map("arrival_date")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+  product       Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  supplier      Supplier?  @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  carrier       Carrier?   @relation(fields: [carrierId], references: [id], onDelete: SetNull)
+  warehouse     Warehouse? @relation(fields: [warehouseId], references: [id], onDelete: SetNull)
 
   @@index([productId])
   @@index([status])
+  @@index([warehouseId])
   @@map("inventory_inbound_shipments")
 }
 
@@ -245,6 +277,7 @@ model Customer {
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   orders          Order[]
+  posSales        PosSale[]
 
   @@index([status])
   @@map("inventory_customers")
@@ -356,6 +389,7 @@ model StoreSettings {
   paypal                 Boolean  @default(false)
   taxRateScope           String   @default("country") @map("tax_rate_scope")
   taxCalculation         String   @default("inclusive") @map("tax_calculation")
+  taxPercent             Decimal  @default(20) @map("tax_percent") @db.Decimal(5, 2)
   automaticInvoice       Boolean  @default(false) @map("automatic_invoice")
   noReplyEmail           String?  @map("no_reply_email")
   guestCheckout          Boolean  @default(true) @map("guest_checkout")
@@ -388,4 +422,54 @@ model StoreSettings {
   updatedAt              DateTime @updatedAt @map("updated_at")
 
   @@map("inventory_store_settings")
+}
+
+model PosSale {
+  id              String        @id @default(cuid())
+  saleNumber      String        @unique @map("sale_number")
+  warehouseId     String        @map("warehouse_id")
+  customerId      String?       @map("customer_id")
+  customerName    String        @default("Walk-in") @map("customer_name")
+  subtotal        Decimal       @default(0) @db.Decimal(12, 2)
+  discountAmount  Decimal       @default(0) @map("discount_amount") @db.Decimal(12, 2)
+  taxAmount       Decimal       @default(0) @map("tax_amount") @db.Decimal(12, 2)
+  total           Decimal       @default(0) @db.Decimal(12, 2)
+  paymentMethod   String        @map("payment_method")
+  amountTendered  Decimal       @default(0) @map("amount_tendered") @db.Decimal(12, 2)
+  changeDue       Decimal       @default(0) @map("change_due") @db.Decimal(12, 2)
+  notes           String?
+  status          String        @default("completed")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  warehouse       Warehouse     @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  customer        Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items           PosSaleItem[]
+
+  @@index([warehouseId])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("inventory_pos_sales")
+}
+
+model PosSaleItem {
+  id           String   @id @default(cuid())
+  saleId       String   @map("sale_id")
+  productId    String?  @map("product_id")
+  sku          String
+  name         String
+  unitPrice    Decimal  @default(0) @map("unit_price") @db.Decimal(12, 2)
+  quantity     Int      @default(1)
+  lineDiscount Decimal  @default(0) @map("line_discount") @db.Decimal(12, 2)
+  lineTotal    Decimal  @default(0) @map("line_total") @db.Decimal(12, 2)
+  color        String?
+  size         String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  sale         PosSale  @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product      Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([saleId])
+  @@index([productId])
+  @@map("inventory_pos_sale_items")
 }

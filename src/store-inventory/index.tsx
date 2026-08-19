@@ -26,6 +26,9 @@ import { CustomerList } from './pages/customer-list/page';
 import { CustomerListDetails } from './pages/customer-list-details/page';
 import { OrderListProducts } from './pages/order-list-products/page';
 import { SettingsModal } from './pages/settings-modal/page';
+import { WarehouseList } from './pages/warehouse-list/page';
+import { PosRegister } from './pages/pos/page';
+import { PosSalesPage } from './pages/pos-sales/page';
 
 export default function StoreInventoryModule() {
   return (
@@ -62,6 +65,9 @@ export default function StoreInventoryModule() {
         <Route path="order-list-products" element={<OrderListProducts />} />
         <Route path="order-details" element={<OrderDetailsPage />} />
         <Route path="order-tracking" element={<OrderTrackingPage />} />
+        <Route path="warehouses" element={<WarehouseList />} />
+        <Route path="pos" element={<PosRegister />} />
+        <Route path="pos/sales" element={<PosSalesPage />} />
       </Route>
     </Routes>
   );

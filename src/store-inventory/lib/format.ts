@@ -41,6 +41,11 @@ export function generateOrderNumber() {
   return `SO-${region}-${digits}`;
 }
 
+export function generateSaleNumber() {
+  const digits = String(Math.floor(100000 + Math.random() * 900000));
+  return `POS-${digits}`;
+}
+
 export function parseOrderDate(value?: string | null) {
   if (!value) return null;
   const parsed = Date.parse(value);

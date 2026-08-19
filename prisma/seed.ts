@@ -109,15 +109,46 @@ async function main() {
   for (const row of inboundStockMockData) addSupplier(row.supplier.name, row.supplier.logo);
   for (const row of orderItemsMockData) addSupplier(row.supplier.name, row.supplier.logo);
 
-  const warehouses = new Map<string, { id: string; code: string; name: string }>();
+  const warehouses = new Map<
+    string,
+    {
+      id: string;
+      code: string;
+      name: string;
+      address: string | null;
+      city: string | null;
+      country: string | null;
+      phone: string | null;
+      status: string;
+      is_default: boolean;
+    }
+  >();
   const addWarehouse = (code?: string) => {
     if (!code) return null;
     if (!warehouses.has(code)) {
-      warehouses.set(code, { id: stableId('wh', code), code, name: code });
+      warehouses.set(code, {
+        id: stableId('wh', code),
+        code,
+        name: code,
+        address: null,
+        city: null,
+        country: null,
+        phone: null,
+        status: 'Active',
+        is_default: false,
+      });
     }
     return warehouses.get(code)!.id;
   };
   for (const row of outboundStockMockData) addWarehouse(row.warehouse);
+  if (!warehouses.size) {
+    addWarehouse('MAIN');
+  }
+  const defaultWarehouse = [...warehouses.values()][0];
+  if (defaultWarehouse) {
+    defaultWarehouse.is_default = true;
+    defaultWarehouse.name = defaultWarehouse.code === 'MAIN' ? 'Main Warehouse' : defaultWarehouse.name;
+  }
 
   const carriers = new Map<string, { id: string; name: string; logo: string | null }>();
   const addCarrier = (name?: string, logo?: string) => {
@@ -268,6 +299,7 @@ async function main() {
       status: row.status.label,
       status_variant: row.status.variant,
       arrival_date: row.arrivalDate,
+      warehouse_id: defaultWarehouse?.id ?? null,
     };
   });
 
@@ -452,11 +484,27 @@ async function main() {
   await upsert('inventory_store_settings', [storeSettingsToRow(defaultStoreSettings)]);
   await upsert('inventory_categories', categories as Record<string, unknown>[]);
   await upsert('inventory_suppliers', [...suppliers.values()]);
-  await upsert('inventory_warehouses', [...warehouses.values()]);
+  await upsert('inventory_warehouses', [...warehouses.values()].map((row) => ({ ...row, is_default: false })));
+  if (defaultWarehouse) {
+    await supabase.from('inventory_warehouses').update({ is_default: false }).eq('is_default', true);
+    const { error: defaultError } = await supabase
+      .from('inventory_warehouses')
+      .update({ is_default: true })
+      .eq('id', defaultWarehouse.id);
+    if (defaultError) throw new Error(`inventory_warehouses default: ${defaultError.message}`);
+  }
   await upsert('inventory_carriers', [...carriers.values()]);
   await upsert('inventory_brands', brands);
   await upsert('inventory_products', [...products.values()] as Record<string, unknown>[]);
   await upsert('inventory_stock_levels', [...stockLevels.values()]);
+  const warehouseStock = [...stockLevels.values()].map((row) => ({
+    id: stableId('whs', `${defaultWarehouse?.id ?? 'main'}_${row.product_id}`),
+    warehouse_id: defaultWarehouse?.id ?? stableId('wh', 'MAIN'),
+    product_id: row.product_id,
+    qty: row.qty,
+    reserved: row.reserved ?? 0,
+  }));
+  await upsert('inventory_warehouse_stock', warehouseStock);
   await upsert('inventory_inbound_shipments', inbound);
   await upsert('inventory_outbound_shipments', outbound);
   await upsert('inventory_customers', customers);

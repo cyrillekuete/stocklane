@@ -19,6 +19,7 @@ import { inventoryKeys, REFERENCE_STALE_TIME } from '../lib/query-keys';
 import {
   createCategory,
   createCustomer,
+  createInboundShipment,
   createOrder,
   createProduct,
   deleteCategory,
@@ -66,6 +67,7 @@ import {
   type OrderInput,
   type OrderItemInput,
 } from '../services/inventory';
+import { fetchWarehouseStock } from '../services/warehouses';
 import type {
   CategoryListRow,
   CustomerListRow,
@@ -367,18 +369,66 @@ export function useBrands() {
   });
 }
 
-export function useAllStock() {
-  return useQuery({
+export function useAllStock(warehouseId?: string | null) {
+  const stock = useQuery({
     ...stockQuery,
-    select: (rows) => rows.map(mapAllStock),
   });
+  const warehouseStock = useQuery({
+    queryKey: inventoryKeys.warehouseStock(warehouseId ?? ''),
+    queryFn: () => fetchWarehouseStock(warehouseId!),
+    enabled: isSupabaseConfigured && Boolean(warehouseId),
+  });
+  const qtyMap = new Map((warehouseStock.data ?? []).map((row) => [row.productId, row]));
+  return {
+    ...stock,
+    data: stock.data
+      ? stock.data.map((product) => {
+          if (!warehouseId) return mapAllStock(product);
+          const overlay = qtyMap.get(product.id);
+          return mapAllStock({
+            ...product,
+            stock_level: product.stock_level
+              ? {
+                  ...product.stock_level,
+                  qty: overlay?.qty ?? 0,
+                  reserved: overlay?.reserved ?? 0,
+                }
+              : product.stock_level,
+          });
+        })
+      : stock.data,
+  };
 }
 
-export function useCurrentStock() {
-  return useQuery({
+export function useCurrentStock(warehouseId?: string | null) {
+  const stock = useQuery({
     ...stockQuery,
-    select: (rows) => rows.map(mapCurrentStock),
   });
+  const warehouseStock = useQuery({
+    queryKey: inventoryKeys.warehouseStock(warehouseId ?? ''),
+    queryFn: () => fetchWarehouseStock(warehouseId!),
+    enabled: isSupabaseConfigured && Boolean(warehouseId),
+  });
+  const qtyMap = new Map((warehouseStock.data ?? []).map((row) => [row.productId, row]));
+  return {
+    ...stock,
+    data: stock.data
+      ? stock.data.map((product) => {
+          if (!warehouseId) return mapCurrentStock(product);
+          const overlay = qtyMap.get(product.id);
+          return mapCurrentStock({
+            ...product,
+            stock_level: product.stock_level
+              ? {
+                  ...product.stock_level,
+                  qty: overlay?.qty ?? 0,
+                  reserved: overlay?.reserved ?? 0,
+                }
+              : product.stock_level,
+          });
+        })
+      : stock.data,
+  };
 }
 
 export function useStockPlanner() {
@@ -625,15 +675,22 @@ export function useUpdateStockLevel() {
       input,
     }: {
       productId: string;
-      input: Partial<InventoryStockLevel>;
+      input: Partial<InventoryStockLevel> & { warehouseId?: string };
     }) => updateStockLevel(productId, input),
-    keys: [inventoryKeys.stock()],
+    keys: [inventoryKeys.stock(), inventoryKeys.warehouseStock()],
     apply: ({ productId, input }) => {
       patchListById<InventoryProduct>(queryClient, inventoryKeys.stock(), productId, (product) => ({
         ...product,
         stock_level: product.stock_level ? { ...product.stock_level, ...input } : product.stock_level,
       }));
     },
+  });
+}
+
+export function useCreateInboundShipment() {
+  return useCachedMutation({
+    mutationFn: createInboundShipment,
+    keys: [inventoryKeys.inbound(), inventoryKeys.stock(), inventoryKeys.warehouseStock()],
   });
 }
 

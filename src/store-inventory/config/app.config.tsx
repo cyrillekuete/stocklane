@@ -5,7 +5,9 @@ import {
   LayoutList,
   Package,
   Settings2,
+  ShoppingCart,
   UsersRound,
+  Warehouse,
 } from 'lucide-react';
 import { MenuConfig } from './types';
 
@@ -54,6 +56,30 @@ export const MENU_SIDEBAR: MenuConfig  = [
       {
         title: 'Create Shipping Label',
         path: '/store-inventory/create-shipping-label',
+      },
+    ],
+  },
+  {
+    title: 'Warehouses',
+    icon: Warehouse,
+    children: [
+      {
+        title: 'Warehouse List',
+        path: '/store-inventory/warehouses',
+      },
+    ],
+  },
+  {
+    title: 'Point of Sale',
+    icon: ShoppingCart,
+    children: [
+      {
+        title: 'Register',
+        path: '/store-inventory/pos',
+      },
+      {
+        title: 'Sale History',
+        path: '/store-inventory/pos/sales',
       },
     ],
   },

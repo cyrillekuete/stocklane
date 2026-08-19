@@ -117,6 +117,8 @@ export interface InboundStockRow {
   };
   arrivalDate: string;
   carrier: string;
+  warehouse?: string;
+  warehouseId?: string | null;
   supplier: {
     logo: string;
     name: string;
@@ -449,6 +451,7 @@ export interface StoreSettings {
   paypal: boolean;
   taxRateScope: string;
   taxCalculation: string;
+  taxPercent: number;
   automaticInvoice: boolean;
   noReplyEmail: string | null;
   guestCheckout: boolean;
@@ -479,4 +482,81 @@ export interface StoreSettings {
   notifyEmail: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WarehouseListRow {
+  id: string;
+  code: string;
+  name: string;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  phone?: string | null;
+  status: {
+    label: string;
+    variant: BadgeTone;
+  };
+  isDefault: boolean;
+  skuCount: number;
+  onHand: number;
+  created?: string;
+  updated?: string;
+}
+
+export type PosPaymentMethod = 'cash' | 'card' | 'mobile';
+export type PosSaleStatus = 'completed' | 'voided';
+
+export interface PosSaleItemRow {
+  id: string;
+  saleId: string;
+  productId?: string | null;
+  sku: string;
+  name: string;
+  unitPrice: number;
+  quantity: number;
+  lineDiscount: number;
+  lineTotal: number;
+  color?: string | null;
+  size?: string | null;
+}
+
+export interface PosSaleRow {
+  id: string;
+  saleNumber: string;
+  warehouseId: string;
+  warehouseName: string;
+  warehouseCode: string;
+  customerId?: string | null;
+  customerName: string;
+  subtotal: number;
+  discountAmount: number;
+  taxAmount: number;
+  total: number;
+  paymentMethod: PosPaymentMethod;
+  amountTendered: number;
+  changeDue: number;
+  notes?: string | null;
+  status: PosSaleStatus;
+  itemCount: number;
+  createdAt: string;
+  items?: PosSaleItemRow[];
+}
+
+export interface WarehouseStockRow {
+  id: string;
+  warehouseId: string;
+  productId: string;
+  qty: number;
+  reserved: number;
+}
+
+export interface PosCatalogProduct {
+  id: string;
+  name: string;
+  sku: string;
+  barcode: string;
+  image: string;
+  price: number;
+  status: string;
+  qty: number;
 }

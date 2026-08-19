@@ -1,9 +1,11 @@
 import { StockNavbar } from '../components/stock-navbar';
 import { CurrentStockTable } from '../tables/current-stock';
 import { useCurrentStock } from '@/store-inventory/hooks/use-inventory';
+import { useWarehouseFilter } from '@/store-inventory/lib/warehouse-filter';
 
 export function CurrentStock() {
-  const { data } = useCurrentStock();
+  const { warehouseId } = useWarehouseFilter();
+  const { data } = useCurrentStock(warehouseId);
   return (
     <>
       <StockNavbar />

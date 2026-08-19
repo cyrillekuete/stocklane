@@ -37,6 +37,17 @@ export const inventoryKeys = {
       ? ([...inventoryKeys.all, 'options', productId] as const)
       : ([...inventoryKeys.all, 'options'] as const),
   settings: () => [...inventoryKeys.all, 'settings'] as const,
+  warehouses: () => [...inventoryKeys.all, 'warehouses'] as const,
+  warehouseStock: (warehouseId?: string) =>
+    warehouseId
+      ? ([...inventoryKeys.all, 'warehouse-stock', warehouseId] as const)
+      : ([...inventoryKeys.all, 'warehouse-stock'] as const),
+  posCatalog: (warehouseId?: string) =>
+    warehouseId
+      ? ([...inventoryKeys.all, 'pos-catalog', warehouseId] as const)
+      : ([...inventoryKeys.all, 'pos-catalog'] as const),
+  posSales: () => [...inventoryKeys.all, 'pos-sales'] as const,
+  posSale: (id: string) => [...inventoryKeys.all, 'pos-sale', id] as const,
 };
 
 export const REFERENCE_STALE_TIME = 5 * 60_000;

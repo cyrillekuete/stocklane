@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { FilePlus, FileMinus, Globe, Globe2 } from "lucide-react";
 import { RiMapPinLine } from "@remixicon/react";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useSettingsForm } from "../../settings-form-context";
 
@@ -63,6 +64,24 @@ export function TaxSettings() {
                   </SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-start gap-5">
+            <div className="flex flex-col gap-0.5 basis-1/3">
+              <Label className="text-2sm font-medium shrink-0">Tax Percent</Label>
+              <span className="text-xs font-normal text-muted-foreground">Used at POS checkout</span>
+            </div>
+            <div className="basis-2/3">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={draft.taxPercent}
+                onChange={(event) => updateDraft({ taxPercent: Number(event.target.value) || 0 })}
+              />
             </div>
           </div>
 

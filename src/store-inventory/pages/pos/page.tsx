@@ -1,0 +1,439 @@
+'use client';
+
+import { useEffect, useMemo, useState } from 'react';
+import { Minus, Plus, Search, ShoppingCart, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { toAbsoluteUrl } from '@/lib/helpers';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input, InputWrapper } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useCustomers } from '@/store-inventory/hooks/use-inventory';
+import { useCompletePosSale, usePosCatalog } from '@/store-inventory/hooks/use-pos';
+import { useStoreSettings } from '@/store-inventory/hooks/use-settings';
+import { useActiveWarehouses } from '@/store-inventory/hooks/use-warehouses';
+import { formatMoney, generateSaleNumber, parseMoney } from '@/store-inventory/lib/format';
+import { computePosTotals } from '@/store-inventory/services/pos';
+import { currentStockMockData } from '@/store-inventory/data/stock';
+import { productListMockData } from '@/store-inventory/data/products';
+import type { PosCatalogProduct, PosPaymentMethod, PosSaleRow } from '@/store-inventory/types';
+import { WarehouseSelect } from '../components/warehouse-select';
+import { PosReceiptDialog } from '../components/pos-receipt-dialog';
+
+type CartLine = {
+  productId: string;
+  name: string;
+  sku: string;
+  unitPrice: number;
+  quantity: number;
+  available: number;
+  image: string;
+};
+
+const mockCatalog: PosCatalogProduct[] = productListMockData.map((product, index) => ({
+  id: product.id,
+  name: product.productInfo.title,
+  sku: product.productInfo.label,
+  barcode: product.barcode ?? '',
+  image: product.productInfo.image,
+  price: parseMoney(product.price),
+  status: product.status.label,
+  qty: currentStockMockData[index % currentStockMockData.length]?.stock ?? 10,
+}));
+
+export function PosRegister() {
+  const { data: warehouses } = useActiveWarehouses();
+  const defaultWarehouse = warehouses?.find((row) => row.isDefault) ?? warehouses?.[0];
+  const [warehouseId, setWarehouseId] = useState<string | null>(null);
+  const catalogQuery = usePosCatalog(warehouseId);
+  const customersQuery = useCustomers();
+  const settingsQuery = useStoreSettings();
+  const completeSale = useCompletePosSale();
+  const [search, setSearch] = useState('');
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const [customerId, setCustomerId] = useState<string>('walk-in');
+  const [discountPercent, setDiscountPercent] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState<PosPaymentMethod>('cash');
+  const [tendered, setTendered] = useState('');
+  const [notes, setNotes] = useState('');
+  const [receipt, setReceipt] = useState<PosSaleRow | null>(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
+
+  useEffect(() => {
+    if (defaultWarehouse && !warehouseId) {
+      setWarehouseId(defaultWarehouse.id);
+    }
+  }, [defaultWarehouse, warehouseId]);
+
+  const settings = settingsQuery.data;
+  const catalog = isSupabaseConfigured ? (catalogQuery.data ?? []) : mockCatalog;
+  const customers = customersQuery.data ?? [];
+
+  const filteredCatalog = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const rows = catalog.filter((product) => product.qty > 0);
+    if (!query) return rows;
+    return rows.filter((product) =>
+      [product.name, product.sku, product.barcode].some((value) => value.toLowerCase().includes(query)),
+    );
+  }, [catalog, search]);
+
+  const addToCart = (product: PosCatalogProduct) => {
+    if (!warehouseId) {
+      toast.error('Select a warehouse first');
+      return;
+    }
+    setCart((current) => {
+      const existing = current.find((line) => line.productId === product.id);
+      if (existing) {
+        if (existing.quantity >= product.qty) {
+          toast.error('Not enough stock in this warehouse');
+          return current;
+        }
+        return current.map((line) =>
+          line.productId === product.id ? { ...line, quantity: line.quantity + 1, available: product.qty } : line,
+        );
+      }
+      return [
+        ...current,
+        {
+          productId: product.id,
+          name: product.name,
+          sku: product.sku,
+          unitPrice: product.price,
+          quantity: 1,
+          available: product.qty,
+          image: product.image,
+        },
+      ];
+    });
+    setSearch('');
+  };
+
+  const updateQty = (productId: string, quantity: number) => {
+    setCart((current) =>
+      current
+        .map((line) => {
+          if (line.productId !== productId) return line;
+          const next = Math.min(Math.max(quantity, 0), line.available);
+          return { ...line, quantity: next };
+        })
+        .filter((line) => line.quantity > 0),
+    );
+  };
+
+  const taxPercent = settings?.taxPercent ?? 20;
+  const taxCalculation = settings?.taxCalculation ?? 'inclusive';
+  const totals = computePosTotals({
+    items: cart,
+    discountPercent,
+    taxPercent,
+    taxCalculation,
+  });
+  const tenderedAmount = parseMoney(tendered);
+  const changeDue = paymentMethod === 'cash' ? Math.max(tenderedAmount - totals.total, 0) : 0;
+  const customer = customers.find((row) => row.id === customerId);
+
+  const handleSearchKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') return;
+    const match = filteredCatalog[0];
+    if (match) addToCart(match);
+  };
+
+  const handleComplete = async () => {
+    if (!warehouseId) {
+      toast.error('Select a warehouse');
+      return;
+    }
+    if (!cart.length) {
+      toast.error('Add at least one item');
+      return;
+    }
+    if (paymentMethod === 'cash' && tenderedAmount < totals.total) {
+      toast.error('Amount tendered is less than the total');
+      return;
+    }
+    const warehouse = warehouses?.find((row) => row.id === warehouseId);
+    const saleNumber = generateSaleNumber();
+    const payload = {
+      saleNumber,
+      warehouseId,
+      customerId: customerId === 'walk-in' ? null : customerId,
+      customerName: customer?.customerInfo.title ?? 'Walk-in',
+      subtotal: totals.subtotal,
+      discountAmount: totals.discountAmount,
+      taxAmount: totals.taxAmount,
+      total: totals.total,
+      paymentMethod,
+      amountTendered: paymentMethod === 'cash' ? tenderedAmount : totals.total,
+      changeDue,
+      notes,
+      items: cart.map((line) => ({
+        productId: line.productId,
+        sku: line.sku,
+        name: line.name,
+        unitPrice: line.unitPrice,
+        quantity: line.quantity,
+        lineTotal: line.unitPrice * line.quantity,
+      })),
+    };
+
+    try {
+      let sale: PosSaleRow | null = null;
+      if (isSupabaseConfigured) {
+        sale = await completeSale.mutateAsync(payload);
+      } else {
+        sale = {
+          id: crypto.randomUUID(),
+          saleNumber,
+          warehouseId,
+          warehouseName: warehouse?.name ?? 'Warehouse',
+          warehouseCode: warehouse?.code ?? '',
+          customerId: payload.customerId,
+          customerName: payload.customerName,
+          subtotal: totals.subtotal,
+          discountAmount: totals.discountAmount,
+          taxAmount: totals.taxAmount,
+          total: totals.total,
+          paymentMethod,
+          amountTendered: payload.amountTendered,
+          changeDue,
+          notes,
+          status: 'completed',
+          itemCount: cart.length,
+          createdAt: new Date().toISOString(),
+          items: cart.map((line) => ({
+            id: crypto.randomUUID(),
+            saleId: '',
+            productId: line.productId,
+            sku: line.sku,
+            name: line.name,
+            unitPrice: line.unitPrice,
+            quantity: line.quantity,
+            lineDiscount: 0,
+            lineTotal: line.unitPrice * line.quantity,
+          })),
+        };
+      }
+      toast.success(`Sale ${saleNumber} completed`);
+      setReceipt(sale);
+      setReceiptOpen(true);
+      setCart([]);
+      setDiscountPercent(0);
+      setTendered('');
+      setNotes('');
+      setCustomerId('walk-in');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to complete sale');
+    }
+  };
+
+  return (
+    <div className="container-fluid space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 className="text-xl font-semibold text-foreground">Point of Sale</h3>
+          <p className="text-sm text-muted-foreground">Sell inventory from the selected warehouse.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <WarehouseSelect allowAll={false} value={warehouseId} onValueChange={setWarehouseId} />
+          <Button variant="outline" asChild>
+            <Link to="/store-inventory/pos/sales">Sale history</Link>
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
+        <Card>
+          <CardHeader className="py-3.5">
+            <div className="flex w-full items-center gap-2">
+              <InputWrapper className="flex-1">
+                <Search />
+                <Input
+                  placeholder="Search name, SKU, or barcode"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={handleSearchKey}
+                />
+              </InputWrapper>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[calc(100vh-22rem)]">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pr-2">
+                {filteredCatalog.map((product) => (
+                  <button
+                    key={product.id}
+                    type="button"
+                    onClick={() => addToCart(product)}
+                    className="rounded-lg border border-border bg-accent/30 p-3 text-left hover:border-primary/40 hover:bg-accent/60"
+                  >
+                    <div className="mb-2 flex h-20 items-center justify-center rounded-md bg-background">
+                      <img
+                        src={toAbsoluteUrl(`/media/store/client/1200x1200/${product.image}`)}
+                        alt={product.name}
+                        className="h-16 object-contain"
+                      />
+                    </div>
+                    <div className="text-sm font-medium leading-5 line-clamp-2">{product.name}</div>
+                    <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                      <span>{product.sku}</span>
+                      <span>{product.qty} in stock</span>
+                    </div>
+                    <div className="mt-1 text-sm font-semibold">{formatMoney(product.price)}</div>
+                  </button>
+                ))}
+                {!filteredCatalog.length && (
+                  <div className="col-span-full py-10 text-center text-sm text-muted-foreground">
+                    No sellable stock in this warehouse.
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="py-3.5">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShoppingCart className="size-4" />
+              Cart
+              <Badge variant="outline">{cart.length}</Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <ScrollArea className="h-[220px] pr-2">
+              <div className="space-y-3">
+                {cart.map((line) => (
+                  <div key={line.productId} className="flex items-start justify-between gap-3 border-b border-border pb-3">
+                    <div>
+                      <div className="text-sm font-medium">{line.name}</div>
+                      <div className="text-xs text-muted-foreground">{formatMoney(line.unitPrice)}</div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button variant="outline" size="icon" className="size-7" onClick={() => updateQty(line.productId, line.quantity - 1)}>
+                        <Minus className="size-3" />
+                      </Button>
+                      <span className="w-6 text-center text-sm">{line.quantity}</span>
+                      <Button variant="outline" size="icon" className="size-7" onClick={() => updateQty(line.productId, line.quantity + 1)}>
+                        <Plus className="size-3" />
+                      </Button>
+                      <Button variant="dim" size="icon" className="size-7" onClick={() => updateQty(line.productId, 0)}>
+                        <Trash2 className="size-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {!cart.length && <p className="py-8 text-center text-sm text-muted-foreground">Cart is empty</p>}
+              </div>
+            </ScrollArea>
+
+            <div className="space-y-2">
+              <Label>Customer</Label>
+              <Select value={customerId} onValueChange={setCustomerId}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="walk-in">Walk-in</SelectItem>
+                  {customers.map((row) => (
+                    <SelectItem key={row.id} value={row.id}>
+                      {row.customerInfo.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Discount %</Label>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={discountPercent}
+                  onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Payment</Label>
+                <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PosPaymentMethod)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="mobile">Mobile</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {paymentMethod === 'cash' && (
+              <div className="space-y-2">
+                <Label>Amount tendered</Label>
+                <Input value={tendered} onChange={(e) => setTendered(e.target.value)} placeholder={String(totals.total)} />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
+            </div>
+
+            <div className="space-y-1 rounded-md bg-accent/50 p-3 text-sm">
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>{formatMoney(totals.subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Discount</span>
+                <span>-{formatMoney(totals.discountAmount)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Tax ({taxPercent}%)</span>
+                <span>{formatMoney(totals.taxAmount)}</span>
+              </div>
+              <div className="flex justify-between font-semibold">
+                <span>Total</span>
+                <span>{formatMoney(totals.total)}</span>
+              </div>
+              {paymentMethod === 'cash' && (
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Change</span>
+                  <span>{formatMoney(changeDue)}</span>
+                </div>
+              )}
+            </div>
+
+            <Button className="w-full" variant="mono" onClick={handleComplete} disabled={completeSale.isPending}>
+              Complete sale
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <PosReceiptDialog
+        open={receiptOpen}
+        onOpenChange={setReceiptOpen}
+        sale={receipt}
+        storeName={settings?.storeName ?? 'Store'}
+        currency={settings?.currency ?? 'EUR'}
+      />
+    </div>
+  );
+}

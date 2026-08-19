@@ -53,6 +53,12 @@ export type InventoryWarehouse = {
   id: string;
   code: string;
   name: string;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  phone?: string | null;
+  status?: string;
+  is_default?: boolean;
 };
 
 export type InventoryCarrier = {
@@ -116,6 +122,7 @@ export type InventoryProduct = {
 export type InventoryInboundShipment = {
   id: string;
   product_id: string;
+  warehouse_id?: string | null;
   order_date: string;
   qty: number;
   stock_value: number | string;
@@ -125,6 +132,7 @@ export type InventoryInboundShipment = {
   product?: InventoryProduct | null;
   supplier?: InventorySupplier | null;
   carrier?: InventoryCarrier | null;
+  warehouse?: InventoryWarehouse | null;
 };
 
 export type InventoryOutboundShipment = {
@@ -471,6 +479,8 @@ export function mapInbound(row: InventoryInboundShipment): InboundStockRow {
     },
     arrivalDate: row.arrival_date,
     carrier: row.carrier?.name ?? '',
+    warehouse: row.warehouse?.code ?? '',
+    warehouseId: row.warehouse_id ?? row.warehouse?.id ?? null,
     supplier: {
       name: row.supplier?.name ?? '',
       logo: row.supplier?.logo ?? 'clusterhq.svg',
@@ -766,7 +776,7 @@ export async function fetchInboundShipments() {
   const client = requireClient();
   const { data, error } = await client
     .from('inventory_inbound_shipments')
-    .select(`*, product:inventory_products(*, supplier:inventory_suppliers(*)), supplier:inventory_suppliers(*), carrier:inventory_carriers(*)`)
+    .select(`*, product:inventory_products(*, supplier:inventory_suppliers(*)), supplier:inventory_suppliers(*), carrier:inventory_carriers(*), warehouse:inventory_warehouses(*)`)
     .order('arrival_date', { ascending: false });
   if (error) throw error;
   return ((data ?? []) as InventoryInboundShipment[]).map(mapInbound);
@@ -933,6 +943,19 @@ export async function createProduct(input: {
     product_id: productId,
   });
 
+  const { data: defaultWarehouse } = await client
+    .from('inventory_warehouses')
+    .select('id')
+    .eq('is_default', true)
+    .maybeSingle();
+  if (defaultWarehouse?.id) {
+    await client.rpc('inventory_set_warehouse_qty', {
+      p_warehouse_id: defaultWarehouse.id,
+      p_product_id: productId,
+      p_qty: 0,
+    });
+  }
+
   if (input.variants?.length) {
     const { error: variantError } = await client.from('inventory_product_variants').insert(
       input.variants.map((variant) => ({
@@ -1035,18 +1058,81 @@ export async function deleteCategory(id: string) {
 
 export async function updateStockLevel(
   productId: string,
-  input: Partial<InventoryStockLevel>,
+  input: Partial<InventoryStockLevel> & { warehouseId?: string },
 ) {
   const client = requireClient();
+  const warehouseId = input.warehouseId;
+  const { warehouseId: _warehouseId, ...stockPayload } = input;
+  if (warehouseId && stockPayload.qty !== undefined) {
+    const { error: qtyError } = await client.rpc('inventory_set_warehouse_qty', {
+      p_warehouse_id: warehouseId,
+      p_product_id: productId,
+      p_qty: stockPayload.qty,
+    });
+    if (qtyError) throw qtyError;
+  }
+  const payload: Record<string, unknown> = { ...stockPayload };
+  delete payload.warehouseId;
+  if (warehouseId && stockPayload.qty !== undefined) {
+    delete payload.qty;
+  }
+  if (!Object.keys(payload).length) return;
   const { error } = await client
     .from('inventory_stock_levels')
-    .update(input)
+    .update(payload)
     .eq('product_id', productId);
   if (error) throw error;
 }
 
 export async function deleteStockProduct(productId: string) {
   return deleteProduct(productId);
+}
+
+export async function createInboundShipment(input: {
+  productId: string;
+  warehouseId: string;
+  qty: number;
+  supplierId?: string | null;
+  carrierId?: string | null;
+  orderDate?: string;
+  arrivalDate?: string;
+  stockValue?: number;
+  status?: string;
+}) {
+  const client = requireClient();
+  const id = crypto.randomUUID();
+  const orderDate = input.orderDate ?? format(new Date(), 'd MMM, yyyy');
+  const arrivalDate = input.arrivalDate ?? orderDate;
+  const { error } = await client.from('inventory_inbound_shipments').insert({
+    id,
+    product_id: input.productId,
+    warehouse_id: input.warehouseId,
+    supplier_id: input.supplierId ?? null,
+    carrier_id: input.carrierId ?? null,
+    order_date: orderDate,
+    qty: input.qty,
+    stock_value: input.stockValue ?? 0,
+    status: input.status ?? 'Received',
+    status_variant: statusVariant(input.status ?? 'Received'),
+    arrival_date: arrivalDate,
+  });
+  if (error) throw error;
+  const { error: qtyError } = await client.rpc('inventory_adjust_warehouse_qty', {
+    p_warehouse_id: input.warehouseId,
+    p_product_id: input.productId,
+    p_delta: input.qty,
+  });
+  if (qtyError) throw qtyError;
+  const { data: stock } = await client
+    .from('inventory_stock_levels')
+    .select('inbound_qty')
+    .eq('product_id', input.productId)
+    .maybeSingle();
+  await client
+    .from('inventory_stock_levels')
+    .update({ inbound_qty: Number(stock?.inbound_qty ?? 0) + input.qty })
+    .eq('product_id', input.productId);
+  return id;
 }
 
 export async function deleteInboundShipment(id: string) {

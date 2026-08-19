@@ -1,4 +1,5 @@
 import { Helmet } from 'react-helmet-async';
+import { WarehouseFilterProvider } from '../lib/warehouse-filter';
 import { LayoutProvider } from './components/context';
 import { Main } from './components/main';
 
@@ -10,7 +11,9 @@ export function DefaultLayout() {
       </Helmet>
 
       <LayoutProvider>
-        <Main />
+        <WarehouseFilterProvider>
+          <Main />
+        </WarehouseFilterProvider>
       </LayoutProvider>
     </>
   );
