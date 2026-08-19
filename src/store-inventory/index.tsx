@@ -1,34 +1,94 @@
+import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { DefaultLayout } from './layout';
-import { AllStock } from './pages/all-stock/page';
-import { CategoryDetails } from './pages/category-details/page';
-import { CategoryList } from './pages/category-list/page';
-import { CreateCategoryPage } from './pages/create-category/page';
-import { CreateProductPage } from './pages/create-product/page';
-import { CreateShippingLabelPage } from './pages/create-shipping-label/page';
-import { CurrentStock } from './pages/current-stock/page';
-import { Dashboard } from './pages/dashboard/page';
-import { InboundStock } from './pages/inbound-stock/page';
-import { ManageVariantsPage } from './pages/manage-variants/page';
-import { OrderList } from './pages/order-list/page';
-import { OrderDetailsPage } from './pages/order-detials/page';
-import { OrderTrackingPage } from './pages/order-tracking/page';
-import { OutboundStock } from './pages/outbound-stock/page';
-import { PerProductStockPage } from './pages/per-product-stock/page';
-import { ProductDetailsPage } from './pages/product-details/page';
-import { ProductList } from './pages/product-list/page';
-import { StockPlanner } from './pages/stock-planner/page';
-import { TrackShippingPage } from './pages/track-shipping/page';
-import { EditCategoryPage } from './pages/edit-category/page';
-import { EditProductPage } from './pages/edit-product/page';
-import { ProductInfoPage } from './pages/product-info/page';
-import { CustomerList } from './pages/customer-list/page';
-import { CustomerListDetails } from './pages/customer-list-details/page';
-import { OrderListProducts } from './pages/order-list-products/page';
-import { SettingsModal } from './pages/settings-modal/page';
-import { WarehouseList } from './pages/warehouse-list/page';
-import { PosRegister } from './pages/pos/page';
-import { PosSalesPage } from './pages/pos-sales/page';
+
+const Dashboard = lazy(() =>
+  import('./pages/dashboard/page').then((m) => ({ default: m.Dashboard })),
+);
+const AllStock = lazy(() =>
+  import('./pages/all-stock/page').then((m) => ({ default: m.AllStock })),
+);
+const CurrentStock = lazy(() =>
+  import('./pages/current-stock/page').then((m) => ({ default: m.CurrentStock })),
+);
+const InboundStock = lazy(() =>
+  import('./pages/inbound-stock/page').then((m) => ({ default: m.InboundStock })),
+);
+const OutboundStock = lazy(() =>
+  import('./pages/outbound-stock/page').then((m) => ({ default: m.OutboundStock })),
+);
+const StockPlanner = lazy(() =>
+  import('./pages/stock-planner/page').then((m) => ({ default: m.StockPlanner })),
+);
+const ProductList = lazy(() =>
+  import('./pages/product-list/page').then((m) => ({ default: m.ProductList })),
+);
+const ProductDetailsPage = lazy(() =>
+  import('./pages/product-details/page').then((m) => ({ default: m.ProductDetailsPage })),
+);
+const CreateProductPage = lazy(() =>
+  import('./pages/create-product/page').then((m) => ({ default: m.CreateProductPage })),
+);
+const EditProductPage = lazy(() =>
+  import('./pages/edit-product/page').then((m) => ({ default: m.EditProductPage })),
+);
+const PerProductStockPage = lazy(() =>
+  import('./pages/per-product-stock/page').then((m) => ({ default: m.PerProductStockPage })),
+);
+const TrackShippingPage = lazy(() =>
+  import('./pages/track-shipping/page').then((m) => ({ default: m.TrackShippingPage })),
+);
+const ProductInfoPage = lazy(() =>
+  import('./pages/product-info/page').then((m) => ({ default: m.ProductInfoPage })),
+);
+const CustomerList = lazy(() =>
+  import('./pages/customer-list/page').then((m) => ({ default: m.CustomerList })),
+);
+const CustomerListDetails = lazy(() =>
+  import('./pages/customer-list-details/page').then((m) => ({ default: m.CustomerListDetails })),
+);
+const SettingsModal = lazy(() =>
+  import('./pages/settings-modal/page').then((m) => ({ default: m.SettingsModal })),
+);
+const CreateShippingLabelPage = lazy(() =>
+  import('./pages/create-shipping-label/page').then((m) => ({ default: m.CreateShippingLabelPage })),
+);
+const ManageVariantsPage = lazy(() =>
+  import('./pages/manage-variants/page').then((m) => ({ default: m.ManageVariantsPage })),
+);
+const CategoryList = lazy(() =>
+  import('./pages/category-list/page').then((m) => ({ default: m.CategoryList })),
+);
+const CreateCategoryPage = lazy(() =>
+  import('./pages/create-category/page').then((m) => ({ default: m.CreateCategoryPage })),
+);
+const EditCategoryPage = lazy(() =>
+  import('./pages/edit-category/page').then((m) => ({ default: m.EditCategoryPage })),
+);
+const CategoryDetails = lazy(() =>
+  import('./pages/category-details/page').then((m) => ({ default: m.CategoryDetails })),
+);
+const OrderList = lazy(() =>
+  import('./pages/order-list/page').then((m) => ({ default: m.OrderList })),
+);
+const OrderListProducts = lazy(() =>
+  import('./pages/order-list-products/page').then((m) => ({ default: m.OrderListProducts })),
+);
+const OrderDetailsPage = lazy(() =>
+  import('./pages/order-detials/page').then((m) => ({ default: m.OrderDetailsPage })),
+);
+const OrderTrackingPage = lazy(() =>
+  import('./pages/order-tracking/page').then((m) => ({ default: m.OrderTrackingPage })),
+);
+const WarehouseList = lazy(() =>
+  import('./pages/warehouse-list/page').then((m) => ({ default: m.WarehouseList })),
+);
+const PosRegister = lazy(() =>
+  import('./pages/pos/page').then((m) => ({ default: m.PosRegister })),
+);
+const PosSalesPage = lazy(() =>
+  import('./pages/pos-sales/page').then((m) => ({ default: m.PosSalesPage })),
+);
 
 export default function StoreInventoryModule() {
   return (
@@ -52,10 +112,7 @@ export default function StoreInventoryModule() {
         <Route path="customer-list" element={<CustomerList />} />
         <Route path="customer-list-details" element={<CustomerListDetails />} />
         <Route path="settings-modal" element={<SettingsModal />} />
-        <Route
-          path="create-shipping-label"
-          element={<CreateShippingLabelPage />}
-        />
+        <Route path="create-shipping-label" element={<CreateShippingLabelPage />} />
         <Route path="manage-variants" element={<ManageVariantsPage />} />
         <Route path="category-list" element={<CategoryList />} />
         <Route path="create-category" element={<CreateCategoryPage />} />

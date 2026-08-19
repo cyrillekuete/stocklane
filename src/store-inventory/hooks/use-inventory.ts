@@ -1,11 +1,11 @@
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { useMemo } from 'react';
 import {
   useMutation,
   useQuery,
   useQueryClient,
   type QueryClient,
   type QueryKey,
-  type UseQueryResult,
 } from '@tanstack/react-query';
 import { withCustomerProfile } from '../data/customer-profile';
 import { formatMoney } from '../lib/format';
@@ -85,7 +85,6 @@ import type {
   ProductListRow,
   ProductOptionCard,
   ProductVariantRow,
-  WarehouseStockRow,
 } from '../types';
 
 const stockQuery = {
@@ -377,45 +376,6 @@ export function useBrands() {
   });
 }
 
-function overlayWarehouseQty<T>(
-  stock: UseQueryResult<InventoryProduct[]>,
-  warehouseStock: UseQueryResult<WarehouseStockRow[]>,
-  warehouseId: string | null | undefined,
-  mapRow: (product: InventoryProduct) => T,
-) {
-  const needsOverlay = isSupabaseConfigured && Boolean(warehouseId);
-  const overlayReady = !needsOverlay || warehouseStock.isSuccess;
-  const qtyMap = new Map((warehouseStock.data ?? []).map((row) => [row.productId, row]));
-  const data =
-    stock.data && overlayReady
-      ? stock.data.map((product) => {
-          if (!warehouseId) return mapRow(product);
-          const overlay = qtyMap.get(product.id);
-          return mapRow({
-            ...product,
-            stock_level: product.stock_level
-              ? {
-                  ...product.stock_level,
-                  qty: overlay?.qty ?? 0,
-                  reserved: overlay?.reserved ?? 0,
-                }
-              : product.stock_level,
-          });
-        })
-      : undefined;
-
-  return {
-    ...stock,
-    isPending: stock.isPending || (needsOverlay && warehouseStock.isPending),
-    isLoading: stock.isLoading || (needsOverlay && warehouseStock.isLoading),
-    isFetching: stock.isFetching || (needsOverlay && warehouseStock.isFetching),
-    isError: stock.isError || (needsOverlay && warehouseStock.isError),
-    isSuccess: stock.isSuccess && overlayReady,
-    error: stock.error ?? (needsOverlay && warehouseStock.isError ? warehouseStock.error : null),
-    data,
-  };
-}
-
 function useStockWithWarehouseOverlay<T>(
   warehouseId: string | null | undefined,
   mapRow: (product: InventoryProduct) => T,
@@ -428,7 +388,37 @@ function useStockWithWarehouseOverlay<T>(
     queryFn: () => fetchWarehouseStock(warehouseId!),
     enabled: isSupabaseConfigured && Boolean(warehouseId),
   });
-  return overlayWarehouseQty(stock, warehouseStock, warehouseId, mapRow);
+  const needsOverlay = isSupabaseConfigured && Boolean(warehouseId);
+  const overlayReady = !needsOverlay || warehouseStock.isSuccess;
+  const data = useMemo(() => {
+    if (!stock.data || !overlayReady) return undefined;
+    const qtyMap = new Map((warehouseStock.data ?? []).map((row) => [row.productId, row]));
+    return stock.data.map((product) => {
+      if (!warehouseId) return mapRow(product);
+      const overlay = qtyMap.get(product.id);
+      return mapRow({
+        ...product,
+        stock_level: product.stock_level
+          ? {
+              ...product.stock_level,
+              qty: overlay?.qty ?? 0,
+              reserved: overlay?.reserved ?? 0,
+            }
+          : product.stock_level,
+      });
+    });
+  }, [stock.data, overlayReady, warehouseId, warehouseStock.data, mapRow]);
+
+  return {
+    ...stock,
+    isPending: stock.isPending || (needsOverlay && warehouseStock.isPending),
+    isLoading: stock.isLoading || (needsOverlay && warehouseStock.isLoading),
+    isFetching: stock.isFetching || (needsOverlay && warehouseStock.isFetching),
+    isError: stock.isError || (needsOverlay && warehouseStock.isError),
+    isSuccess: stock.isSuccess && overlayReady,
+    error: stock.error ?? (needsOverlay && warehouseStock.isError ? warehouseStock.error : null),
+    data,
+  };
 }
 
 export function useAllStock(warehouseId?: string | null) {

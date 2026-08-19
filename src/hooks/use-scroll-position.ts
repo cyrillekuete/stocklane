@@ -1,7 +1,7 @@
 import { RefObject, useEffect, useState } from 'react';
 
 interface UseScrollPositionProps {
-  targetRef?: RefObject<HTMLElement | Document | undefined>; // Ref to the scrollable element
+  targetRef?: RefObject<HTMLElement | Document | undefined>;
 }
 
 export function useScrollPosition({
@@ -10,26 +10,35 @@ export function useScrollPosition({
   const [scrollPosition, setScrollPosition] = useState<number>(0);
 
   useEffect(() => {
-    // If the ref is not provided or its current value is null, fall back to document
     const target = targetRef?.current || document;
     const scrollable = target === document ? window : target;
+    let frame = 0;
+
+    const readScrollY = () =>
+      target === document ? window.scrollY : (target as HTMLElement).scrollTop;
 
     const updatePosition = () => {
-      // Determine if we're scrolling the document or a specific element
-      const scrollY =
-        target === document
-          ? window.scrollY
-          : (target as HTMLElement).scrollTop;
-      setScrollPosition(scrollY);
+      frame = 0;
+      const scrollY = readScrollY();
+      setScrollPosition((prev) => {
+        const wasSticky = prev > 0;
+        const isSticky = scrollY > 0;
+        if (wasSticky === isSticky) return prev;
+        return scrollY;
+      });
     };
 
-    scrollable.addEventListener('scroll', updatePosition);
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(updatePosition);
+    };
 
-    // Set the initial position
+    scrollable.addEventListener('scroll', onScroll, { passive: true });
     updatePosition();
 
     return () => {
-      scrollable.removeEventListener('scroll', updatePosition);
+      if (frame) cancelAnimationFrame(frame);
+      scrollable.removeEventListener('scroll', onScroll);
     };
   }, [targetRef]);
 

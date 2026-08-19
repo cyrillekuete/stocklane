@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import {
   Column,
   ColumnDef,
@@ -410,6 +410,65 @@ const data: IData[] = [
   },
 ];
 
+function RecentOrdersToolbar({
+  searchQuery,
+  onSearchChange,
+  inputRef,
+}: {
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
+  inputRef: RefObject<HTMLInputElement | null>;
+}) {
+  const [inputValue, setInputValue] = useState(searchQuery);
+
+  useEffect(() => {
+    setInputValue(searchQuery);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (inputValue !== searchQuery) {
+        onSearchChange(inputValue);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [inputValue, onSearchChange, searchQuery]);
+
+  return (
+    <CardToolbar>
+      <div className="w-full max-w-[200px]">
+        <InputWrapper>
+          <Search />
+          <Input
+            placeholder="Search by ID"
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              onSearchChange(e.target.value);
+            }}
+            onMouseDown={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          />
+          <Button
+            onClick={() => {
+              setInputValue('');
+              onSearchChange('');
+            }}
+            variant="dim"
+            className="-me-4"
+            disabled={inputValue === ''}
+          >
+            {inputValue !== '' && <X size={16} />}
+          </Button>
+        </InputWrapper>
+      </div>
+      <Button variant="outline">Export CSV</Button>
+    </CardToolbar>
+  );
+}
+
 const DashboardTable = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
@@ -650,57 +709,6 @@ const DashboardTable = () => {
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const Toolbar = () => {
-    const [inputValue, setInputValue] = useState('');
-
-    // Sync inputValue with searchQuery when searchQuery changes externally
-    useEffect(() => {
-      setInputValue(searchQuery);
-    }, []);
-
-    // Update search query when input changes
-    useEffect(() => {
-      const timer = setTimeout(() => {
-        if (inputValue !== searchQuery) {
-          setSearchQuery(inputValue);
-        }
-      }, 300);
-
-      return () => clearTimeout(timer);
-    }, [inputValue]);
-
-    return (
-      <CardToolbar>
-        {/* Search */}
-        <div className="w-full max-w-[200px]">
-          <InputWrapper>
-            <Search />
-            <Input
-              placeholder="Search by ID"
-              ref={inputRef}
-              value={inputValue}
-              onChange={(e) => {
-                setInputValue(e.target.value);
-                setSearchQuery(e.target.value);
-              }}
-              onMouseDown={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-            />
-            <Button
-              onClick={() => setInputValue('')}
-              variant="dim"
-              className="-me-4"
-              disabled={inputValue === ''}
-            >
-              {inputValue !== '' && <X size={16} />}
-            </Button>
-          </InputWrapper>
-        </div>
-        <Button variant="outline">Export CSV</Button>
-      </CardToolbar>
-    );
-  };
-
   return (
     <DataGrid
       table={table}
@@ -715,7 +723,11 @@ const DashboardTable = () => {
       <Card>
         <CardHeader className="py-3.5">
           <CardTitle>Recent Orders</CardTitle>
-          <Toolbar />
+          <RecentOrdersToolbar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            inputRef={inputRef}
+          />
         </CardHeader>
         <CardTable>
           <ScrollArea>

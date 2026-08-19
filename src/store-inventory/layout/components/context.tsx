@@ -1,8 +1,7 @@
-import { createContext, ReactNode, useContext, useState } from 'react';
+import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
 
 type SidebarTheme = 'dark' | 'light';
 
-// Define the shape of the layout state
 interface LayoutState {
   sidebarCollapse: boolean;
   setSidebarCollapse: (open: boolean) => void;
@@ -10,10 +9,8 @@ interface LayoutState {
   setSidebarTheme: (theme: SidebarTheme) => void;
 }
 
-// Create the context
 const LayoutContext = createContext<LayoutState | undefined>(undefined);
 
-// Provider component
 interface LayoutProviderProps {
   children: ReactNode;
 }
@@ -22,21 +19,19 @@ export function LayoutProvider({ children }: LayoutProviderProps) {
   const [sidebarCollapse, setSidebarCollapse] = useState(false);
   const [sidebarTheme, setSidebarTheme] = useState<SidebarTheme>('light');
 
-  return (
-    <LayoutContext.Provider
-      value={{
-        sidebarCollapse,
-        setSidebarCollapse,
-        sidebarTheme,
-        setSidebarTheme,
-      }}
-    >
-      {children}
-    </LayoutContext.Provider>
+  const value = useMemo(
+    () => ({
+      sidebarCollapse,
+      setSidebarCollapse,
+      sidebarTheme,
+      setSidebarTheme,
+    }),
+    [sidebarCollapse, sidebarTheme],
   );
+
+  return <LayoutContext.Provider value={value}>{children}</LayoutContext.Provider>;
 }
 
-// Custom hook for consuming the context
 export const useLayout = () => {
   const context = useContext(LayoutContext);
   if (!context) {

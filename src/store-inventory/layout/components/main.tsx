@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
+import { ScreenLoader } from '@/components/screen-loader';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLayout } from './context';
 import { Footer } from './footer';
@@ -49,7 +50,9 @@ export function Main() {
         <Header />
 
         <main className="grow pt-5" role="content">
-          <Outlet />
+          <Suspense fallback={<ScreenLoader />}>
+            <Outlet />
+          </Suspense>
         </main>
 
         <Footer />
