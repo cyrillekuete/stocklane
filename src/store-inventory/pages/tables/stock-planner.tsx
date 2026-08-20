@@ -113,11 +113,12 @@ export interface IData {
 
 interface StockPlannerProps {
   mockData?: IData[];
+  warehouseId?: string | null;
 }
 
 const mockData: IData[] = stockPlannerMockData;
 
-const StockPlannerTable = ({ mockData: propsMockData }: StockPlannerProps) => {
+const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlannerProps) => {
   const data = propsMockData || mockData;
   const updateStock = useUpdateStockLevel();
   const [pagination, setPagination] = useState<PaginationState>({
@@ -125,6 +126,7 @@ const StockPlannerTable = ({ mockData: propsMockData }: StockPlannerProps) => {
     pageSize: 10,
   });
   const [isStockSheetOpen, setIsStockSheetOpen] = useState(false);
+  const [selectedStockProduct, setSelectedStockProduct] = useState<(typeof data)[number] | undefined>();
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   // Modal state
@@ -216,7 +218,8 @@ const StockPlannerTable = ({ mockData: propsMockData }: StockPlannerProps) => {
         cell: (info) => {
           const row = info.row.original;
           const handleProductClick = () => {
-            setIsProductDetailsOpen(true);
+            setSelectedStockProduct(row);
+            setIsStockSheetOpen(true);
           };
 
           return (
@@ -467,7 +470,10 @@ const StockPlannerTable = ({ mockData: propsMockData }: StockPlannerProps) => {
               onCheckedChange={(checked) => {
                 updateStock.mutate({
                   productId: info.row.original.id,
-                  input: { auto_reorder: checked },
+                  input: {
+                    auto_reorder: checked,
+                    ...(warehouseId ? { warehouseId } : {}),
+                  },
                 });
                 if (checked) {
                   toast.custom(
@@ -557,7 +563,7 @@ const StockPlannerTable = ({ mockData: propsMockData }: StockPlannerProps) => {
         size: 60,
       },
     ],
-    [],
+    [updateStock, warehouseId],
   );
 
   useEffect(() => {
@@ -807,7 +813,10 @@ const StockPlannerTable = ({ mockData: propsMockData }: StockPlannerProps) => {
               <CardToolbar>
                 <Button
                   variant="outline"
-                  onClick={() => setIsStockSheetOpen(true)}
+                  onClick={() => {
+                    setSelectedStockProduct(filteredData[0]);
+                    setIsStockSheetOpen(true);
+                  }}
                 >
                   Reports
                 </Button>
@@ -827,6 +836,16 @@ const StockPlannerTable = ({ mockData: propsMockData }: StockPlannerProps) => {
         <PerProductStockSheet
           open={isStockSheetOpen}
           onOpenChange={setIsStockSheetOpen}
+          data={
+            selectedStockProduct
+              ? {
+                  ...selectedStockProduct,
+                  reorderQty: selectedStockProduct.reorder,
+                  leadTimeDays: selectedStockProduct.leadTime.days,
+                  autoReorder: selectedStockProduct.ar,
+                }
+              : undefined
+          }
         />
 
         {/* Product Details Analytics Modal */}

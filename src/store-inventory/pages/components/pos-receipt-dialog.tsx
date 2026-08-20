@@ -90,7 +90,7 @@ export function PosReceiptDialog({
                 <span>{formatMoney(sale.subtotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Discount</span>
+                <span>Discount{sale.discountAmount > 0 ? ' (cart)' : ''}</span>
                 <span>-{formatMoney(sale.discountAmount)}</span>
               </div>
               <div className="flex justify-between">

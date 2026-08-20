@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toAbsoluteUrl } from "@/lib/helpers";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { LOGO_MAX_CHARS } from "@/store-inventory/lib/settings-validation";
 import { useSettingsForm } from "../../settings-form-context";
 
 const countries = [
@@ -96,9 +98,25 @@ export function Basics() {
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      event.target.value = '';
+      return;
+    }
+    // Base64 expands ~4/3; keep under LOGO_MAX_CHARS after encoding.
+    if (file.size > LOGO_MAX_CHARS * 0.7) {
+      toast.error('Logo is too large (max ~500KB)');
+      event.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
-      updateDraft({ logo: reader.result as string });
+      const result = reader.result as string;
+      if (result.length > LOGO_MAX_CHARS) {
+        toast.error('Logo is too large (max ~500KB)');
+        return;
+      }
+      updateDraft({ logo: result });
     };
     reader.readAsDataURL(file);
   };
@@ -139,7 +157,7 @@ export function Basics() {
                 </div>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
                   onChange={handleImageUpload}
                   className="hidden"
                   id="profile-image-upload"

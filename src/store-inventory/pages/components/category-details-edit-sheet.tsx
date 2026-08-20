@@ -7,10 +7,14 @@ import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { formatMoney, parseMoney } from '@/store-inventory/lib/format';
 import {
+  useCategories,
   useCategoryProducts,
   useDeleteCategory,
   useUpdateCategory,
 } from '@/store-inventory/hooks/use-inventory';
+import { mapCategoryError } from '@/store-inventory/lib/category-errors';
+import { normalizeCategoryStatus } from '@/store-inventory/lib/category-validation';
+import { uploadCategoryIcon } from '@/store-inventory/services/inventory';
 import type { CategoryListRow } from '@/store-inventory/types';
 import { Badge, BadgeDot, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -49,11 +53,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { CategoryDeleteDialog } from './category-delete-dialog';
+import {
+  CategoryIconFields,
+  resolvePersistedCategoryIcon,
+} from './category-icon-fields';
 
 function iconFileName(icon?: string | null) {
-  if (!icon) return null;
-  if (icon.startsWith('data:') || icon.startsWith('blob:')) return null;
-  return icon.includes('/') ? (icon.split('/').pop() as string) : icon;
+  return resolvePersistedCategoryIcon(icon);
 }
 
 export function CategoryDetailsEditSheet({
@@ -66,9 +73,9 @@ export function CategoryDetailsEditSheet({
   category?: CategoryListRow;
 }) {
   const featuredId = useId();
-  const imageInputId = useId();
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
+  const { data: categories = [] } = useCategories();
   const { data: products = [] } = useCategoryProducts(open ? category?.id : undefined);
 
   const [categoryName, setCategoryName] = useState('');
@@ -77,6 +84,9 @@ export function CategoryDetailsEditSheet({
   const [featured, setFeatured] = useState(false);
   const [icon, setIcon] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -84,12 +94,13 @@ export function CategoryDetailsEditSheet({
     setStatus(category?.status.label.toLowerCase() ?? 'active');
     setDescription(category?.description ?? '');
     setFeatured(Boolean(category?.featured));
-    setIcon(iconFileName(category?.productInfo.image) ?? 'running-shoes.svg');
+    setIcon(iconFileName(category?.productInfo.image));
     setPreviewUrl(null);
+    setPendingFile(null);
+    setConfirmDeleteOpen(false);
   }, [open, category]);
 
-  const bundledIcon = iconFileName(icon);
-  const isPending = updateCategory.isPending || deleteCategory.isPending;
+  const isPending = updateCategory.isPending || deleteCategory.isPending || uploading;
 
   const metrics = useMemo(() => {
     const prices = products.map((product) => parseMoney(product.price));
@@ -105,25 +116,14 @@ export function CategoryDetailsEditSheet({
 
     return {
       totalQty: totalQty || products.length,
-      earning: category?.totalEarnings ?? formatMoney(0),
+      stockValue: formatMoney(totalSalesValue),
       avgPrice,
       productCount: products.length,
       totalSalesValue,
       priceSeries: (prices.length ? prices : [0]).map((value) => ({ value })),
       salesSeries: (stockValues.length ? stockValues : [0]).map((value) => ({ value })),
     };
-  }, [products, category?.totalEarnings]);
-
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+  }, [products]);
 
   const handleClose = () => onOpenChange(false);
 
@@ -136,8 +136,28 @@ export function CategoryDetailsEditSheet({
       toast.error('Category name is required');
       return;
     }
-    const nextStatus = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Active';
+    if (categoryName.trim().length > 80) {
+      toast.error('Name must be 80 characters or fewer');
+      return;
+    }
+    if (description.length > 500) {
+      toast.error('Description must be 500 characters or fewer');
+      return;
+    }
+    const nextStatus = normalizeCategoryStatus(status);
     try {
+      let persistIcon = resolvePersistedCategoryIcon(icon);
+      if (pendingFile) {
+        setUploading(true);
+        try {
+          persistIcon = await uploadCategoryIcon(pendingFile, category.id);
+        } catch (error) {
+          toast.error(mapCategoryError(error, 'Unable to upload category icon').message);
+          return;
+        } finally {
+          setUploading(false);
+        }
+      }
       await updateCategory.mutateAsync({
         id: category.id,
         input: {
@@ -145,33 +165,46 @@ export function CategoryDetailsEditSheet({
           status: nextStatus,
           featured,
           description,
-          icon: bundledIcon ?? 'running-shoes.svg',
+          icon: persistIcon,
         },
       });
       toast.success('Category saved');
       onOpenChange(false);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to save category');
+    } catch {
+      // Mutation errors are toasted by the shared mutation hook.
     }
   };
 
-  const handleDelete = async () => {
+  const handleConfirmDelete = async (reassignToCategoryId: string | null) => {
     if (!category?.id) {
       onOpenChange(false);
       return;
     }
     try {
-      await deleteCategory.mutateAsync(category.id);
-      toast.success('Category deleted');
+      const result = await deleteCategory.mutateAsync({
+        id: category.id,
+        reassignToCategoryId,
+      });
+      if (result.reassigned) {
+        toast.success('Category deleted and products reassigned');
+      } else if (result.productCount > 0) {
+        toast.success(
+          `Category deleted. ${result.productCount} ${result.productCount === 1 ? 'product is' : 'products are'} now Uncategorized.`,
+        );
+      } else {
+        toast.success('Category deleted');
+      }
+      setConfirmDeleteOpen(false);
       onOpenChange(false);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to delete category');
+    } catch {
+      // Error already toasted by mutation hook
     }
   };
 
   const statusVariant = (category?.status.variant ?? 'secondary') as BadgeProps['variant'];
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="gap-0 lg:w-[1080px] sm:max-w-none inset-5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
@@ -218,11 +251,11 @@ export function CategoryDetailsEditSheet({
               <Button variant="ghost" onClick={handleClose} disabled={isPending}>
                 Close
               </Button>
-              <Button variant="outline" onClick={handleDelete} disabled={isPending || !category?.id}>
+              <Button variant="outline" onClick={() => setConfirmDeleteOpen(true)} disabled={isPending || !category?.id}>
                 Delete
               </Button>
               <Button variant="mono" onClick={handleSave} disabled={isPending || !category?.id}>
-                Save
+                {uploading ? 'Uploading…' : 'Save'}
               </Button>
             </div>
           </div>
@@ -240,7 +273,7 @@ export function CategoryDetailsEditSheet({
                     <div className="flex items-start lg:gap-10 gap-5">
                       {[
                         { label: 'Total Qty', value: String(metrics.totalQty) },
-                        { label: 'Earning', value: metrics.earning },
+                        { label: 'Stock value', value: metrics.stockValue },
                         { label: 'Return Rate', value: '—' },
                         { label: 'Avg. Margin', value: '—' },
                         { label: 'Avg. Rating', value: '—' },
@@ -374,7 +407,7 @@ export function CategoryDetailsEditSheet({
                           {metrics.productCount.toLocaleString()}
                         </span>
                         <span className="text-2sm font-normal text-secondary-foreground ps-2.5">
-                          {formatMoney(metrics.totalSalesValue)}
+                          {formatMoney(metrics.totalSalesValue)} stock value
                         </span>
                       </div>
 
@@ -534,44 +567,21 @@ export function CategoryDetailsEditSheet({
               </div>
 
               <div className="w-full shrink-0 lg:w-[420px] py-5 lg:ps-5 space-y-4">
-                <div>
-                  <div className="relative">
-                    <Card className="flex items-center justify-center rounded-md bg-accent/50 h-[200px] shadow-none shrink-0">
-                      {previewUrl ? (
-                        <img
-                          src={previewUrl}
-                          className="cursor-pointer h-[200px] object-contain"
-                          alt="Category"
-                        />
-                      ) : bundledIcon ? (
-                        <>
-                          <img
-                            src={toAbsoluteUrl(`/media/store/client/icons/light/${bundledIcon}`)}
-                            className="cursor-pointer h-[200px] object-contain dark:hidden"
-                            alt="Category"
-                          />
-                          <img
-                            src={toAbsoluteUrl(`/media/store/client/icons/dark/${bundledIcon}`)}
-                            className="cursor-pointer h-[200px] object-contain light:hidden"
-                            alt="Category"
-                          />
-                        </>
-                      ) : null}
-                    </Card>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      id={imageInputId}
-                    />
-                    <label htmlFor={imageInputId} className="absolute bottom-3 right-3">
-                      <Button size="sm" variant="outline" asChild>
-                        <span>Change</span>
-                      </Button>
-                    </label>
-                  </div>
-                </div>
+                <CategoryIconFields
+                  compact
+                  icon={icon}
+                  previewUrl={previewUrl}
+                  pendingFile={pendingFile}
+                  onBundledIconChange={setIcon}
+                  onFileSelected={(file, preview) => {
+                    setPendingFile(file);
+                    setPreviewUrl(preview);
+                  }}
+                  onClearPreview={() => {
+                    setPendingFile(null);
+                    setPreviewUrl(null);
+                  }}
+                />
 
                 <div className="flex flex-col gap-2.5">
                   <Label className="text-xs">Category Name</Label>
@@ -579,8 +589,18 @@ export function CategoryDetailsEditSheet({
                     value={categoryName}
                     onChange={(e) => setCategoryName(e.target.value)}
                     placeholder="Category Name"
+                    maxLength={80}
                   />
                 </div>
+                {category?.productInfo.label ? (
+                  <div className="flex flex-col gap-2.5">
+                    <Label className="text-xs">Code</Label>
+                    <Input value={category.productInfo.label} disabled readOnly />
+                    <p className="text-xs text-muted-foreground">
+                      Immutable after create — renaming keeps this code.
+                    </p>
+                  </div>
+                ) : null}
                 <div className="flex flex-col gap-2.5">
                   <Label className="text-xs">Status</Label>
                   <Select value={status} onValueChange={setStatus} indicatorPosition="right">
@@ -603,6 +623,7 @@ export function CategoryDetailsEditSheet({
                     placeholder="Category Description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    maxLength={500}
                   />
                 </div>
 
@@ -624,14 +645,24 @@ export function CategoryDetailsEditSheet({
           <Button variant="ghost" onClick={handleClose} disabled={isPending}>
             Close
           </Button>
-          <Button variant="outline" onClick={handleDelete} disabled={isPending || !category?.id}>
+          <Button variant="outline" onClick={() => setConfirmDeleteOpen(true)} disabled={isPending || !category?.id}>
             Delete
           </Button>
           <Button variant="mono" onClick={handleSave} disabled={isPending || !category?.id}>
-            Save
+            {uploading ? 'Uploading…' : 'Save'}
           </Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>
+
+    <CategoryDeleteDialog
+      open={confirmDeleteOpen}
+      onOpenChange={setConfirmDeleteOpen}
+      category={category}
+      categories={categories}
+      pending={deleteCategory.isPending}
+      onConfirm={handleConfirmDelete}
+    />
+    </>
   );
 }

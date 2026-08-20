@@ -14,15 +14,18 @@ import {
   EllipsisVertical,
   Filter,
   Info,
+  RotateCcw,
   Search,
   Settings,
   Star,
   Trash,
+  Trash2,
   X,
   Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/lib/helpers';
+import { resolveProductImageSrc } from '@/store-inventory/lib/format';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -51,19 +54,18 @@ import {
 import { Input, InputWrapper } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { ProductFormSheet } from '../components/product-form-sheet';
 import { ProductDetailsAnalyticsSheet } from '../components/product-details-analytics-sheet';
 import { ManageVariantsSheet } from '../components/manage-variants';
+import {
+  ProductHardDeleteDialog,
+  ProductSoftDeleteDialog,
+  useProductRestoreAction,
+} from '../components/product-delete-dialogs';
 import { cn } from '@/lib/utils';
 import { productListMockData } from '@/store-inventory/data/products';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { useDeleteProduct } from '@/store-inventory/hooks/use-inventory';
+import { useDeleteProduct, useDeletedProducts } from '@/store-inventory/hooks/use-inventory';
 import type { ProductListRow } from '@/store-inventory/types';
 
 interface IColumnFilterProps<TData, TValue> {
@@ -91,11 +93,15 @@ export function ProductListTable({
   displaySheet,
   selectedProductId,
 }: ProductListProps) {
-  const data = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
+  const activeData = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
+  const { data: deletedProducts = [] } = useDeletedProducts();
+  const data = useMemo(() => {
+    if (!isSupabaseConfigured) return activeData;
+    const deletedIds = new Set(deletedProducts.map((p) => p.id));
+    return [...activeData.filter((p) => !deletedIds.has(p.id)), ...deletedProducts];
+  }, [activeData, deletedProducts]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-
-  // Search input state
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const [pagination, setPagination] = useState<PaginationState>({
@@ -103,18 +109,17 @@ export function ProductListTable({
     pageSize: 10,
   });
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'created', desc: true },
-  ]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'created', desc: true }]);
   const [selectedLastMoved] = useState<string[]>([]);
-
-  // Modal state
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
   const [isEditProductOpen, setIsEditProductOpen] = useState(false);
   const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
   const [isManageVariantsOpen, setIsManageVariantsOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductListRow | undefined>();
+  const [softDeleteTarget, setSoftDeleteTarget] = useState<ProductListRow | null>(null);
+  const [hardDeleteTarget, setHardDeleteTarget] = useState<ProductListRow | null>(null);
   const deleteProduct = useDeleteProduct();
+  const { restore } = useProductRestoreAction();
 
   useEffect(() => {
     if (displaySheet === 'createProduct') {
@@ -148,16 +153,26 @@ export function ProductListTable({
   };
 
   const handleDeleteProduct = (product: ProductListRow) => {
-    deleteProduct.mutate(product.id, {
+    if (product.deletedAt) {
+      setHardDeleteTarget(product);
+      return;
+    }
+    setSoftDeleteTarget(product);
+  };
+
+  const confirmSoftDelete = () => {
+    if (!softDeleteTarget) return;
+    deleteProduct.mutate(softDeleteTarget.id, {
       onSuccess: () => {
         toast.custom((t) => (
           <Alert variant="mono" icon="success" onClose={() => toast.dismiss(t)}>
             <AlertIcon>
               <Info />
             </AlertIcon>
-            <AlertTitle>Product deleted</AlertTitle>
+            <AlertTitle>Product moved to trash</AlertTitle>
           </Alert>
         ));
+        setSoftDeleteTarget(null);
       },
       onError: (error) => {
         toast.error(error instanceof Error ? error.message : 'Unable to delete product');
@@ -165,9 +180,7 @@ export function ProductListTable({
     });
   };
 
-  const ColumnInputFilter = <TData, TValue>({
-    column,
-  }: IColumnFilterProps<TData, TValue>) => {
+  const ColumnInputFilter = <TData, TValue>({ column }: IColumnFilterProps<TData, TValue>) => {
     return (
       <Input
         placeholder="Filter..."
@@ -190,9 +203,6 @@ export function ProductListTable({
         enableHiding: false,
         enableResizing: false,
         size: 40,
-        meta: {
-          cellClassName: '',
-        },
       },
       {
         id: 'productInfo',
@@ -211,48 +221,27 @@ export function ProductListTable({
             label: string;
             tooltip: string;
           };
+          const imageSrc = resolveProductImageSrc(productInfo.image);
+          const resolved =
+            imageSrc.startsWith('http') || imageSrc.startsWith('data:') || imageSrc.startsWith('blob:')
+              ? imageSrc
+              : toAbsoluteUrl(imageSrc);
 
           return (
             <div className="flex items-center gap-2.5">
               <Card className="flex items-center justify-center rounded-md bg-accent/50 h-[40px] w-[50px] shadow-none shrink-0">
-                <img
-                  src={toAbsoluteUrl(
-                    `/media/store/client/1200x1200/${productInfo.image}`,
-                  )}
-                  className="cursor-pointer h-[40px]"
-                  alt="image"
-                />
+                <img src={resolved} className="cursor-pointer h-[40px]" alt="image" />
               </Card>
               <div className="flex flex-col gap-1">
-                {productInfo.title.length > 20 ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span
-                          className="text-sm font-medium text-foreground leading-3.5 truncate max-w-[180px] cursor-pointer hover:text-primary transition-colors"
-                          onClick={() => handleViewDetails(info.row.original)}
-                        >
-                          {productInfo.title}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>{productInfo.title}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : (
-                  <span
-                    className="text-sm font-medium text-foreground leading-3.5 cursor-pointer hover:text-primary transition-colors"
-                    onClick={() => handleViewDetails(info.row.original)}
-                  >
-                    {productInfo.title}
-                  </span>
-                )}
+                <span
+                  className="text-sm font-medium text-foreground leading-3.5 cursor-pointer hover:text-primary transition-colors truncate max-w-[180px]"
+                  onClick={() => handleViewDetails(info.row.original)}
+                >
+                  {productInfo.title}
+                </span>
                 <span className="text-xs text-muted-foreground uppercase">
                   sku:{' '}
-                  <span className="text-xs font-medium text-secondary-foreground">
-                    {productInfo.label}
-                  </span>
+                  <span className="text-xs font-medium text-secondary-foreground">{productInfo.label}</span>
                 </span>
               </div>
             </div>
@@ -260,152 +249,115 @@ export function ProductListTable({
         },
         enableSorting: true,
         size: 260,
-        meta: {
-          cellClassName: '',
-        },
       },
       {
         id: 'category',
         accessorFn: (row) => row.category,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Category" column={column} />
-        ),
-        cell: (info) => {
-          return (
-            <div>{info.row.original.category}</div>
-          );
-        },
+        header: ({ column }) => <DataGridColumnHeader title="Category" column={column} />,
+        cell: (info) => <div>{info.row.original.category}</div>,
         enableSorting: true,
-        size: 110,
-        meta: {
-          cellClassName: '',
-        },
+        size: 140,
       },
       {
         id: 'price',
         accessorFn: (row) => row.price,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Price" column={column} />
-        ),
-        cell: (info) => {
-          return <div className="text-center">{info.row.original.price}</div>;
-        },
+        header: ({ column }) => <DataGridColumnHeader title="Price" column={column} />,
+        cell: (info) => info.row.original.price,
         enableSorting: true,
-        size: 80,
-        meta: {
-          cellClassName: '',
-        },
+        size: 100,
       },
       {
         id: 'status',
         accessorFn: (row) => row.status,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Status" column={column} />
-        ),
+        header: ({ column }) => <DataGridColumnHeader title="Status" column={column} />,
         cell: (info) => {
           const status = info.row.original.status;
-          const variant = status.variant as keyof BadgeProps['variant'];
           return (
-            <Badge
-              variant={variant}
-              appearance="light"
-              className="rounded-full"
-            >
-              {status.label}
+            <Badge variant={status.variant as BadgeProps['variant']} appearance="light">
+              {info.row.original.deletedAt ? 'Trashed' : status.label}
             </Badge>
           );
         },
         enableSorting: true,
-        size: 90,
-        meta: {
-          cellClassName: '',
-        },
-      },
-      {
-        id: 'rating',
-        accessorFn: () => {},
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Rating" column={column} />
-        ),
-        cell: () => {
-          return (
-            <Badge
-              size="sm"
-              variant="warning"
-              appearance="outline"
-              className="rounded-full"
-            >
-              <Star className="text-[#FEC524]" fill="#FEC524" />
-              5.0
-            </Badge>
-          );
-        },
-        enableSorting: true,
-        size: 85,
-        meta: {
-          cellClassName: 'text-center',
-        },
+        size: 120,
       },
       {
         id: 'created',
         accessorFn: (row) => row.created,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Created" column={column} />
-        ),
-        cell: (info) => {
-          return info.row.original.created;
-        },
+        header: ({ column }) => <DataGridColumnHeader title="Created" column={column} />,
+        cell: (info) => info.row.original.created,
         enableSorting: true,
         size: 120,
-        meta: {
-          cellClassName: '',
-        },
       },
       {
         id: 'updated',
         accessorFn: (row) => row.updated,
-        header: ({ column }) => (
-          <DataGridColumnHeader title="Updated" column={column} />
-        ),
-        cell: (info) => {
-          return info.row.original.updated;
-        },
+        header: ({ column }) => <DataGridColumnHeader title="Updated" column={column} />,
+        cell: (info) => info.row.original.updated,
         enableSorting: true,
         size: 120,
-        meta: {
-          cellClassName: '',
-        },
+      },
+      {
+        id: 'featured',
+        accessorFn: (row) => row.featured,
+        header: ({ column }) => <DataGridColumnHeader title="Featured" column={column} />,
+        cell: (info) =>
+          info.row.original.featured ? (
+            <Star className="size-4 text-amber-500 fill-amber-500" />
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          ),
+        enableSorting: true,
+        size: 90,
       },
       {
         id: 'actions',
         header: () => '',
         enableSorting: false,
         cell: ({ row }) => {
+          const product = row.original;
+          const isTrashed = Boolean(product.deletedAt);
           return (
             <div className="flex items-center justify-center">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" mode="icon" size="sm" className="">
+                  <Button variant="ghost" mode="icon" size="sm">
                     <EllipsisVertical />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" side="bottom">
-                  <DropdownMenuItem onClick={() => handleEditProduct(row.original)}>
-                    <Settings className="size-4" />
-                    Edit Product
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleManageVariants(row.original)}>
-                    <Layers className="size-4" />
-                    Manage Variants
-                  </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleViewDetails(row.original)}>
-                      <Info className="size-4" />
-                      View Details
-                    </DropdownMenuItem>
-                  <DropdownMenuItem variant="destructive" onClick={() => handleDeleteProduct(row.original)}>
-                    <Trash className="size-4" />
-                    Delete
-                  </DropdownMenuItem>
+                  {!isTrashed && (
+                    <>
+                      <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                        <Settings className="size-4" />
+                        Edit Product
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleManageVariants(product)}>
+                        <Layers className="size-4" />
+                        Manage Variants
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleViewDetails(product)}>
+                        <Info className="size-4" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem variant="destructive" onClick={() => handleDeleteProduct(product)}>
+                        <Trash className="size-4" />
+                        Move to trash
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {isTrashed && (
+                    <>
+                      <DropdownMenuItem onClick={() => restore(product.id)}>
+                        <RotateCcw className="size-4" />
+                        Restore
+                      </DropdownMenuItem>
+                      <DropdownMenuItem variant="destructive" onClick={() => setHardDeleteTarget(product)}>
+                        <Trash2 className="size-4" />
+                        Delete permanently
+                      </DropdownMenuItem>
+                    </>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -414,24 +366,22 @@ export function ProductListTable({
         size: 80,
       },
     ],
-    [handleEditProduct, handleManageVariants, handleViewDetails, handleDeleteProduct],
+    [restore],
   );
 
-  // Apply search, tab, and last moved filters
   const filteredData = useMemo(() => {
     let result = [...data];
 
-    // Apply tab filter based on tabs array ids
     if (activeTab === 'all') {
-      result = result; // No filter, show all data
+      result = result.filter((item) => !item.deletedAt);
     } else if (activeTab === 'live') {
-      result = result.filter((item) => item.status.label === 'Live');
+      result = result.filter((item) => !item.deletedAt && item.status.label === 'Live' && !item.needsAction);
     } else if (activeTab === 'draft') {
-      result = result.filter((item) => item.status.label === 'Draft');
+      result = result.filter((item) => !item.deletedAt && item.status.label === 'Draft');
     } else if (activeTab === 'archived') {
-      result = result.filter((item) => item.status.label === 'Archived');
+      result = result.filter((item) => item.deletedAt || item.status.label === 'Archived');
     } else if (activeTab === 'actionNeeded') {
-      result = result.filter((item) => item.status.label === 'Must Act');
+      result = result.filter((item) => !item.deletedAt && (item.needsAction || item.status.label === 'Must Act'));
     }
 
     if (searchQuery) {
@@ -440,7 +390,8 @@ export function ProductListTable({
         (item) =>
           item.productInfo.title.toLowerCase().includes(query) ||
           item.productInfo.label.toLowerCase().includes(query) ||
-          item.category.toLowerCase().includes(query),
+          item.category.toLowerCase().includes(query) ||
+          (item.barcode ?? '').toLowerCase().includes(query),
       );
     }
 
@@ -448,45 +399,9 @@ export function ProductListTable({
   }, [data, activeTab, searchQuery]);
 
   useEffect(() => {
-    const selectedRowIds = Object.keys(rowSelection);
-    if (selectedRowIds.length > 0) {
-      toast.custom(
-        (t) => (
-          <Alert
-            variant="mono"
-            icon="success"
-            close={true}
-            onClose={() => toast.dismiss(t)}
-          >
-            <AlertIcon>
-              <Info />
-            </AlertIcon>
-            <AlertTitle>
-              Selected row IDs: {selectedRowIds.join(', ')}
-            </AlertTitle>
-          </Alert>
-        ),
-        {
-          duration: 5000,
-        },
-      );
-    }
-  }, [rowSelection]);
-
-  // Reset pagination when filters change
-  useEffect(() => {
-    table.setPageIndex(0);
-  }, [searchQuery, selectedLastMoved, activeTab]);
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: 0,
-    }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   }, [activeTab, searchQuery, selectedLastMoved]);
 
-  // Sync inputValue with searchQuery when searchQuery changes externally
   useEffect(() => {
     setInputValue(searchQuery);
   }, [searchQuery]);
@@ -495,10 +410,7 @@ export function ProductListTable({
     data: filteredData,
     columns,
     state: {
-      pagination: {
-        pageIndex: pagination.pageIndex,
-        pageSize: 10, // Fixed 10 items per page
-      },
+      pagination: { pageIndex: pagination.pageIndex, pageSize: 10 },
       sorting,
       rowSelection,
     },
@@ -508,38 +420,35 @@ export function ProductListTable({
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
-    debugTable: true,
-    debugHeaders: true,
-    debugColumns: true,
+    initialState: { pagination: { pageSize: 10 } },
   });
 
+  const activeOnly = data.filter((item) => !item.deletedAt);
   const tabs = [
-    { id: 'all', label: 'All', badge: data.length },
-    { id: 'live', label: 'Live', badge: data.filter((item) => item.status.label === 'Live').length },
-    { id: 'draft', label: 'Draft', badge: data.filter((item) => item.status.label === 'Draft').length },
-    { id: 'archived', label: 'Archived', badge: data.filter((item) => item.status.label === 'Archived').length },
+    { id: 'all', label: 'All', badge: activeOnly.length },
+    {
+      id: 'live',
+      label: 'Live',
+      badge: activeOnly.filter((item) => item.status.label === 'Live' && !item.needsAction).length,
+    },
+    { id: 'draft', label: 'Draft', badge: activeOnly.filter((item) => item.status.label === 'Draft').length },
+    {
+      id: 'archived',
+      label: 'Archived',
+      badge: data.filter((item) => item.deletedAt || item.status.label === 'Archived').length,
+    },
     {
       id: 'actionNeeded',
       label: 'Action Needed',
-      badge: data.filter((item) => item.status.label === 'Must Act').length,
+      badge: activeOnly.filter((item) => item.needsAction || item.status.label === 'Must Act').length,
     },
   ];
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
-    // Reset to first page when changing tabs
-    setPagination((prev) => ({
-      ...prev,
-      pageIndex: 0,
-    }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  // Search input handlers
   const handleClearInput = () => {
     setInputValue('');
     setSearchQuery('');
@@ -551,19 +460,13 @@ export function ProductListTable({
       {isError && (
         <p className="text-sm text-destructive">Unable to load products. Check your connection and try again.</p>
       )}
-      {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading products...</p>
-      )}
-      {!isLoading && !isError && data.length === 0 && (
+      {isLoading && <p className="text-sm text-muted-foreground">Loading products...</p>}
+      {!isLoading && !isError && activeData.length === 0 && deletedProducts.length === 0 && (
         <p className="text-sm text-muted-foreground">No products yet. Create your first product to get started.</p>
       )}
       <Card>
         <CardHeader className="py-3 flex-nowrap">
-          <Tabs
-            value={activeTab}
-            onValueChange={handleTabChange}
-            className="m-0 p-0 w-full"
-          >
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="m-0 p-0 w-full">
             <TabsList className="h-auto p-0 bg-transparent border-b-0 border-border rounded-none -ms-[3px] w-full">
               <div className="flex items-center gap-1 min-w-max">
                 {tabs.map((tab) => (
@@ -571,9 +474,9 @@ export function ProductListTable({
                     key={tab.id}
                     value={tab.id}
                     className={cn(
-                      "relative text-foreground px-2 hover:text-primary data-[state=active]:text-primary data-[state=active]:shadow-none", 
-                      activeTab === tab.id ? 'font-medium' : 'font-normal')
-                    }
+                      'relative text-foreground px-2 hover:text-primary data-[state=active]:text-primary data-[state=active]:shadow-none',
+                      activeTab === tab.id ? 'font-medium' : 'font-normal',
+                    )}
                   >
                     <div className="flex items-center gap-2">
                       {tab.label}
@@ -581,7 +484,7 @@ export function ProductListTable({
                         size="sm"
                         variant={activeTab === tab.id ? 'primary' : 'outline'}
                         appearance="outline"
-                        className={cn("rounded-full", activeTab === tab.id ? '' : 'bg-muted/60')}
+                        className={cn('rounded-full', activeTab === tab.id ? '' : 'bg-muted/60')}
                       >
                         {tab.badge}
                       </Badge>
@@ -595,7 +498,6 @@ export function ProductListTable({
             </TabsList>
           </Tabs>
           <CardToolbar className="flex items-center gap-2">
-            {/* Search */}
             <div className="w-full max-w-[200px]">
               <InputWrapper>
                 <Search />
@@ -610,18 +512,11 @@ export function ProductListTable({
                   onMouseDown={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
                 />
-                <Button
-                  onClick={handleClearInput}
-                  variant="dim"
-                  className="-me-4"
-                  disabled={inputValue === ''}
-                >
+                <Button onClick={handleClearInput} variant="dim" className="-me-4" disabled={inputValue === ''}>
                   {inputValue !== '' && <X size={16} />}
                 </Button>
               </InputWrapper>
             </div>
-
-            {/* Filter */}
             <DataGridColumnVisibility
               table={table}
               trigger={
@@ -634,20 +529,13 @@ export function ProductListTable({
           </CardToolbar>
         </CardHeader>
 
-        {/* Tab Contents */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           {tabs.map((tab) => (
-            <TabsContent
-              key={`content-${tab.id}`}
-              value={tab.id}
-              className="mt-0"
-            >
+            <TabsContent key={`content-${tab.id}`} value={tab.id} className="mt-0">
               <DataGrid
                 table={table}
                 recordCount={filteredData?.length || 0}
-                onRowClick={
-                  onRowClick ? (row: ProductListRow) => onRowClick(row.id) : undefined
-                }
+                onRowClick={onRowClick ? (row: ProductListRow) => onRowClick(row.id) : undefined}
                 tableLayout={{
                   columnsPinnable: true,
                   columnsMovable: true,
@@ -670,7 +558,6 @@ export function ProductListTable({
         </Tabs>
       </Card>
 
-      {/* Product Details Modal */}
       <ProductDetailsAnalyticsSheet
         open={isProductDetailsOpen}
         onOpenChange={setIsProductDetailsOpen}
@@ -690,7 +577,6 @@ export function ProductListTable({
         }}
       />
 
-      {/* Edit Product Modal */}
       <ProductFormSheet
         mode="edit"
         open={isEditProductOpen}
@@ -698,19 +584,47 @@ export function ProductListTable({
         product={selectedProduct}
       />
 
-      {/* Create Product Modal */}
-      <ProductFormSheet
-        mode="new"
-        open={isCreateProductOpen}
-        onOpenChange={setIsCreateProductOpen}
-      />
+      <ProductFormSheet mode="new" open={isCreateProductOpen} onOpenChange={setIsCreateProductOpen} />
 
-      {/* Manage Variants Modal */}
       <ManageVariantsSheet
         open={isManageVariantsOpen}
         onOpenChange={setIsManageVariantsOpen}
         productId={selectedProduct?.id}
         productName={selectedProduct?.productInfo.title}
+      />
+
+      <ProductSoftDeleteDialog
+        open={Boolean(softDeleteTarget)}
+        onOpenChange={(open) => {
+          if (!open) setSoftDeleteTarget(null);
+        }}
+        product={
+          softDeleteTarget
+            ? {
+                id: softDeleteTarget.id,
+                title: softDeleteTarget.productInfo.title,
+                sku: softDeleteTarget.productInfo.label,
+              }
+            : null
+        }
+        confirming={deleteProduct.isPending}
+        onConfirm={confirmSoftDelete}
+      />
+
+      <ProductHardDeleteDialog
+        open={Boolean(hardDeleteTarget)}
+        onOpenChange={(open) => {
+          if (!open) setHardDeleteTarget(null);
+        }}
+        product={
+          hardDeleteTarget
+            ? {
+                id: hardDeleteTarget.id,
+                title: hardDeleteTarget.productInfo.title,
+                sku: hardDeleteTarget.productInfo.label,
+              }
+            : null
+        }
       />
     </div>
   );

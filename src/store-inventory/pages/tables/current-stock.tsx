@@ -80,6 +80,7 @@ import {
 import { currentStockMockData } from '@/store-inventory/data/stock';
 import { useDeleteProduct } from '@/store-inventory/hooks/use-inventory';
 import { PerProductStockSheet } from '../components/per-product-stock-sheet';
+import { ProductSoftDeleteDialog } from '../components/product-delete-dialogs';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;
@@ -124,6 +125,7 @@ const CurrentStockTable = ({
 }: CurrentStockProps) => {
   const data = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
   const deleteProduct = useDeleteProduct();
+  const [productToDelete, setProductToDelete] = useState<IData | null>(null);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
@@ -546,9 +548,9 @@ const CurrentStockTable = ({
                 Edit
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" onClick={() => deleteProduct.mutate(info.row.original.id)}>
+              <DropdownMenuItem variant="destructive" onClick={() => setProductToDelete(info.row.original)}>
                 <Trash />
-                Delete
+                Move to trash
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -913,6 +915,35 @@ const CurrentStockTable = ({
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         data={selectedProduct}
+      />
+
+      <ProductSoftDeleteDialog
+        open={Boolean(productToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setProductToDelete(null);
+        }}
+        product={
+          productToDelete
+            ? {
+                id: productToDelete.id,
+                title: productToDelete.productInfo.title,
+                sku: productToDelete.productInfo.label,
+              }
+            : null
+        }
+        confirming={deleteProduct.isPending}
+        onConfirm={() => {
+          if (!productToDelete) return;
+          deleteProduct.mutate(productToDelete.id, {
+            onSuccess: () => {
+              toast.success('Product moved to trash');
+              setProductToDelete(null);
+            },
+            onError: (error) => {
+              toast.error(error instanceof Error ? error.message : 'Unable to delete product');
+            },
+          });
+        }}
       />
     </DataGrid>
     </div>

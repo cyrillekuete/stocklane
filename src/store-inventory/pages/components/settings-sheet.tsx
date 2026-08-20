@@ -48,17 +48,24 @@ function SettingsSheetBody({
   onOpenChange: (open: boolean) => void;
   initialTab?: string;
 }) {
-  const { draft, lastOrderLabel, dirty, saving, resetDraft, save } = useSettingsForm();
+  const { draft, lastOrderLabel, dirty, saving, loading, resetDraft, save } = useSettingsForm();
   const [activeTab, setActiveTab] = useState(
     SETTINGS_TABS.some((tab) => tab.value === initialTab) ? initialTab! : 'general-settings',
   );
 
+  const confirmDiscard = () => {
+    if (!dirty) return true;
+    return window.confirm('Discard unsaved settings changes?');
+  };
+
   const handleCancel = () => {
+    if (!confirmDiscard()) return;
     resetDraft();
   };
 
   const handleClose = (nextOpen: boolean) => {
     if (!nextOpen) {
+      if (!confirmDiscard()) return;
       resetDraft();
     }
     onOpenChange(nextOpen);
@@ -102,13 +109,16 @@ function SettingsSheetBody({
               <Button variant="outline" onClick={handleCancel} disabled={!dirty || saving}>
                 Cancel
               </Button>
-              <Button variant="mono" onClick={() => void save()} disabled={saving}>
+              <Button variant="mono" onClick={() => void save()} disabled={!dirty || saving || loading}>
                 {saving ? 'Saving...' : 'Save'}
               </Button>
             </div>
           </div>
           <div className="flex flex-col h-[calc(100dvh-22rem)]">
             <div className="flex flex-wrap lg:flex-nowrap py-5 px-2 grow">
+              {loading ? (
+                <div className="px-5 py-8 text-sm text-muted-foreground">Loading settings…</div>
+              ) : (
               <Tabs value={activeTab} onValueChange={setActiveTab} className="text-2sm text-muted-foreground w-full space-y-3">
                 <div className="px-3">
                   <div className="overflow-x-auto">
@@ -146,6 +156,7 @@ function SettingsSheetBody({
                   </TabsContent>
                 </ScrollArea>
               </Tabs>
+              )}
             </div>
           </div>
         </SheetBody>
@@ -157,7 +168,7 @@ function SettingsSheetBody({
           <Button variant="outline" onClick={handleCancel} disabled={!dirty || saving}>
             Cancel
           </Button>
-          <Button variant="mono" onClick={() => void save()} disabled={saving}>
+          <Button variant="mono" onClick={() => void save()} disabled={!dirty || saving || loading}>
             {saving ? 'Saving...' : 'Save'}
           </Button>
         </SheetFooter>

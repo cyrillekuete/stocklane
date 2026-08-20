@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
+import { clampNonNegativeNumber } from "@/store-inventory/lib/settings-validation";
 import { useSettingsForm } from "./settings-form-context";
 import type { ShippingZone } from "@/store-inventory/types";
 
@@ -67,7 +68,12 @@ export function ShippingDelivery() {
                   min={0}
                   disabled={!draft.freeShippingEnabled}
                   value={draft.freeShippingMin}
-                  onChange={(e) => updateDraft({ freeShippingMin: Number(e.target.value) || 0 })}
+                  onChange={(e) => {
+                    const raw = Number(e.target.value);
+                    updateDraft({
+                      freeShippingMin: Number.isFinite(raw) ? clampNonNegativeNumber(raw) : 0,
+                    });
+                  }}
                   placeholder="Minimum order amount"
                 />
               </div>
@@ -163,7 +169,14 @@ export function ShippingDelivery() {
                 type="number"
                 min={0}
                 value={draft.handlingDays}
-                onChange={(e) => updateDraft({ handlingDays: Number(e.target.value) || 0 })}
+                onChange={(e) => {
+                  const raw = Number(e.target.value);
+                  updateDraft({
+                    handlingDays: Number.isFinite(raw)
+                      ? Math.trunc(clampNonNegativeNumber(raw))
+                      : 0,
+                  });
+                }}
               />
             </div>
           </div>
@@ -194,7 +207,12 @@ export function ShippingDelivery() {
                     type="number"
                     min={0}
                     value={zone.rate}
-                    onChange={(e) => updateZone(zone.id, { rate: Number(e.target.value) || 0 })}
+                    onChange={(e) => {
+                      const raw = Number(e.target.value);
+                      updateZone(zone.id, {
+                        rate: Number.isFinite(raw) ? clampNonNegativeNumber(raw) : 0,
+                      });
+                    }}
                     placeholder="Rate"
                   />
                   <Input

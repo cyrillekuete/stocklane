@@ -1,5 +1,7 @@
 import { JSX, useCallback, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth } from '@/auth';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { MENU_SIDEBAR } from '@/store-inventory/config/app.config';
 import { MenuConfig, MenuItem } from '@/store-inventory/config/types';
 import { cn } from '@/lib/utils';
@@ -150,8 +152,29 @@ function buildMenu(items: MenuConfig): JSX.Element[] {
   });
 }
 
+function filterMenuByPermission(
+  items: MenuConfig,
+  hasPermission: (permission: NonNullable<MenuItem['permission']>) => boolean,
+): MenuConfig {
+  if (!isSupabaseConfigured) return items;
+
+  return items
+    .map((item) => {
+      if (item.heading) return item;
+      if (item.permission && !hasPermission(item.permission)) return null;
+      if (item.children) {
+        const children = filterMenuByPermission(item.children, hasPermission);
+        if (!children.length) return null;
+        return { ...item, children };
+      }
+      return item;
+    })
+    .filter(Boolean) as MenuConfig;
+}
+
 export function SidebarMenu() {
   const { pathname } = useLocation();
+  const { hasPermission } = useAuth();
 
   const matchPath = useCallback(
     (path: string): boolean =>
@@ -160,7 +183,10 @@ export function SidebarMenu() {
     [pathname],
   );
 
-  const menuItems = useMemo(() => buildMenu(MENU_SIDEBAR), []);
+  const menuItems = useMemo(
+    () => buildMenu(filterMenuByPermission(MENU_SIDEBAR as MenuConfig, hasPermission)),
+    [hasPermission],
+  );
 
   return (
     <ScrollArea className="flex grow shrink-0 py-5 px-5 lg:h-[calc(100vh-5.5rem)]">

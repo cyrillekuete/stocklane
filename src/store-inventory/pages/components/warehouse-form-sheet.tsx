@@ -1,7 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -23,10 +33,14 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import {
+  useActiveWarehouses,
   useCreateWarehouse,
   useDeleteWarehouse,
+  useMoveWarehouseStock,
   useUpdateWarehouse,
 } from '@/store-inventory/hooks/use-warehouses';
+import { mapWarehouseError } from '@/store-inventory/lib/warehouse-errors';
+import { getWarehouseDeleteBlockers } from '@/store-inventory/services/warehouses';
 import type { WarehouseListRow } from '@/store-inventory/types';
 
 export function WarehouseFormSheet({
@@ -43,6 +57,8 @@ export function WarehouseFormSheet({
   const createWarehouse = useCreateWarehouse();
   const updateWarehouse = useUpdateWarehouse();
   const deleteWarehouse = useDeleteWarehouse();
+  const moveStock = useMoveWarehouseStock();
+  const { data: activeWarehouses } = useActiveWarehouses();
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -51,7 +67,19 @@ export function WarehouseFormSheet({
   const [phone, setPhone] = useState('');
   const [status, setStatus] = useState('Active');
   const [isDefault, setIsDefault] = useState(false);
-  const pending = createWarehouse.isPending || updateWarehouse.isPending || deleteWarehouse.isPending;
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleteSummary, setDeleteSummary] = useState<string[]>([]);
+  const [moveTargetId, setMoveTargetId] = useState('');
+  const pending =
+    createWarehouse.isPending ||
+    updateWarehouse.isPending ||
+    deleteWarehouse.isPending ||
+    moveStock.isPending;
+
+  const moveTargets = useMemo(
+    () => (activeWarehouses ?? []).filter((row) => row.id !== warehouse?.id),
+    [activeWarehouses, warehouse?.id],
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -63,11 +91,17 @@ export function WarehouseFormSheet({
     setPhone(warehouse?.phone ?? '');
     setStatus(warehouse?.status.label ?? 'Active');
     setIsDefault(Boolean(warehouse?.isDefault));
+    setMoveTargetId('');
+    setDeleteSummary([]);
   }, [open, warehouse]);
 
   const handleSave = async () => {
     if (!code.trim() || !name.trim()) {
       toast.error('Code and name are required');
+      return;
+    }
+    if (isDefault && status !== 'Active') {
+      toast.error('Default warehouse must be Active');
       return;
     }
     try {
@@ -92,93 +126,219 @@ export function WarehouseFormSheet({
       }
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to save warehouse');
+      toast.error(mapWarehouseError(error).message);
     }
   };
 
-  const handleDelete = async () => {
+  const openDeleteConfirm = async () => {
     if (!warehouse) return;
     try {
-      await deleteWarehouse.mutateAsync(warehouse.id);
-      toast.success('Warehouse deleted');
-      onOpenChange(false);
+      const blockers = await getWarehouseDeleteBlockers(warehouse.id);
+      setDeleteSummary(
+        blockers.messages.length
+          ? blockers.messages
+          : [`Delete ${warehouse.name}? This cannot be undone.`],
+      );
+      if (blockers.hasStock && moveTargets[0]) {
+        setMoveTargetId(moveTargets[0].id);
+      }
+      setConfirmDeleteOpen(true);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to delete warehouse');
+      toast.error(mapWarehouseError(error).message);
     }
   };
 
+  const handleMoveStock = async () => {
+    if (!warehouse || !moveTargetId) {
+      toast.error('Select a destination warehouse');
+      return;
+    }
+    try {
+      const moved = await moveStock.mutateAsync({
+        fromWarehouseId: warehouse.id,
+        toWarehouseId: moveTargetId,
+      });
+      toast.success(`Moved ${moved} units to the selected warehouse`);
+      const blockers = await getWarehouseDeleteBlockers(warehouse.id);
+      setDeleteSummary(
+        blockers.messages.length
+          ? blockers.messages
+          : [`Stock moved. You can delete ${warehouse.name} now.`],
+      );
+    } catch (error) {
+      toast.error(mapWarehouseError(error).message);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!warehouse) return;
+    try {
+      const blockers = await getWarehouseDeleteBlockers(warehouse.id);
+      if (blockers.messages.length) {
+        setDeleteSummary(blockers.messages);
+        toast.error(blockers.messages[0]);
+        return;
+      }
+      await deleteWarehouse.mutateAsync(warehouse.id);
+      toast.success('Warehouse deleted');
+      setConfirmDeleteOpen(false);
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(mapWarehouseError(error).message);
+    }
+  };
+
+  const defaultLocked = mode === 'edit' && Boolean(warehouse?.isDefault);
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="sm:w-[440px] inset-5 start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
-        <SheetHeader className="border-b border-border p-5">
-          <SheetTitle>{mode === 'new' ? 'Add Warehouse' : 'Edit Warehouse'}</SheetTitle>
-        </SheetHeader>
-        <SheetBody className="p-0">
-          <ScrollArea className="h-[calc(100vh-10.5rem)] px-5">
-            <div className="space-y-4 py-5">
-              <div className="space-y-2">
-                <Label htmlFor="wh-code">Code</Label>
-                <Input id="wh-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="MAIN" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="wh-name">Name</Label>
-                <Input id="wh-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Main Warehouse" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="wh-address">Address</Label>
-                <Input id="wh-address" value={address} onChange={(e) => setAddress(e.target.value)} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="sm:w-[440px] inset-5 start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
+          <SheetHeader className="border-b border-border p-5">
+            <SheetTitle>{mode === 'new' ? 'Add Warehouse' : 'Edit Warehouse'}</SheetTitle>
+          </SheetHeader>
+          <SheetBody className="p-0">
+            <ScrollArea className="h-[calc(100vh-10.5rem)] px-5">
+              <div className="space-y-4 py-5">
                 <div className="space-y-2">
-                  <Label htmlFor="wh-city">City</Label>
-                  <Input id="wh-city" value={city} onChange={(e) => setCity(e.target.value)} />
+                  <Label htmlFor="wh-code">Code</Label>
+                  <Input id="wh-code" value={code} onChange={(e) => setCode(e.target.value)} placeholder="MAIN" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="wh-country">Country</Label>
-                  <Input id="wh-country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="FR" />
+                  <Label htmlFor="wh-name">Name</Label>
+                  <Input id="wh-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Main Warehouse" />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wh-address">Address</Label>
+                  <Input id="wh-address" value={address} onChange={(e) => setAddress(e.target.value)} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="wh-city">City</Label>
+                    <Input id="wh-city" value={city} onChange={(e) => setCity(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="wh-country">Country</Label>
+                    <Input id="wh-country" value={country} onChange={(e) => setCountry(e.target.value)} placeholder="FR" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="wh-phone">Phone</Label>
+                  <Input id="wh-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={isDefault}
+                    disabled={defaultLocked && isDefault}
+                    onCheckedChange={(checked) => {
+                      if (defaultLocked && !checked) {
+                        toast.error('Set another warehouse as default before unchecking this one');
+                        return;
+                      }
+                      setIsDefault(Boolean(checked));
+                      if (checked) setStatus('Active');
+                    }}
+                  />
+                  Default warehouse
+                </label>
+                {mode === 'edit' && warehouse && warehouse.onHand > 0 && moveTargets.length > 0 ? (
+                  <div className="space-y-3 rounded-md border border-border p-3">
+                    <div className="text-sm font-medium text-foreground">Move stock</div>
+                    <p className="text-xs text-muted-foreground">
+                      {warehouse.onHand} on-hand units must be moved before this warehouse can be deleted.
+                    </p>
+                    <Select value={moveTargetId} onValueChange={setMoveTargetId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Destination warehouse" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {moveTargets.map((row) => (
+                          <SelectItem key={row.id} value={row.id}>
+                            {row.name} ({row.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" onClick={handleMoveStock} disabled={pending || !moveTargetId}>
+                      Move all stock
+                    </Button>
+                  </div>
+                ) : null}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="wh-phone">Phone</Label>
-                <Input id="wh-phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <label className="flex items-center gap-2 text-sm">
-                <Checkbox checked={isDefault} onCheckedChange={(checked) => setIsDefault(Boolean(checked))} />
-                Default warehouse
-              </label>
+            </ScrollArea>
+          </SheetBody>
+          <SheetFooter className="border-t border-border p-5 flex-row justify-between">
+            {mode === 'edit' ? (
+              <Button variant="destructive" onClick={openDeleteConfirm} disabled={pending}>
+                Delete
+              </Button>
+            ) : (
+              <span />
+            )}
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button variant="mono" onClick={handleSave} disabled={pending}>
+                {mode === 'new' ? 'Create' : 'Save'}
+              </Button>
             </div>
-          </ScrollArea>
-        </SheetBody>
-        <SheetFooter className="border-t border-border p-5 flex-row justify-between">
-          {mode === 'edit' ? (
-            <Button variant="destructive" onClick={handleDelete} disabled={pending}>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete warehouse</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                {deleteSummary.map((message) => (
+                  <p key={message}>{message}</p>
+                ))}
+                {warehouse && warehouse.onHand > 0 && moveTargets.length > 0 ? (
+                  <div className="space-y-2 pt-2">
+                    <Label>Move all stock to</Label>
+                    <Select value={moveTargetId} onValueChange={setMoveTargetId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Destination warehouse" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {moveTargets.map((row) => (
+                          <SelectItem key={row.id} value={row.id}>
+                            {row.name} ({row.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="sm" onClick={handleMoveStock} disabled={pending || !moveTargetId}>
+                      Move all stock
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleConfirmDelete} disabled={pending}>
               Delete
-            </Button>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button variant="mono" onClick={handleSave} disabled={pending}>
-              {mode === 'new' ? 'Create' : 'Save'}
-            </Button>
-          </div>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }

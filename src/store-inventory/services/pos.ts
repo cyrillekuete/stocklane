@@ -8,14 +8,21 @@ import type {
   PosSaleStatus,
 } from '../types';
 
+/** Default void window (days); must match inventory_void_pos_sale default. */
+export const POS_VOID_MAX_AGE_DAYS = 30;
+
 export type CompletePosSaleInput = {
+  saleId?: string;
   saleNumber: string;
-  warehouseId: string;
+  warehouseId?: string | null;
   customerId?: string | null;
   customerName: string;
   subtotal: number;
   discountAmount: number;
+  discountPercent?: number;
   taxAmount: number;
+  taxPercent?: number;
+  taxCalculation?: string;
   total: number;
   paymentMethod: PosPaymentMethod;
   amountTendered: number;
@@ -38,7 +45,7 @@ export type CompletePosSaleInput = {
 type PosSaleDbRow = {
   id: string;
   sale_number: string;
-  warehouse_id: string;
+  warehouse_id: string | null;
   customer_id: string | null;
   customer_name: string;
   subtotal: number | string;
@@ -50,6 +57,10 @@ type PosSaleDbRow = {
   change_due: number | string;
   notes: string | null;
   status: string;
+  tax_percent?: number | string | null;
+  tax_calculation?: string | null;
+  void_reason?: string | null;
+  voided_at?: string | null;
   created_at: string;
   warehouse?: { id: string; name: string; code: string } | null;
   items?: PosSaleItemDbRow[];
@@ -118,7 +129,9 @@ export function uniqueSaleWarehouses(sale: PosSaleRow): Array<{ id: string; name
 }
 
 export function formatSaleWarehouses(sale: PosSaleRow): string {
-  return uniqueSaleWarehouses(sale)
+  const warehouses = uniqueSaleWarehouses(sale);
+  if (!warehouses.length) return 'Multiple warehouses';
+  return warehouses
     .map((row) => (row.code ? `${row.name} (${row.code})` : row.name))
     .join(', ');
 }
@@ -133,14 +146,14 @@ export function groupSaleItemsByWarehouse(sale: PosSaleRow) {
   const indexById = new Map<string, number>();
 
   for (const item of sale.items ?? []) {
-    const id = item.warehouseId || sale.warehouseId;
+    const id = item.warehouseId || sale.warehouseId || 'unknown';
     const existing = indexById.get(id);
     if (existing == null) {
       indexById.set(id, groups.length);
       groups.push({
         id,
-        name: item.warehouseName || sale.warehouseName,
-        code: item.warehouseCode || sale.warehouseCode,
+        name: item.warehouseName || sale.warehouseName || 'Warehouse',
+        code: item.warehouseCode || sale.warehouseCode || '',
         items: [item],
       });
       continue;
@@ -165,7 +178,7 @@ function mapSale(row: PosSaleDbRow): PosSaleRow {
   return {
     id: row.id,
     saleNumber: row.sale_number,
-    warehouseId: row.warehouse_id,
+    warehouseId: row.warehouse_id ?? row.warehouse?.id ?? items[0]?.warehouseId ?? '',
     warehouseName: row.warehouse?.name ?? '',
     warehouseCode: row.warehouse?.code ?? '',
     customerId: row.customer_id,
@@ -179,10 +192,47 @@ function mapSale(row: PosSaleDbRow): PosSaleRow {
     changeDue: parseMoney(row.change_due),
     notes: row.notes,
     status: (row.status as PosSaleStatus) ?? 'completed',
+    taxPercent: row.tax_percent == null ? null : parseMoney(row.tax_percent),
+    taxCalculation: row.tax_calculation ?? null,
+    voidReason: row.void_reason ?? null,
+    voidedAt: row.voided_at ?? null,
     itemCount: items.length,
     createdAt: row.created_at,
     items,
   };
+}
+
+export function formatPosError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error ?? 'Unknown error');
+  const lower = message.toLowerCase();
+  if (lower.includes('insufficient available stock') || lower.includes('insufficient stock')) {
+    return 'Not enough available stock for one or more items';
+  }
+  if (lower.includes('insufficient account balance')) {
+    return 'Not enough account balance for this sale';
+  }
+  if (lower.includes('amount tendered')) {
+    return 'Amount tendered is less than the total';
+  }
+  if (lower.includes('sale total mismatch')) {
+    return 'Sale totals changed — refresh the cart and try again';
+  }
+  if (lower.includes('older than') && lower.includes('void')) {
+    return `Sales older than ${POS_VOID_MAX_AGE_DAYS} days cannot be voided`;
+  }
+  if (lower.includes('already voided')) {
+    return 'Sale is already voided';
+  }
+  if (lower.includes('not sellable') || lower.includes('not live')) {
+    return 'A cart product is no longer available for sale';
+  }
+  if (lower.includes('must include a product')) {
+    return 'Each sale item must include a product';
+  }
+  if (lower.includes('require a customer')) {
+    return 'Select a customer for account or credit sales';
+  }
+  return message;
 }
 
 export async function fetchPosCatalog(warehouseId?: string | null): Promise<PosCatalogProduct[]> {
@@ -191,13 +241,13 @@ export async function fetchPosCatalog(warehouseId?: string | null): Promise<PosC
     .from('inventory_products')
     .select('id, name, sku, barcode, image, price, status')
     .eq('status', 'Live')
+    .is('deleted_at', null)
     .order('name');
   if (error) throw error;
 
   let stockQuery = client
     .from('inventory_warehouse_stock')
-    .select('product_id, qty, warehouse:inventory_warehouses(id, name, code)')
-    .gt('qty', 0);
+    .select('product_id, qty, reserved, warehouse:inventory_warehouses(id, name, code, status)');
   if (warehouseId) {
     stockQuery = stockQuery.eq('warehouse_id', warehouseId);
   }
@@ -219,12 +269,21 @@ export async function fetchPosCatalog(warehouseId?: string | null): Promise<PosC
   return ((stockRows ?? []) as Array<{
     product_id: string;
     qty: number | string;
-    warehouse?: { id: string; name: string; code: string } | { id: string; name: string; code: string }[] | null;
+    reserved?: number | string;
+    warehouse?:
+      | { id: string; name: string; code: string; status?: string }
+      | { id: string; name: string; code: string; status?: string }[]
+      | null;
   }>)
     .flatMap((row) => {
       const product = productById.get(row.product_id);
       const warehouse = Array.isArray(row.warehouse) ? row.warehouse[0] : row.warehouse;
       if (!product || !warehouse) return [];
+      if ((warehouse.status ?? '').toLowerCase() !== 'active') return [];
+      const qty = Number(row.qty ?? 0);
+      const reserved = Number(row.reserved ?? 0);
+      const available = Math.max(qty - reserved, 0);
+      if (available <= 0) return [];
       return [{
         id: product.id,
         warehouseId: warehouse.id,
@@ -236,7 +295,7 @@ export async function fetchPosCatalog(warehouseId?: string | null): Promise<PosC
         image: product.image ?? '11.png',
         price: parseMoney(product.price),
         status: product.status,
-        qty: Number(row.qty ?? 0),
+        qty: available,
       }];
     })
     .sort((a, b) => a.name.localeCompare(b.name) || a.warehouseName.localeCompare(b.warehouseName));
@@ -266,17 +325,20 @@ export async function fetchPosSaleById(id: string) {
 
 export async function completePosSale(input: CompletePosSaleInput) {
   const client = requireClient();
-  const saleId = crypto.randomUUID();
+  const saleId = input.saleId ?? crypto.randomUUID();
   const { data, error } = await client.rpc('inventory_complete_pos_sale', {
     payload: {
       sale_id: saleId,
       sale_number: input.saleNumber,
-      warehouse_id: input.warehouseId,
+      warehouse_id: input.warehouseId ?? null,
       customer_id: input.customerId ?? null,
       customer_name: input.customerName,
       subtotal: input.subtotal,
       discount_amount: input.discountAmount,
+      discount_percent: input.discountPercent ?? 0,
       tax_amount: input.taxAmount,
+      tax_percent: input.taxPercent ?? null,
+      tax_calculation: input.taxCalculation ?? null,
       total: input.total,
       payment_method: input.paymentMethod,
       amount_tendered: input.amountTendered,
@@ -301,13 +363,27 @@ export async function completePosSale(input: CompletePosSaleInput) {
   return fetchPosSaleById(returnedId);
 }
 
-export async function voidPosSale(saleId: string) {
+export async function voidPosSale(
+  saleId: string,
+  options?: { reason?: string; maxAgeDays?: number },
+) {
   const client = requireClient();
   const { error } = await client.rpc('inventory_void_pos_sale', {
     p_sale_id: saleId,
+    p_void_reason: options?.reason ?? null,
+    p_max_age_days: options?.maxAgeDays ?? POS_VOID_MAX_AGE_DAYS,
   });
   if (error) throw error;
   return saleId;
+}
+
+export function isPosSaleVoidable(sale: Pick<PosSaleRow, 'status' | 'createdAt'>, maxAgeDays = POS_VOID_MAX_AGE_DAYS) {
+  if (sale.status !== 'completed') return false;
+  if (maxAgeDays < 0) return true;
+  const created = new Date(sale.createdAt).getTime();
+  if (Number.isNaN(created)) return false;
+  const ageMs = Date.now() - created;
+  return ageMs <= maxAgeDays * 24 * 60 * 60 * 1000;
 }
 
 export function computePosTotals(options: {
@@ -321,12 +397,10 @@ export function computePosTotals(options: {
     const line = roundMoney(item.unitPrice) * item.quantity - roundMoney(item.lineDiscount ?? 0);
     return sum + Math.max(line, 0);
   }, 0);
-  const percentDiscount = options.discountPercent
-    ? (lineSubtotal * options.discountPercent) / 100
-    : 0;
-  const discountAmount = roundMoney(
-    Math.min(lineSubtotal, Math.max(options.discountAmount ?? 0, 0) + percentDiscount),
-  );
+  const clampedPercent = Math.min(Math.max(options.discountPercent ?? 0, 0), 100);
+  const percentDiscount = clampedPercent ? (lineSubtotal * clampedPercent) / 100 : 0;
+  const fixedDiscount = Math.max(options.discountAmount ?? 0, 0);
+  const discountAmount = roundMoney(Math.min(lineSubtotal, fixedDiscount + percentDiscount));
   const afterDiscount = Math.max(lineSubtotal - discountAmount, 0);
   const taxPercent = Math.max(options.taxPercent, 0);
   const inclusive = options.taxCalculation === 'inclusive';
@@ -342,4 +416,33 @@ export function computePosTotals(options: {
     taxAmount,
     total: roundMoney(total),
   };
+}
+
+/** Split a cart-level discount across lines so line totals reconcile with the receipt. */
+export function allocateCartDiscount(
+  items: Array<{ unitPrice: number; quantity: number }>,
+  discountAmount: number,
+) {
+  const grosses = items.map((item) => roundMoney(item.unitPrice) * item.quantity);
+  const totalGross = grosses.reduce((sum, value) => sum + value, 0);
+  const clampedDiscount = roundMoney(Math.min(Math.max(discountAmount, 0), totalGross));
+  if (totalGross <= 0 || clampedDiscount <= 0) {
+    return items.map((item, index) => ({
+      lineDiscount: 0,
+      lineTotal: grosses[index],
+    }));
+  }
+
+  let allocated = 0;
+  return grosses.map((gross, index) => {
+    const isLast = index === grosses.length - 1;
+    const share = isLast
+      ? roundMoney(clampedDiscount - allocated)
+      : roundMoney((gross / totalGross) * clampedDiscount);
+    allocated += share;
+    return {
+      lineDiscount: share,
+      lineTotal: roundMoney(gross - share),
+    };
+  });
 }

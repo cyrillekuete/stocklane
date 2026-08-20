@@ -30,7 +30,7 @@ import {
   buildOrderDetail,
   defaultTrackingDetail,
 } from '@/store-inventory/data/orders';
-import { useDeleteOrder, useOrder, useOrderTracking } from '@/store-inventory/hooks/use-inventory';
+import { useCancelOrder, useOrder, useOrderTracking } from '@/store-inventory/hooks/use-inventory';
 import type { OrderListRow } from '@/store-inventory/types';
 
 const steps = [
@@ -61,10 +61,14 @@ export function TrackShippingSheet({
 }: TrackShippingSheetProps) {
   const { data: remoteOrder } = useOrder(isSupabaseConfigured ? orderId : undefined);
   const { data: remoteEvents } = useOrderTracking(isSupabaseConfigured ? orderId : undefined);
-  const deleteOrder = useDeleteOrder();
+  const cancelOrderMutation = useCancelOrder();
   const fallback = resolveFallback(orderId, order);
   const detail = remoteOrder ?? fallback;
-  const events = remoteEvents?.length ? remoteEvents : detail.trackingEvents;
+  const events = remoteEvents?.length
+    ? remoteEvents
+    : isSupabaseConfigured
+      ? []
+      : detail.trackingEvents;
   const currentStep = Math.min(Math.max(detail.currentStep || 1, 1), 4);
 
   const handleCancel = () => {
@@ -72,15 +76,18 @@ export function TrackShippingSheet({
       onOpenChange(false);
       return;
     }
-    deleteOrder.mutate(detail.id, {
-      onSuccess: () => {
-        toast.success('Order cancelled');
-        onOpenChange(false);
+    cancelOrderMutation.mutate(
+      { id: detail.id, reason: 'Canceled from tracking' },
+      {
+        onSuccess: () => {
+          toast.success('Order canceled');
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error(error instanceof Error ? error.message : 'Unable to cancel order');
+        },
       },
-      onError: (error) => {
-        toast.error(error instanceof Error ? error.message : 'Unable to cancel order');
-      },
-    });
+    );
   };
 
   return (

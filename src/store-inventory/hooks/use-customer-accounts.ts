@@ -10,6 +10,7 @@ import {
   type QuerySnapshot,
 } from '../lib/optimistic';
 import { inventoryKeys } from '../lib/query-keys';
+import { mapCustomerError } from '../lib/customer-errors';
 import {
   depositCustomerAccount,
   fetchCustomerAccountTransactions,
@@ -50,7 +51,7 @@ export function useDepositCustomerAccount() {
     },
     onError: (error, _input, context) => {
       if (context?.previous) restoreQueries(queryClient, context.previous as QuerySnapshot);
-      toastMutationError(error);
+      toastMutationError(mapCustomerError(error));
     },
     onSettled: (_data, _error, input) => {
       void invalidateKeys(

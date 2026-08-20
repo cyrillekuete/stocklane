@@ -1,0 +1,23 @@
+-- Order RPC security posture (for when staff auth lands).
+--
+-- Current Vite store-inventory client uses the publishable/anon key with no
+-- auth session, so inventory_create_order / inventory_update_order /
+-- inventory_cancel_order / inventory_delete_order still GRANT EXECUTE TO anon
+-- (see order_edge_case_hardening.sql). Direct INSERT/UPDATE/DELETE on order
+-- tables is revoked from anon/authenticated — mutations must go through those
+-- SECURITY DEFINER RPCs.
+--
+-- When /store-inventory is gated behind Supabase Auth + roles:
+--   REVOKE EXECUTE ON FUNCTION inventory_create_order(JSONB) FROM anon;
+--   REVOKE EXECUTE ON FUNCTION inventory_update_order(TEXT, JSONB) FROM anon;
+--   REVOKE EXECUTE ON FUNCTION inventory_cancel_order(TEXT, TEXT) FROM anon;
+--   REVOKE EXECUTE ON FUNCTION inventory_delete_order(TEXT) FROM anon;
+--   REVOKE EXECUTE ON FUNCTION inventory_update_order_status(TEXT, TEXT, TEXT) FROM anon;
+-- Then grant execute only to authenticated roles that map to:
+--   read  → SELECT policies on inventory_orders*
+--   create → inventory_create_order
+--   cancel → inventory_cancel_order
+--   void   → inventory_cancel_order (fulfilled restock) / inventory_restock_fulfilled_order
+-- Scope SELECT by store_id using JWT claims when multi-store lands.
+
+SELECT 1;

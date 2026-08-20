@@ -85,66 +85,87 @@ export function ProductFormVariants({
 
   const handleAddVariant = () => {
     if (
-      newVariant.size &&
-      newVariant.color &&
-      newVariant.onHand &&
-      newVariant.price
+      !newVariant.size ||
+      !newVariant.color ||
+      !newVariant.onHand ||
+      !newVariant.price
     ) {
-      if (editingId) {
-        // Update existing variant
-        setVariants((prev) =>
-          prev.map((v) => (v.id === editingId ? { ...v, ...newVariant } : v)),
-        );
-
-        toast.custom(
-          (t) => (
-            <Alert
-              variant="mono"
-              icon="success"
-              onClose={() => toast.dismiss(t)}
-            >
-              <AlertIcon>
-                <CheckCircle />
-              </AlertIcon>
-              <AlertTitle>Variant updated successfully</AlertTitle>
-            </Alert>
-          ),
-          {
-            duration: 5000,
-          },
-        );
-
-        setEditingId(null);
-      } else {
-        // Add new variant
-        const variant: Variant = {
-          id: `new-${crypto.randomUUID()}`,
-          ...newVariant,
-        };
-        setVariants([...variants, variant]);
-
-        toast.custom(
-          (t) => (
-            <Alert
-              variant="mono"
-              icon="success"
-              onClose={() => toast.dismiss(t)}
-            >
-              <AlertIcon>
-                <CheckCircle />
-              </AlertIcon>
-              <AlertTitle>Variant added successfully</AlertTitle>
-            </Alert>
-          ),
-          {
-            duration: 5000,
-          },
-        );
-      }
-
-      resetForm();
-      setActiveTab('list');
+      toast.error('Size, color, on hand, and price are required');
+      return;
     }
+    const onHand = Number(newVariant.onHand);
+    const price = Number(newVariant.price);
+    if (!Number.isFinite(onHand) || onHand < 0) {
+      toast.error('On hand must be zero or greater');
+      return;
+    }
+    if (!Number.isFinite(price) || price < 0) {
+      toast.error('Variant price cannot be negative');
+      return;
+    }
+    const duplicate = variants.some(
+      (v) =>
+        v.id !== editingId &&
+        v.size === newVariant.size &&
+        v.color === newVariant.color,
+    );
+    if (duplicate) {
+      toast.error(`Variant ${newVariant.size} / ${newVariant.color} already exists`);
+      return;
+    }
+
+    if (editingId) {
+      setVariants((prev) =>
+        prev.map((v) => (v.id === editingId ? { ...v, ...newVariant } : v)),
+      );
+
+      toast.custom(
+        (t) => (
+          <Alert
+            variant="mono"
+            icon="success"
+            onClose={() => toast.dismiss(t)}
+          >
+            <AlertIcon>
+              <CheckCircle />
+            </AlertIcon>
+            <AlertTitle>Variant updated successfully</AlertTitle>
+          </Alert>
+        ),
+        {
+          duration: 5000,
+        },
+      );
+
+      setEditingId(null);
+    } else {
+      const variant: Variant = {
+        id: `new-${crypto.randomUUID()}`,
+        ...newVariant,
+      };
+      setVariants([...variants, variant]);
+
+      toast.custom(
+        (t) => (
+          <Alert
+            variant="mono"
+            icon="success"
+            onClose={() => toast.dismiss(t)}
+          >
+            <AlertIcon>
+              <CheckCircle />
+            </AlertIcon>
+            <AlertTitle>Variant added successfully</AlertTitle>
+          </Alert>
+        ),
+        {
+          duration: 5000,
+        },
+      );
+    }
+
+    resetForm();
+    setActiveTab('list');
   };
 
   const handleDeleteVariant = (id: string) => {
@@ -250,7 +271,7 @@ export function ProductFormVariants({
                         Available
                       </TableHead>
                       <TableHead className="min-w-[90px] w-[100px] h-8.5 border-e border-border">
-                        On Hand
+                        Display qty
                       </TableHead>
                       <TableHead className="w-[100px] h-8.5">Actions</TableHead>
                     </TableRow>
@@ -351,9 +372,11 @@ export function ProductFormVariants({
                   </div>
 
                   <div className="flex flex-col gap-2 basis-1/5">
-                    <Label className="text-xs">On Hand</Label>
+                    <Label className="text-xs">Display qty</Label>
                     <Input
-                      placeholder="Qty"
+                      type="number"
+                      min={0}
+                      placeholder="0"
                       value={newVariant.onHand}
                       onChange={(e) =>
                         setNewVariant({ ...newVariant, onHand: e.target.value })
@@ -366,6 +389,7 @@ export function ProductFormVariants({
                     <InputWrapper>
                       <Input
                         type="number"
+                        min={0}
                         placeholder="0"
                         value={newVariant.price}
                         onChange={(e) =>

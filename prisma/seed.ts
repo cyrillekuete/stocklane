@@ -75,9 +75,16 @@ async function main() {
     usedCategoryCodes.add(next);
     return next;
   };
+  const registerCategoryName = (name: string, id: string) => {
+    categoryByName.set(name.trim().toLowerCase(), id);
+  };
+  const hasCategoryName = (name: string) => categoryByName.has(name.trim().toLowerCase());
+  const getCategoryId = (name?: string | null) =>
+    name ? (categoryByName.get(name.trim().toLowerCase()) ?? null) : null;
+
   const categories = categoryListMockData.map((row) => {
     const id = stableId('cat', row.productInfo.title);
-    categoryByName.set(row.productInfo.title, id);
+    registerCategoryName(row.productInfo.title, id);
     return {
       id,
       name: row.productInfo.title,
@@ -94,13 +101,16 @@ async function main() {
     ...allStockMockData.map((row) => row.category),
   ];
   for (const name of extraCategoryNames) {
-    if (!name || categoryByName.has(name)) continue;
+    if (!name || hasCategoryName(name)) continue;
     const id = stableId('cat', name);
-    categoryByName.set(name, id);
+    registerCategoryName(name, id);
     categories.push({
       id,
       name,
-      code: null as unknown as string,
+      code: uniqueCategoryCode(
+        name.replace(/[^a-zA-Z0-9]+/g, '').slice(0, 8).toUpperCase() || 'CAT',
+        id.slice(0, 4),
+      ) as string,
       icon: null as unknown as string,
       status: 'Active',
       featured: false,
@@ -225,7 +235,7 @@ async function main() {
       image: row.productInfo.image,
       price: parseMoney(row.price),
       status: row.status.label,
-      category_id: categoryByName.get(row.category) ?? null,
+      category_id: getCategoryId(row.category),
     });
   }
   for (const row of allStockMockData) {
@@ -233,7 +243,7 @@ async function main() {
       full_name: row.productInfo.tooltip || row.productInfo.title,
       image: row.productInfo.image,
       price: parseMoney(row.price),
-      category_id: categoryByName.get(row.category) ?? null,
+      category_id: getCategoryId(row.category),
       supplier_id: addSupplier(row.supplier.name, row.supplier.logo),
     });
   }
@@ -258,7 +268,7 @@ async function main() {
     rememberProduct(row.productInfo.label, row.productInfo.tooltip || row.productInfo.title, {
       image: row.productInfo.image,
       price: parseMoney(row.price),
-      category_id: categoryByName.get(row.category) ?? null,
+      category_id: getCategoryId(row.category),
       supplier_id: addSupplier(row.supplier.name, row.supplier.logo),
     });
   }

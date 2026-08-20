@@ -139,7 +139,8 @@ const mockData: OutboundStockData[] = outboundStockMockData;
 export function OutboundStockTable({
   mockData: propsMockData,
 }: OutboundStockProps) {
-  const data = propsMockData || mockData;
+  // Prefer live data (including empty arrays); only fall back to mocks when undefined.
+  const data = propsMockData ?? mockData;
   const deleteOutbound = useDeleteOutboundShipment();
   const [, setNotifyState] = useState<Record<string, boolean>>({});
 

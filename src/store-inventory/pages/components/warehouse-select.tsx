@@ -23,14 +23,16 @@ export function WarehouseSelect({
   const { data: warehouses } = useActiveWarehouses();
   const selected = value !== undefined ? value : filter.warehouseId;
   const handleChange = onValueChange ?? filter.setWarehouseId;
+  const hasWarehouses = (warehouses ?? []).length > 0;
 
   return (
     <Select
-      value={selected ?? 'all'}
+      value={selected ?? (allowAll ? 'all' : undefined)}
       onValueChange={(next) => handleChange(next === 'all' ? null : next)}
+      disabled={!hasWarehouses && !allowAll}
     >
       <SelectTrigger className={className ?? 'w-[220px]'}>
-        <SelectValue placeholder="Warehouse" />
+        <SelectValue placeholder={hasWarehouses ? 'Warehouse' : 'Activate a warehouse first'} />
       </SelectTrigger>
       <SelectContent>
         {allowAll && <SelectItem value="all">All warehouses</SelectItem>}

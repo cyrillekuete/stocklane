@@ -1,5 +1,6 @@
 import type { QueryClient, QueryKey } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { mapWarehouseError } from './warehouse-errors';
 
 export type QuerySnapshot = [QueryKey, unknown][];
 
@@ -92,5 +93,9 @@ export function patchQueryData<T>(
 }
 
 export function toastMutationError(error: unknown, fallback = 'Something went wrong. Changes were reverted.') {
-  toast.error(error instanceof Error ? error.message : fallback);
+  if (error instanceof Error && !('code' in error)) {
+    toast.error(error.message || fallback);
+    return;
+  }
+  toast.error(mapWarehouseError(error, fallback).message);
 }

@@ -8,7 +8,10 @@ import {
   type QueryKey,
 } from '@tanstack/react-query';
 import { withCustomerProfile } from '../data/customer-profile';
+import { generateCategoryCode } from '../lib/category-validation';
 import { formatMoney } from '../lib/format';
+import { computeOrderPricing } from '../lib/order-pricing';
+import { mapOrderError } from '../lib/order-errors';
 import {
   invalidateKeys,
   patchListById,
@@ -28,16 +31,28 @@ import {
   createCustomer,
   createInboundShipment,
   createOrder,
+  createOutboundShipment,
   createProduct,
+  cancelOrder,
   deleteCategory,
-  deleteCustomer,
+  deleteCategories,
+  archiveCategories,
   deleteCustomers,
   deleteInboundShipment,
   deleteOrder,
   deleteOutboundShipment,
-  deleteProduct,
+  softDeleteProduct,
+  restoreProduct,
+  hardDeleteProduct,
+  fetchProductDeleteImpact,
+  softDeleteCustomer,
+  restoreCustomer,
+  hardDeleteCustomer,
+  fetchCustomerDeleteImpact,
+  fetchDeletedCustomers,
   duplicateCustomers,
   fetchBrands,
+  fetchStockSummary,
   fetchCarriers,
   fetchCategories,
   fetchCustomerById,
@@ -52,6 +67,7 @@ import {
   fetchOutboundShipments,
   fetchProductById,
   fetchProducts,
+  fetchDeletedProducts,
   fetchProductsByCategory,
   fetchStockProducts,
   fetchVariants,
@@ -190,14 +206,18 @@ function optimisticProductRow(id: string, input: Parameters<typeof createProduct
   };
 }
 
-function optimisticCategoryRow(id: string, input: Parameters<typeof createCategory>[0]): CategoryListRow {
+function optimisticCategoryRow(
+  id: string,
+  input: Parameters<typeof createCategory>[0],
+  code: string,
+): CategoryListRow {
   const status = input.status ?? 'Active';
   return {
     id,
     productInfo: {
       image: input.icon ?? 'running-shoes.svg',
       title: input.name,
-      label: '',
+      label: code,
     },
     productsQty: '0',
     totalEarnings: formatMoney(0),
@@ -242,10 +262,7 @@ function optimisticCustomerRow(id: string, input: CustomerInput): CustomerListRo
 }
 
 function orderTotal(items: OrderItemInput[] = []) {
-  const subtotal = items.reduce((sum, item) => sum + item.price * (item.quantity ?? 1), 0);
-  const shippingCost = items.length ? 10 : 0;
-  const tax = items.length ? 20 : 0;
-  return subtotal + shippingCost + tax;
+  return computeOrderPricing(items).total;
 }
 
 function optimisticOrderRow(id: string, input: OrderInput): OrderListRow {
@@ -344,6 +361,14 @@ export function useProducts() {
   });
 }
 
+export function useDeletedProducts() {
+  return useQuery({
+    queryKey: inventoryKeys.deletedProducts(),
+    queryFn: fetchDeletedProducts,
+    enabled: isSupabaseConfigured,
+  });
+}
+
 export function useProduct(id?: string) {
   return useQuery({
     queryKey: inventoryKeys.product(id ?? ''),
@@ -358,6 +383,14 @@ export function useCategories() {
     queryFn: fetchCategories,
     enabled: isSupabaseConfigured,
   });
+}
+
+export function useActiveCategories() {
+  const query = useCategories();
+  return {
+    ...query,
+    data: (query.data ?? []).filter((row) => row.status.label.toLowerCase() === 'active'),
+  };
 }
 
 export function useCategoryProducts(categoryId?: string) {
@@ -457,6 +490,14 @@ export function useCustomers() {
   return useQuery({
     queryKey: inventoryKeys.customers(),
     queryFn: fetchCustomers,
+    enabled: isSupabaseConfigured,
+  });
+}
+
+export function useDeletedCustomers() {
+  return useQuery({
+    queryKey: inventoryKeys.deletedCustomers(),
+    queryFn: fetchDeletedCustomers,
     enabled: isSupabaseConfigured,
   });
 }
@@ -598,12 +639,14 @@ export function useUpdateProduct() {
 export function useDeleteProduct() {
   const queryClient = useQueryClient();
   return useCachedMutation({
-    mutationFn: deleteProduct,
+    mutationFn: softDeleteProduct,
     keys: [
       inventoryKeys.products(),
+      inventoryKeys.deletedProducts(),
       inventoryKeys.stock(),
       inventoryKeys.categories(),
       inventoryKeys.categoryProducts(),
+      inventoryKeys.posCatalog(),
     ],
     apply: (id) => {
       removeFromList(queryClient, inventoryKeys.products(), id);
@@ -615,6 +658,52 @@ export function useDeleteProduct() {
   });
 }
 
+export function useRestoreProduct() {
+  const queryClient = useQueryClient();
+  return useCachedMutation({
+    mutationFn: restoreProduct,
+    keys: [
+      inventoryKeys.products(),
+      inventoryKeys.deletedProducts(),
+      inventoryKeys.stock(),
+      inventoryKeys.categories(),
+      inventoryKeys.categoryProducts(),
+    ],
+    apply: (id) => {
+      removeFromList(queryClient, inventoryKeys.deletedProducts(), id);
+    },
+  });
+}
+
+export function useHardDeleteProduct() {
+  const queryClient = useQueryClient();
+  return useCachedMutation({
+    mutationFn: hardDeleteProduct,
+    keys: [
+      inventoryKeys.products(),
+      inventoryKeys.deletedProducts(),
+      inventoryKeys.stock(),
+      inventoryKeys.categories(),
+      inventoryKeys.categoryProducts(),
+    ],
+    apply: (id) => {
+      removeFromList(queryClient, inventoryKeys.deletedProducts(), id);
+      removeFromList(queryClient, inventoryKeys.products(), id);
+      removeFromList(queryClient, inventoryKeys.stock(), id);
+      queryClient.removeQueries({ queryKey: inventoryKeys.product(id) });
+      queryClient.removeQueries({ queryKey: inventoryKeys.productDeleteImpact(id) });
+    },
+  });
+}
+
+export function useProductDeleteImpact(id?: string, enabled = false) {
+  return useQuery({
+    queryKey: inventoryKeys.productDeleteImpact(id ?? ''),
+    queryFn: () => fetchProductDeleteImpact(id!),
+    enabled: isSupabaseConfigured && Boolean(id) && enabled,
+  });
+}
+
 export function useCreateCategory() {
   const queryClient = useQueryClient();
   return useCachedMutation({
@@ -622,12 +711,26 @@ export function useCreateCategory() {
     keys: [inventoryKeys.categories()],
     apply: (input) => {
       const tempId = crypto.randomUUID();
-      prependToList(queryClient, inventoryKeys.categories(), optimisticCategoryRow(tempId, input));
+      const code = generateCategoryCode(input.name, tempId);
+      prependToList(
+        queryClient,
+        inventoryKeys.categories(),
+        optimisticCategoryRow(tempId, input, code),
+      );
       return { tempId };
     },
-    onSuccess: (id, _input, extras) => {
+    onSuccess: (result, _input, extras) => {
       const tempId = (extras as { tempId?: string } | null)?.tempId;
-      if (tempId) replaceListItemId(queryClient, inventoryKeys.categories(), tempId, id);
+      if (tempId) {
+        replaceListItemId(queryClient, inventoryKeys.categories(), tempId, result.id);
+        patchListById<CategoryListRow>(queryClient, inventoryKeys.categories(), result.id, (item) => ({
+          ...item,
+          productInfo: {
+            ...item.productInfo,
+            label: result.code,
+          },
+        }));
+      }
     },
   });
 }
@@ -662,14 +765,36 @@ export function useUpdateCategory() {
 }
 
 export function useDeleteCategory() {
-  const queryClient = useQueryClient();
   return useCachedMutation({
-    mutationFn: deleteCategory,
+    mutationFn: ({
+      id,
+      reassignToCategoryId,
+    }: {
+      id: string;
+      reassignToCategoryId?: string | null;
+    }) => deleteCategory(id, { reassignToCategoryId }),
     keys: [inventoryKeys.categories(), inventoryKeys.products(), inventoryKeys.categoryProducts()],
-    apply: (id) => {
-      removeFromList(queryClient, inventoryKeys.categories(), id);
-      queryClient.removeQueries({ queryKey: inventoryKeys.categoryProducts(id) });
-    },
+    // Intentionally no optimistic remove — delete has preflight product checks.
+  });
+}
+
+export function useArchiveCategories() {
+  return useCachedMutation({
+    mutationFn: (ids: string[]) => archiveCategories(ids),
+    keys: [inventoryKeys.categories()],
+  });
+}
+
+export function useDeleteCategories() {
+  return useCachedMutation({
+    mutationFn: ({
+      ids,
+      reassignToCategoryId,
+    }: {
+      ids: string[];
+      reassignToCategoryId?: string | null;
+    }) => deleteCategories(ids, { reassignToCategoryId }),
+    keys: [inventoryKeys.categories(), inventoryKeys.products(), inventoryKeys.categoryProducts()],
   });
 }
 
@@ -715,10 +840,25 @@ export function useDeleteOutboundShipment() {
   const queryClient = useQueryClient();
   return useCachedMutation({
     mutationFn: deleteOutboundShipment,
-    keys: [inventoryKeys.outbound(), inventoryKeys.stock()],
+    keys: [inventoryKeys.outbound(), inventoryKeys.stock(), inventoryKeys.warehouseStock()],
     apply: (id) => {
       removeFromList<OutboundStockRow>(queryClient, inventoryKeys.outbound(), id);
     },
+  });
+}
+
+export function useCreateOutboundShipment() {
+  return useCachedMutation({
+    mutationFn: createOutboundShipment,
+    keys: [inventoryKeys.outbound(), inventoryKeys.stock(), inventoryKeys.warehouseStock()],
+  });
+}
+
+export function useStockSummary() {
+  return useQuery({
+    queryKey: [...inventoryKeys.stock(), 'summary'] as const,
+    queryFn: fetchStockSummary,
+    enabled: isSupabaseConfigured,
   });
 }
 
@@ -759,14 +899,53 @@ export function useUpdateCustomer() {
 export function useDeleteCustomer() {
   const queryClient = useQueryClient();
   return useCachedMutation({
-    mutationFn: deleteCustomer,
-    keys: [inventoryKeys.customers(), inventoryKeys.customerOrders()],
+    mutationFn: softDeleteCustomer,
+    keys: [
+      inventoryKeys.customers(),
+      inventoryKeys.deletedCustomers(),
+      inventoryKeys.customerOrders(),
+    ],
     apply: (id) => {
       removeFromList(queryClient, inventoryKeys.customers(), id);
       queryClient.removeQueries({ queryKey: inventoryKeys.customer(id) });
       queryClient.removeQueries({ queryKey: inventoryKeys.customerOrders(id) });
       queryClient.removeQueries({ queryKey: inventoryKeys.customerAccountTransactions(id) });
     },
+  });
+}
+
+export function useRestoreCustomer() {
+  const queryClient = useQueryClient();
+  return useCachedMutation({
+    mutationFn: restoreCustomer,
+    keys: [inventoryKeys.customers(), inventoryKeys.deletedCustomers()],
+    apply: (id) => {
+      removeFromList(queryClient, inventoryKeys.deletedCustomers(), id);
+    },
+  });
+}
+
+export function useHardDeleteCustomer() {
+  const queryClient = useQueryClient();
+  return useCachedMutation({
+    mutationFn: hardDeleteCustomer,
+    keys: [inventoryKeys.customers(), inventoryKeys.deletedCustomers()],
+    apply: (id) => {
+      removeFromList(queryClient, inventoryKeys.deletedCustomers(), id);
+      removeFromList(queryClient, inventoryKeys.customers(), id);
+      queryClient.removeQueries({ queryKey: inventoryKeys.customer(id) });
+      queryClient.removeQueries({ queryKey: inventoryKeys.customerDeleteImpact(id) });
+      queryClient.removeQueries({ queryKey: inventoryKeys.customerOrders(id) });
+      queryClient.removeQueries({ queryKey: inventoryKeys.customerAccountTransactions(id) });
+    },
+  });
+}
+
+export function useCustomerDeleteImpact(id?: string, enabled = false) {
+  return useQuery({
+    queryKey: inventoryKeys.customerDeleteImpact(id ?? ''),
+    queryFn: () => fetchCustomerDeleteImpact(id!),
+    enabled: isSupabaseConfigured && Boolean(id) && enabled,
   });
 }
 
@@ -789,7 +968,7 @@ export function useDeleteCustomers() {
   const queryClient = useQueryClient();
   return useCachedMutation({
     mutationFn: deleteCustomers,
-    keys: [inventoryKeys.customers()],
+    keys: [inventoryKeys.customers(), inventoryKeys.deletedCustomers()],
     apply: (ids) => {
       removeFromList(queryClient, inventoryKeys.customers(), ids);
     },
@@ -821,8 +1000,19 @@ export function useDuplicateCustomers() {
 export function useCreateOrder() {
   const queryClient = useQueryClient();
   return useCachedMutation({
-    mutationFn: createOrder,
-    keys: [inventoryKeys.orders(), inventoryKeys.customerOrders()],
+    mutationFn: async (input: OrderInput) => {
+      try {
+        return await createOrder(input);
+      } catch (error) {
+        throw mapOrderError(error);
+      }
+    },
+    keys: [
+      inventoryKeys.orders(),
+      inventoryKeys.customerOrders(),
+      inventoryKeys.stock(),
+      inventoryKeys.warehouseStock(),
+    ],
     apply: (input) => {
       const tempId = crypto.randomUUID();
       prependToList(queryClient, inventoryKeys.orders(), optimisticOrderRow(tempId, input));
@@ -838,12 +1028,20 @@ export function useCreateOrder() {
 export function useUpdateOrder() {
   const queryClient = useQueryClient();
   return useCachedMutation({
-    mutationFn: ({ id, input }: { id: string; input: Partial<OrderInput> }) => updateOrder(id, input),
+    mutationFn: async ({ id, input }: { id: string; input: Partial<OrderInput> }) => {
+      try {
+        await updateOrder(id, input);
+      } catch (error) {
+        throw mapOrderError(error);
+      }
+    },
     keys: ({ id }) => [
       inventoryKeys.orders(),
       inventoryKeys.order(id),
       inventoryKeys.orderItems(),
       inventoryKeys.customerOrders(),
+      inventoryKeys.stock(),
+      inventoryKeys.warehouseStock(),
     ],
     apply: ({ id, input }) => {
       patchListById<OrderListRow>(queryClient, inventoryKeys.orders(), id, (item) =>
@@ -860,7 +1058,7 @@ export function useUpdateOrder() {
 export function useUpdateOrderStatus() {
   const queryClient = useQueryClient();
   return useCachedMutation({
-    mutationFn: ({
+    mutationFn: async ({
       id,
       paymentStatus,
       deliveryStatus,
@@ -868,8 +1066,20 @@ export function useUpdateOrderStatus() {
       id: string;
       paymentStatus: string;
       deliveryStatus?: string;
-    }) => updateOrderStatus(id, paymentStatus, deliveryStatus),
-    keys: ({ id }) => [inventoryKeys.orders(), inventoryKeys.order(id)],
+    }) => {
+      try {
+        await updateOrderStatus(id, paymentStatus, deliveryStatus);
+      } catch (error) {
+        throw mapOrderError(error);
+      }
+    },
+    keys: ({ id }) => [
+      inventoryKeys.orders(),
+      inventoryKeys.order(id),
+      inventoryKeys.orderTracking(),
+      inventoryKeys.stock(),
+      inventoryKeys.warehouseStock(),
+    ],
     apply: ({ id, paymentStatus, deliveryStatus }) => {
       const patch = (item: OrderListRow): OrderListRow => ({
         ...item,
@@ -887,15 +1097,51 @@ export function useUpdateOrderStatus() {
   });
 }
 
-export function useDeleteOrder() {
+export function useCancelOrder() {
   const queryClient = useQueryClient();
   return useCachedMutation({
-    mutationFn: deleteOrder,
+    mutationFn: async ({ id, reason }: { id: string; reason?: string }) => {
+      try {
+        await cancelOrder(id, reason);
+      } catch (error) {
+        throw mapOrderError(error);
+      }
+    },
     keys: [
       inventoryKeys.orders(),
       inventoryKeys.orderItems(),
       inventoryKeys.orderTracking(),
       inventoryKeys.customerOrders(),
+      inventoryKeys.stock(),
+      inventoryKeys.warehouseStock(),
+    ],
+    apply: ({ id }) => {
+      patchListById<OrderListRow>(queryClient, inventoryKeys.orders(), id, (item) => ({
+        ...item,
+        deliveryStatus: { label: 'Canceled', variant: statusVariant('Canceled') },
+        paymentStatus: { label: 'Cancelled', variant: statusVariant('Cancelled') },
+      }));
+    },
+  });
+}
+
+export function useDeleteOrder() {
+  const queryClient = useQueryClient();
+  return useCachedMutation({
+    mutationFn: async (id: string) => {
+      try {
+        await deleteOrder(id);
+      } catch (error) {
+        throw mapOrderError(error);
+      }
+    },
+    keys: [
+      inventoryKeys.orders(),
+      inventoryKeys.orderItems(),
+      inventoryKeys.orderTracking(),
+      inventoryKeys.customerOrders(),
+      inventoryKeys.stock(),
+      inventoryKeys.warehouseStock(),
     ],
     apply: (id) => {
       removeFromList(queryClient, inventoryKeys.orders(), id);

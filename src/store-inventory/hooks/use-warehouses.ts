@@ -5,19 +5,20 @@ import {
   invalidateKeys,
   patchListById,
   prependToList,
-  removeFromList,
   replaceListItemId,
   restoreQueries,
   snapshotQueries,
   toastMutationError,
   type QuerySnapshot,
 } from '../lib/optimistic';
+import { mapWarehouseError } from '../lib/warehouse-errors';
 import { inventoryKeys, REFERENCE_STALE_TIME } from '../lib/query-keys';
 import {
   createWarehouse,
   deleteWarehouse,
   fetchWarehouseStock,
   fetchWarehouses,
+  moveWarehouseStock,
   updateWarehouse,
   type WarehouseInput,
 } from '../services/warehouses';
@@ -73,7 +74,7 @@ function useWarehouseMutation<TData, TVariables>(options: {
     },
     onError: (error, _variables, context) => {
       if (context?.previous) restoreQueries(queryClient, context.previous as QuerySnapshot);
-      toastMutationError(error);
+      toastMutationError(mapWarehouseError(error));
     },
     onSuccess: (data, variables, context) => {
       options.onSuccess?.(data, variables, context?.extras);
@@ -90,6 +91,11 @@ export function useCreateWarehouse() {
     mutationFn: createWarehouse,
     apply: (input: WarehouseInput) => {
       const tempId = crypto.randomUUID();
+      if (input.isDefault) {
+        queryClient.setQueryData<WarehouseListRow[]>(inventoryKeys.warehouses(), (current) =>
+          (current ?? []).map((item) => ({ ...item, isDefault: false })),
+        );
+      }
       prependToList<WarehouseListRow>(queryClient, inventoryKeys.warehouses(), {
         id: tempId,
         code: input.code.toUpperCase(),
@@ -120,6 +126,14 @@ export function useUpdateWarehouse() {
     mutationFn: ({ id, input }: { id: string; input: Partial<WarehouseInput> }) =>
       updateWarehouse(id, input),
     apply: ({ id, input }) => {
+      if (input.isDefault) {
+        queryClient.setQueryData<WarehouseListRow[]>(inventoryKeys.warehouses(), (current) =>
+          (current ?? []).map((item) => ({
+            ...item,
+            isDefault: item.id === id,
+          })),
+        );
+      }
       patchListById<WarehouseListRow>(queryClient, inventoryKeys.warehouses(), id, (item) => ({
         ...item,
         code: input.code ? input.code.toUpperCase() : item.code,
@@ -139,11 +153,20 @@ export function useUpdateWarehouse() {
 }
 
 export function useDeleteWarehouse() {
-  const queryClient = useQueryClient();
   return useWarehouseMutation({
     mutationFn: deleteWarehouse,
-    apply: (id: string) => {
-      removeFromList<WarehouseListRow>(queryClient, inventoryKeys.warehouses(), id);
-    },
+    // Intentionally no optimistic remove — delete has preflight blockers and FK risks.
+  });
+}
+
+export function useMoveWarehouseStock() {
+  return useWarehouseMutation({
+    mutationFn: ({
+      fromWarehouseId,
+      toWarehouseId,
+    }: {
+      fromWarehouseId: string;
+      toWarehouseId: string;
+    }) => moveWarehouseStock(fromWarehouseId, toWarehouseId),
   });
 }

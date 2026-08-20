@@ -10,8 +10,6 @@ import type { CustomerListRow } from '@/store-inventory/types';
 
 const EMPTY_CUSTOMERS: CustomerListRow[] = [];
 
-const EMPTY_CUSTOMERS: CustomerListRow[] = [];
-
 export function CustomerListDetails() {
   const [searchParams] = useSearchParams();
   const { data, isLoading, isError } = useCustomers();

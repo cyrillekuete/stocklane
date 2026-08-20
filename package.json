@@ -14,7 +14,16 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:apply-inventory": "node scripts/apply-inventory-migrations.cjs",
+    "seed:auth-users": "node scripts/seed-auth-users.cjs",
+    "auth:create-user": "node scripts/create-auth-user.cjs",
+    "test:inventory-rpcs": "node scripts/test-inventory-rpcs.cjs",
+    "test:customer-rpcs": "node scripts/test-customer-rpcs.cjs",
+    "test:pos-edge-cases": "node scripts/test-pos-edge-cases.cjs",
+    "test:order-edge-cases": "node scripts/test-order-edge-cases.cjs",
+    "test:category-validation": "tsx scripts/test-category-validation.ts",
+    "test:category-edge-cases": "node scripts/test-category-edge-cases.cjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

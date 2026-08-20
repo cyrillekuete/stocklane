@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CircleX } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { APP_CURRENCY, parseMoney } from '@/store-inventory/lib/format';
 import {
+  useActiveCategories,
   useBrands,
   useCategories,
   useCreateProduct,
@@ -127,7 +128,8 @@ export function ProductFormSheet({
 }) {
   const isNewMode = mode === 'new';
   const isEditMode = mode === 'edit';
-  const { data: categories } = useCategories();
+  const { data: allCategories } = useCategories();
+  const { data: activeCategories } = useActiveCategories();
   const { data: brands } = useBrands();
   const { data: warehouses } = useActiveWarehouses();
   const createProduct = useCreateProduct();
@@ -150,6 +152,14 @@ export function ProductFormSheet({
   const [warehouseId, setWarehouseId] = useState('');
   const [saving, setSaving] = useState(false);
   const defaultWarehouse = warehouses?.find((row) => row.isDefault) ?? warehouses?.[0];
+
+  const categoryOptions = useMemo(() => {
+    const active = activeCategories ?? [];
+    if (!categoryId) return active;
+    if (active.some((row) => row.id === categoryId)) return active;
+    const current = (allCategories ?? []).find((row) => row.id === categoryId);
+    return current ? [current, ...active] : active;
+  }, [activeCategories, allCategories, categoryId]);
 
   useEffect(() => {
     if (!open) return;
@@ -186,15 +196,37 @@ export function ProductFormSheet({
       toast.error('Product name and SKU are required');
       return;
     }
+    const parsedPrice = parseMoney(price);
+    if (parsedPrice < 0) {
+      toast.error('Price cannot be negative');
+      return;
+    }
+    const seenVariants = new Set<string>();
+    for (const variant of variants) {
+      const key = `${variant.size}::${variant.color}`.toLowerCase();
+      if (seenVariants.has(key)) {
+        toast.error(`Duplicate variant: ${variant.size} / ${variant.color}`);
+        return;
+      }
+      seenVariants.add(key);
+      if (parseMoney(variant.price) < 0) {
+        toast.error('Variant price cannot be negative');
+        return;
+      }
+    }
     if (isNewMode && !warehouseId) {
       toast.error('Select a warehouse to add this product to');
+      return;
+    }
+    if (isNewMode && !(warehouses ?? []).length) {
+      toast.error('Activate a warehouse first');
       return;
     }
     setSaving(true);
     const payload = {
       name: name.trim(),
       sku: sku.trim(),
-      barcode,
+      barcode: barcode.trim(),
       description,
       categoryId: categoryId ?? null,
       brandId: brandId ?? null,
@@ -202,7 +234,7 @@ export function ProductFormSheet({
       featured,
       tags,
       image,
-      price: parseMoney(price),
+      price: parsedPrice,
     };
     try {
       if (isEditMode) {
@@ -222,7 +254,12 @@ export function ProductFormSheet({
       toast.success(isNewMode ? 'Product created' : 'Product saved');
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to save product');
+      const message = error instanceof Error ? error.message : 'Unable to save product';
+      if (message.toLowerCase().includes('duplicate') || message.toLowerCase().includes('unique')) {
+        toast.error('SKU or barcode already exists on another active product');
+      } else {
+        toast.error(message);
+      }
     } finally {
       setSaving(false);
     }
@@ -305,6 +342,7 @@ export function ProductFormSheet({
                       <InputWrapper>
                         <Input
                           type="number"
+                          min={0}
                           placeholder="0"
                           value={price}
                           onChange={(e) => setPrice(e.target.value)}
@@ -341,9 +379,12 @@ export function ProductFormSheet({
                           <SelectValue placeholder="Select Category" />
                         </SelectTrigger>
                         <SelectContent>
-                          {(categories ?? []).map((category) => (
+                          {categoryOptions.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.productInfo.title}
+                              {category.status.label.toLowerCase() !== 'active'
+                                ? ` (${category.status.label})`
+                                : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -377,9 +418,16 @@ export function ProductFormSheet({
                           value={warehouseId}
                           onValueChange={setWarehouseId}
                           indicatorPosition="right"
+                          disabled={!(warehouses ?? []).length}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select Warehouse" />
+                            <SelectValue
+                              placeholder={
+                                (warehouses ?? []).length
+                                  ? 'Select Warehouse'
+                                  : 'Activate a warehouse first'
+                              }
+                            />
                           </SelectTrigger>
                           <SelectContent>
                             {(warehouses ?? []).map((warehouse) => (

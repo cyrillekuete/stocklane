@@ -51,7 +51,7 @@ import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@/comp
 import { cn } from '@/lib/utils';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { orderItemsMockData as sharedOrderItemsMockData, orderListMockData } from '@/store-inventory/data/orders';
-import { useDeleteOrder, useOrderItems } from '@/store-inventory/hooks/use-inventory';
+import { useCancelOrder, useOrderItems } from '@/store-inventory/hooks/use-inventory';
 import { OrderFormSheet } from '../components/order-form-sheet';
 
 // ---- DATA TYPE ----
@@ -131,7 +131,7 @@ function matchesTab(row: OrderListData, tab: string) {
     case 'delivered':
       return delivery === 'delivered';
     case 'returns':
-      return delivery === 'on hold' || delivery === 'returned';
+      return delivery === 'returned';
     case 'canceled':
       return delivery === 'canceled' || delivery === 'cancelled' || payment === 'cancelled';
     default:
@@ -149,7 +149,7 @@ export function OrderListTable({
   selectedOrderId,
 }: OrderListProps) {
   const rawData = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
-  const deleteOrder = useDeleteOrder();
+  const cancelOrder = useCancelOrder();
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -175,6 +175,7 @@ export function OrderListTable({
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    setPagination((current) => ({ ...current, pageIndex: 0 }));
   };
 
   const tabs = useMemo(
@@ -418,7 +419,19 @@ export function OrderListTable({
                   <Settings />
                   Edit Order
                 </DropdownMenuItem>
-                <DropdownMenuItem variant="destructive" onClick={() => deleteOrder.mutate(row.original.id)}>
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() =>
+                    cancelOrder.mutate(
+                      { id: row.original.id, reason: 'Canceled from order list' },
+                      {
+                        onSuccess: () => toast.success('Order canceled'),
+                        onError: (error) =>
+                          toast.error(error instanceof Error ? error.message : 'Unable to cancel order'),
+                      },
+                    )
+                  }
+                >
                   <Trash />
                   Cancel Order
                 </DropdownMenuItem>
@@ -432,7 +445,7 @@ export function OrderListTable({
          },
       },
     ],
-    [displayProducts, openDetails, openTracking, openEdit],
+    [displayProducts, openDetails, openTracking, openEdit, cancelOrder],
   );
 
   useEffect(() => {

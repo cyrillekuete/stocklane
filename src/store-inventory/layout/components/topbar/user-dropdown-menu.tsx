@@ -1,16 +1,14 @@
 import {
-  Bell,
   CircleUser,
-  Gift,
   Keyboard,
   LogOut,
   Moon,
-  Smile,
   Sun,
   UserRound,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from 'next-themes';
+import { useAuth, ROLE_LABELS } from '@/auth';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import {
   Avatar,
@@ -24,31 +22,39 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
 export function UserDropdownMenu() {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const { user, logout, isAdmin } = useAuth();
 
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light');
   };
+
+  const displayName =
+    user?.fullname ||
+    `${user?.first_name ?? ''} ${user?.last_name ?? ''}`.trim() ||
+    user?.email ||
+    'Guest';
+  const initials = displayName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('') || 'U';
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="cursor-pointer">
         <Avatar className="size-7">
           <AvatarImage
-            src={toAbsoluteUrl('/media/avatars/300-2.png')}
-            alt="@reui"
+            src={user?.pic || toAbsoluteUrl('/media/avatars/300-2.png')}
+            alt={displayName}
           />
-          <AvatarFallback>CH</AvatarFallback>
+          <AvatarFallback>{initials}</AvatarFallback>
           <AvatarIndicator className="-end-2 -top-2">
             <AvatarStatus variant="online" className="size-2.5" />
           </AvatarIndicator>
@@ -63,51 +69,38 @@ export function UserDropdownMenu() {
         <div className="flex items-center gap-3 p-3">
           <Avatar>
             <AvatarImage
-              src={toAbsoluteUrl('/media/avatars/300-2.png')}
-              alt="@reui"
+              src={user?.pic || toAbsoluteUrl('/media/avatars/300-2.png')}
+              alt={displayName}
             />
-            <AvatarFallback>S</AvatarFallback>
+            <AvatarFallback>{initials}</AvatarFallback>
             <AvatarIndicator className="-end-1.5 -top-1.5">
               <AvatarStatus variant="online" className="size-2.5" />
             </AvatarIndicator>
           </Avatar>
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-foreground">Sean</span>
-            <span className="text-xs text-muted-foreground">Online</span>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span className="text-sm font-semibold text-foreground truncate">
+              {displayName}
+            </span>
+            <span className="text-xs text-muted-foreground truncate">
+              {user?.email || 'Not signed in'}
+            </span>
+            {user?.role && (
+              <Badge variant="secondary" appearance="light" className="w-fit">
+                {ROLE_LABELS[user.role]}
+              </Badge>
+            )}
           </div>
         </div>
-        <DropdownMenuItem className="cursor-pointer py-1 rounded-md border border-border hover:bg-muted">
-          <Smile />
-          <span>Set status</span>
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Bell />
-            <span>Mute notifications</span>
-          </DropdownMenuSubTrigger>
-          <DropdownMenuPortal>
-            <DropdownMenuSubContent className="w-48">
-              <DropdownMenuItem>For 30 minutes</DropdownMenuItem>
-              <DropdownMenuItem>For 1 hour</DropdownMenuItem>
-              <DropdownMenuItem>For 4 hours</DropdownMenuItem>
-              <DropdownMenuItem>Until tomorrow</DropdownMenuItem>
-              <DropdownMenuItem>Until next week</DropdownMenuItem>
-              <DropdownMenuItem>Custom date and time</DropdownMenuItem>
-            </DropdownMenuSubContent>
-          </DropdownMenuPortal>
-        </DropdownMenuSub>
-        <DropdownMenuItem>
-          <UserRound />
-          <span>Profile</span>
-        </DropdownMenuItem>
+        {isAdmin && (
+          <DropdownMenuItem onClick={() => navigate('/store-inventory/users')}>
+            <UserRound />
+            <span>User management</span>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => navigate('/store-inventory/settings-modal')}>
           <CircleUser />
           <span>Settings</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => navigate('/store-inventory/settings-modal?tab=notification')}>
-          <Bell />
-          <span>Notification settings</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={toggleTheme}>
@@ -118,20 +111,16 @@ export function UserDropdownMenu() {
           )}
           <span>{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem>
           <Keyboard />
           <span>Keyboard shortcuts</span>
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Gift />
-          <span>Referrals</span>
-          <Badge variant="info" appearance="light" className="ms-auto">
-            New
-          </Badge>
-        </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => {
+            void logout().then(() => navigate('/auth/signin'));
+          }}
+        >
           <LogOut />
           <span>Log out</span>
         </DropdownMenuItem>

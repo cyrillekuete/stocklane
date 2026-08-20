@@ -4,6 +4,16 @@ import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Eye, Search, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardFooter, CardHeader, CardHeading, CardTable } from '@/components/ui/card';
@@ -12,12 +22,19 @@ import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
 import { DataGridPagination } from '@/components/ui/data-grid-pagination';
 import { DataGridTable } from '@/components/ui/data-grid-table';
 import { Input, InputWrapper } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { usePosSales, useVoidPosSale } from '@/store-inventory/hooks/use-pos';
+import { Textarea } from '@/components/ui/textarea';
+import { useVoidPosSale } from '@/store-inventory/hooks/use-pos';
 import { useStoreSettings } from '@/store-inventory/hooks/use-settings';
 import { APP_CURRENCY, formatMoney } from '@/store-inventory/lib/format';
 import { formatPaymentMethod } from '@/store-inventory/lib/payment-methods';
-import { formatSaleWarehouses } from '@/store-inventory/services/pos';
+import {
+  formatPosError,
+  formatSaleWarehouses,
+  isPosSaleVoidable,
+  POS_VOID_MAX_AGE_DAYS,
+} from '@/store-inventory/services/pos';
 import type { PosSaleRow } from '@/store-inventory/types';
 import {
   ColumnDef,
@@ -39,6 +56,8 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'createdAt', desc: true }]);
   const [selected, setSelected] = useState<PosSaleRow | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const [voidTarget, setVoidTarget] = useState<PosSaleRow | null>(null);
+  const [voidReason, setVoidReason] = useState('');
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -111,41 +130,48 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
         id: 'actions',
         enableSorting: false,
         header: () => '',
-        cell: ({ row }) => (
-          <div className="flex justify-end gap-1">
-            <Button
-              variant="dim"
-              mode="icon"
-              size="sm"
-              onClick={() => {
-                setSelected(row.original);
-                setReceiptOpen(true);
-              }}
-            >
-              <Eye />
-            </Button>
-            {row.original.status === 'completed' && (
+        cell: ({ row }) => {
+          const sale = row.original;
+          const canVoid = isPosSaleVoidable(sale);
+          return (
+            <div className="flex justify-end gap-1">
               <Button
                 variant="dim"
                 mode="icon"
                 size="sm"
                 onClick={() => {
-                  voidSale.mutate(row.original.id, {
-                    onSuccess: () => toast.success('Sale voided and stock restored'),
-                    onError: (error) =>
-                      toast.error(error instanceof Error ? error.message : 'Unable to void sale'),
-                  });
+                  setSelected(sale);
+                  setReceiptOpen(true);
                 }}
               >
-                <Undo2 />
+                <Eye />
               </Button>
-            )}
-          </div>
-        ),
+              {sale.status === 'completed' && (
+                <Button
+                  variant="dim"
+                  mode="icon"
+                  size="sm"
+                  disabled={!canVoid || voidSale.isPending}
+                  title={
+                    canVoid
+                      ? 'Void sale'
+                      : `Sales older than ${POS_VOID_MAX_AGE_DAYS} days cannot be voided`
+                  }
+                  onClick={() => {
+                    setVoidTarget(sale);
+                    setVoidReason('');
+                  }}
+                >
+                  <Undo2 />
+                </Button>
+              )}
+            </div>
+          );
+        },
         size: 90,
       },
     ],
-    [voidSale],
+    [voidSale.isPending],
   );
 
   const table = useReactTable({
@@ -158,6 +184,22 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const handleConfirmVoid = () => {
+    if (!voidTarget) return;
+    const reason = voidReason.trim();
+    voidSale.mutate(
+      { saleId: voidTarget.id, reason: reason || undefined },
+      {
+        onSuccess: () => {
+          toast.success('Sale voided and stock restored');
+          setVoidTarget(null);
+          setVoidReason('');
+        },
+        onError: (error) => toast.error(formatPosError(error)),
+      },
+    );
+  };
 
   return (
     <>
@@ -191,6 +233,52 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
         storeName={settings.data?.storeName ?? 'Store'}
         currency={settings.data?.currency ?? APP_CURRENCY}
       />
+      <AlertDialog
+        open={Boolean(voidTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setVoidTarget(null);
+            setVoidReason('');
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Void sale {voidTarget?.saleNumber}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This restores warehouse stock
+              {voidTarget && (voidTarget.paymentMethod === 'account' || voidTarget.paymentMethod === 'credit')
+                ? ' and reverses the customer account charge'
+                : ''}
+              . Total {voidTarget ? formatMoney(voidTarget.total) : ''}. Voids are limited to{' '}
+              {POS_VOID_MAX_AGE_DAYS} days.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 px-1">
+            <Label htmlFor="void-reason">Reason (optional)</Label>
+            <Textarea
+              id="void-reason"
+              value={voidReason}
+              onChange={(e) => setVoidReason(e.target.value)}
+              rows={2}
+              placeholder="Wrong items, customer cancelled, …"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={voidSale.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={(event) => {
+                event.preventDefault();
+                handleConfirmVoid();
+              }}
+              disabled={voidSale.isPending}
+            >
+              Void sale
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

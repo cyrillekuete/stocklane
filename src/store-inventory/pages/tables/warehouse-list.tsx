@@ -3,6 +3,16 @@
 import { useMemo, useState } from 'react';
 import { Pencil, Search, Star, Trash } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardFooter, CardHeader, CardHeading, CardTable } from '@/components/ui/card';
@@ -11,8 +21,22 @@ import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
 import { DataGridPagination } from '@/components/ui/data-grid-pagination';
 import { DataGridTable } from '@/components/ui/data-grid-table';
 import { Input, InputWrapper } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { useDeleteWarehouse } from '@/store-inventory/hooks/use-warehouses';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  useActiveWarehouses,
+  useDeleteWarehouse,
+  useMoveWarehouseStock,
+} from '@/store-inventory/hooks/use-warehouses';
+import { mapWarehouseError } from '@/store-inventory/lib/warehouse-errors';
+import { getWarehouseDeleteBlockers } from '@/store-inventory/services/warehouses';
 import type { WarehouseListRow } from '@/store-inventory/types';
 import {
   ColumnDef,
@@ -28,11 +52,22 @@ import { WarehouseFormSheet } from '../components/warehouse-form-sheet';
 export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[] }) {
   const data = mockData ?? [];
   const deleteWarehouse = useDeleteWarehouse();
+  const moveStock = useMoveWarehouseStock();
+  const { data: activeWarehouses } = useActiveWarehouses();
   const [search, setSearch] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   const [sorting, setSorting] = useState<SortingState>([{ id: 'name', desc: false }]);
   const [editRow, setEditRow] = useState<WarehouseListRow | undefined>();
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteRow, setDeleteRow] = useState<WarehouseListRow | undefined>();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleteSummary, setDeleteSummary] = useState<string[]>([]);
+  const [moveTargetId, setMoveTargetId] = useState('');
+
+  const moveTargets = useMemo(
+    () => (activeWarehouses ?? []).filter((row) => row.id !== deleteRow?.id),
+    [activeWarehouses, deleteRow?.id],
+  );
 
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -41,6 +76,67 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
       [row.name, row.code, row.city, row.country].some((value) => value?.toLowerCase().includes(query)),
     );
   }, [data, search]);
+
+  const openDeleteConfirm = async (row: WarehouseListRow) => {
+    try {
+      const blockers = await getWarehouseDeleteBlockers(row.id);
+      setDeleteRow(row);
+      setDeleteSummary(
+        blockers.messages.length
+          ? blockers.messages
+          : [`Delete ${row.name}? This cannot be undone.`],
+      );
+      const targets = (activeWarehouses ?? []).filter((item) => item.id !== row.id);
+      if (blockers.hasStock && targets[0]) {
+        setMoveTargetId(targets[0].id);
+      } else {
+        setMoveTargetId('');
+      }
+      setConfirmDeleteOpen(true);
+    } catch (error) {
+      toast.error(mapWarehouseError(error).message);
+    }
+  };
+
+  const handleMoveStock = async () => {
+    if (!deleteRow || !moveTargetId) {
+      toast.error('Select a destination warehouse');
+      return;
+    }
+    try {
+      const moved = await moveStock.mutateAsync({
+        fromWarehouseId: deleteRow.id,
+        toWarehouseId: moveTargetId,
+      });
+      toast.success(`Moved ${moved} units to the selected warehouse`);
+      const blockers = await getWarehouseDeleteBlockers(deleteRow.id);
+      setDeleteSummary(
+        blockers.messages.length
+          ? blockers.messages
+          : [`Stock moved. You can delete ${deleteRow.name} now.`],
+      );
+    } catch (error) {
+      toast.error(mapWarehouseError(error).message);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteRow) return;
+    try {
+      const blockers = await getWarehouseDeleteBlockers(deleteRow.id);
+      if (blockers.messages.length) {
+        setDeleteSummary(blockers.messages);
+        toast.error(blockers.messages[0]);
+        return;
+      }
+      await deleteWarehouse.mutateAsync(deleteRow.id);
+      toast.success('Warehouse deleted');
+      setConfirmDeleteOpen(false);
+      setDeleteRow(undefined);
+    } catch (error) {
+      toast.error(mapWarehouseError(error).message);
+    }
+  };
 
   const columns = useMemo<ColumnDef<WarehouseListRow>[]>(
     () => [
@@ -122,11 +218,7 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
               mode="icon"
               size="sm"
               onClick={() => {
-                deleteWarehouse.mutate(row.original.id, {
-                  onSuccess: () => toast.success('Warehouse deleted'),
-                  onError: (error) =>
-                    toast.error(error instanceof Error ? error.message : 'Unable to delete warehouse'),
-                });
+                void openDeleteConfirm(row.original);
               }}
             >
               <Trash />
@@ -136,7 +228,7 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
         size: 80,
       },
     ],
-    [deleteWarehouse],
+    [activeWarehouses],
   );
 
   const table = useReactTable({
@@ -149,6 +241,8 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
   });
+
+  const pending = deleteWarehouse.isPending || moveStock.isPending;
 
   return (
     <>
@@ -180,6 +274,47 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
         </Card>
       </DataGrid>
       <WarehouseFormSheet mode="edit" open={editOpen} onOpenChange={setEditOpen} warehouse={editRow} />
+
+      <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete warehouse</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-sm text-muted-foreground">
+                {deleteSummary.map((message) => (
+                  <p key={message}>{message}</p>
+                ))}
+                {deleteRow && deleteRow.onHand > 0 && moveTargets.length > 0 ? (
+                  <div className="space-y-2 pt-2">
+                    <Label>Move all stock to</Label>
+                    <Select value={moveTargetId} onValueChange={setMoveTargetId}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Destination warehouse" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {moveTargets.map((row) => (
+                          <SelectItem key={row.id} value={row.id}>
+                            {row.name} ({row.code})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="sm" onClick={handleMoveStock} disabled={pending || !moveTargetId}>
+                      Move all stock
+                    </Button>
+                  </div>
+                ) : null}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleConfirmDelete} disabled={pending}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

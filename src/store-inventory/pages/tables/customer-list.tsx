@@ -10,23 +10,13 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import {
-  Eye,
-  Info,
-  Search,
-  SquarePen,
-  Trash,
-  ChevronUp,
-  Copy,
-  Download,
-  Link,
-  Wallet,
-  X,
-} from 'lucide-react';
+import { Eye, Info, Search, SquarePen, Trash, ChevronUp, Copy, Download, Link, Wallet, X, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { isRemoteAsset, formatMoney } from '@/store-inventory/lib/format';
+import { mapCustomerError } from '@/store-inventory/lib/customer-errors';
+import { cn } from '@/lib/utils';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import {
   AlertDialog,
@@ -63,9 +53,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input, InputWrapper } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { customerListMockData } from '@/store-inventory/data/customers';
 import { CustomerDetailsSheet } from '../components/customer-details-sheet';
 import { CustomerDepositSheet } from '../components/customer-deposit-sheet';
+import {
+  CustomerHardDeleteDialog,
+  CustomerSoftDeleteDialog,
+  useCustomerRestoreAction,
+} from '../components/customer-delete-dialogs';
 import { CustomerFormSheet } from '../components/customer-form-sheet';
 import { Avatar, AvatarImage, AvatarFallback, AvatarIndicator, AvatarStatus } from '@/components/ui/avatar';
 import { VariantProps } from 'class-variance-authority';
@@ -73,6 +69,7 @@ import { Separator } from '@/components/ui/separator';
 import {
   useDeleteCustomer,
   useDeleteCustomers,
+  useDeletedCustomers,
   useDuplicateCustomers,
   useUpdateCustomersStatus,
 } from '@/store-inventory/hooks/use-inventory';
@@ -158,9 +155,18 @@ export function CustomerListTable({
   onSheetClose,
   onSelectedRowsChange,
 }: CustomerListProps) {
-  const data = isSupabaseConfigured ? (propsMockData ?? EMPTY_CUSTOMERS) : (propsMockData || customerListMockData);
+  const activeData = isSupabaseConfigured
+    ? (propsMockData ?? EMPTY_CUSTOMERS)
+    : (propsMockData || customerListMockData);
+  const { data: deletedCustomers = [] } = useDeletedCustomers();
+  const data = useMemo(() => {
+    if (!isSupabaseConfigured) return activeData;
+    const deletedIds = new Set(deletedCustomers.map((c) => c.id));
+    return [...activeData.filter((c) => !deletedIds.has(c.id)), ...deletedCustomers];
+  }, [activeData, deletedCustomers]);
   const [searchQuery, setSearchQuery] = useState('');
   const [inputValue, setInputValue] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
   const inputRef = useRef<HTMLInputElement>(null);
   const [isCustomerSheetOpen, setIsCustomerSheetOpen] = useState(false);
   const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
@@ -169,6 +175,7 @@ export function CustomerListTable({
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerListRow | undefined>();
   const [customerToDelete, setCustomerToDelete] = useState<CustomerListRow | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [hardDeleteTarget, setHardDeleteTarget] = useState<CustomerListRow | null>(null);
   const [isGroupDeleteDialogOpen, setIsGroupDeleteDialogOpen] = useState(false);
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -181,6 +188,7 @@ export function CustomerListTable({
   const deleteCustomers = useDeleteCustomers();
   const updateStatus = useUpdateCustomersStatus();
   const duplicateCustomers = useDuplicateCustomers();
+  const { restore } = useCustomerRestoreAction();
 
   useEffect(() => {
     if (displaySheet === 'createCustomer' && shouldOpenSheet !== false) {
@@ -244,12 +252,12 @@ export function CustomerListTable({
     if (!customerToDelete) return;
     deleteCustomer.mutate(customerToDelete.id, {
       onSuccess: () => {
-        successToast(`Customer "${customerToDelete.customerInfo.title}" deleted successfully`);
+        successToast(`Customer "${customerToDelete.customerInfo.title}" archived`);
         setCustomerToDelete(null);
         setIsDeleteDialogOpen(false);
       },
       onError: (error) => {
-        toast.error(error instanceof Error ? error.message : 'Unable to delete customer');
+        toast.error(mapCustomerError(error).message);
       },
     });
   };
@@ -265,7 +273,7 @@ export function CustomerListTable({
           setRowSelection({});
         },
         onError: (error) => {
-          toast.error(error instanceof Error ? error.message : 'Unable to update status');
+          toast.error(mapCustomerError(error).message);
         },
       },
     );
@@ -279,7 +287,7 @@ export function CustomerListTable({
         setRowSelection({});
       },
       onError: (error) => {
-        toast.error(error instanceof Error ? error.message : 'Unable to duplicate customers');
+        toast.error(mapCustomerError(error).message);
       },
     });
   };
@@ -317,12 +325,12 @@ export function CustomerListTable({
     if (!ids.length) return;
     deleteCustomers.mutate(ids, {
       onSuccess: () => {
-        successToast(`Deleted ${ids.length} customers`);
+        successToast(`Archived ${ids.length} customers`);
         setRowSelection({});
         setIsGroupDeleteDialogOpen(false);
       },
       onError: (error) => {
-        toast.error(error instanceof Error ? error.message : 'Unable to delete customers');
+        toast.error(mapCustomerError(error).message);
       },
     });
   };
@@ -508,73 +516,140 @@ export function CustomerListTable({
         id: 'actions',
         header: '',
         enableSorting: false,
-        cell: ({ row }) => (
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              mode="icon"
-              onClick={() => handleOpenCustomerDetails(row.original)}
-              title="View customer"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              mode="icon"
-              onClick={() => handleOpenDeposit(row.original)}
-              title="Deposit to account"
-            >
-              <Wallet className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              mode="icon"
-              onClick={() => handleOpenCustomerForm('edit', row.original)}
-              title="Edit customer"
-            >
-              <SquarePen className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              mode="icon"
-              onClick={() => {
-                setCustomerToDelete(row.original);
-                setIsDeleteDialogOpen(true);
-              }}
-              title="Delete customer"
-            >
-              <Trash className="h-4 w-4" />
-            </Button>
-          </div>
-        ),
+        cell: ({ row }) => {
+          const customer = row.original;
+          const isArchived = Boolean(customer.deletedAt);
+          if (isArchived) {
+            return (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  mode="icon"
+                  onClick={() => restore(customer.id)}
+                  title="Restore customer"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  mode="icon"
+                  onClick={() => setHardDeleteTarget(customer)}
+                  title="Delete permanently"
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </div>
+            );
+          }
+          return (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                mode="icon"
+                onClick={() => handleOpenCustomerDetails(customer)}
+                title="View customer"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                mode="icon"
+                onClick={() => handleOpenDeposit(customer)}
+                title="Deposit to account"
+                disabled={customer.status.label.toLowerCase() !== 'active'}
+              >
+                <Wallet className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                mode="icon"
+                onClick={() => handleOpenCustomerForm('edit', customer)}
+                title="Edit customer"
+              >
+                <SquarePen className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                mode="icon"
+                onClick={() => {
+                  setCustomerToDelete(customer);
+                  setIsDeleteDialogOpen(true);
+                }}
+                title="Archive customer"
+              >
+                <Trash className="h-4 w-4" />
+              </Button>
+            </div>
+          );
+        },
         size: 160,
         meta: { cellClassName: '' },
       },
     ],
-    [],
+    [restore],
   );
 
   const filteredData = useMemo(() => {
-    if (!searchQuery) return data;
+    let result = data;
+    if (activeTab === 'all') {
+      result = result.filter((item) => !item.deletedAt);
+    } else if (activeTab === 'active') {
+      result = result.filter((item) => !item.deletedAt && item.status.label === 'Active');
+    } else if (activeTab === 'inactive') {
+      result = result.filter(
+        (item) => !item.deletedAt && ['Inactive', 'Pending', 'Banned'].includes(item.status.label),
+      );
+    } else if (activeTab === 'archived') {
+      result = result.filter((item) => item.deletedAt || item.status.label === 'Archived');
+    }
+    if (!searchQuery) return result;
     const query = searchQuery.toLowerCase();
-    return data.filter(
+    return result.filter(
       (item) =>
         item.user.toLowerCase().includes(query) ||
         item.customerInfo.title.toLowerCase().includes(query) ||
         item.customerInfo.label.toLowerCase().includes(query),
     );
-  }, [data, searchQuery]);
+  }, [data, activeTab, searchQuery]);
 
   const selectedRowsCount = selectedRows.length;
   const totalRowsCount = filteredData.length;
+  const activeOnly = data.filter((item) => !item.deletedAt);
+  const tabs = [
+    { id: 'all', label: 'All', badge: activeOnly.length },
+    {
+      id: 'active',
+      label: 'Active',
+      badge: activeOnly.filter((item) => item.status.label === 'Active').length,
+    },
+    {
+      id: 'inactive',
+      label: 'Inactive',
+      badge: activeOnly.filter((item) =>
+        ['Inactive', 'Pending', 'Banned'].includes(item.status.label),
+      ).length,
+    },
+    {
+      id: 'archived',
+      label: 'Archived',
+      badge: data.filter((item) => item.deletedAt || item.status.label === 'Archived').length,
+    },
+  ];
 
   useEffect(() => {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
-  }, [searchQuery]);
+  }, [searchQuery, activeTab]);
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
 
   const table = useReactTable({
     data: filteredData,
@@ -619,44 +694,68 @@ export function CustomerListTable({
         <p className="text-sm text-destructive mb-3">Unable to load customers. Check your connection and try again.</p>
       )}
       {isLoading && <p className="text-sm text-muted-foreground mb-3">Loading customers...</p>}
-      {!isLoading && !isError && data.length === 0 && (
+      {!isLoading && !isError && activeData.length === 0 && deletedCustomers.length === 0 && (
         <p className="text-sm text-muted-foreground mb-3">No customers yet. Create your first customer to get started.</p>
       )}
       <Card>
         <CardHeader className="py-3 flex-nowrap">
-          <div className="flex items-center justify-between w-full">
-            <h3 className="text-base font-semibold text-foreground leading-0">Customers</h3>
-            <CardToolbar className="flex items-center gap-2">
-              <div className="w-full max-w-[200px]">
-                <InputWrapper>
-                  <Search />
-                  <Input
-                    placeholder="Search customers"
-                    ref={inputRef}
-                    value={inputValue}
-                    onChange={(e) => {
-                      setInputValue(e.target.value);
-                      setSearchQuery(e.target.value);
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                  />
-                  <Button
-                    onClick={() => {
-                      setInputValue('');
-                      setSearchQuery('');
-                      inputRef.current?.focus();
-                    }}
-                    variant="dim"
-                    className="-me-4"
-                    disabled={inputValue === ''}
-                  >
-                    {inputValue !== '' && <X size={16} />}
-                  </Button>
-                </InputWrapper>
-              </div>
-            </CardToolbar>
-          </div>
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="m-0 p-0 w-full">
+            <div className="flex items-center justify-between w-full gap-3 flex-wrap">
+              <TabsList className="h-auto p-0 bg-transparent border-b-0 border-border rounded-none -ms-[3px]">
+                <div className="flex items-center gap-1 min-w-max">
+                  {tabs.map((tab) => (
+                    <TabsTrigger
+                      key={tab.id}
+                      value={tab.id}
+                      className={cn(
+                        'relative text-foreground px-2 hover:text-primary data-[state=active]:text-primary data-[state=active]:shadow-none',
+                        activeTab === tab.id ? 'font-medium' : 'font-normal',
+                      )}
+                    >
+                      {tab.label}
+                      <Badge
+                        variant={activeTab === tab.id ? 'primary' : 'outline'}
+                        appearance="light"
+                        className={cn('ms-1.5 rounded-full', activeTab === tab.id ? '' : 'bg-muted/60')}
+                      >
+                        {tab.badge}
+                      </Badge>
+                    </TabsTrigger>
+                  ))}
+                </div>
+              </TabsList>
+              <CardToolbar className="flex items-center gap-2">
+                <div className="w-full max-w-[200px]">
+                  <InputWrapper>
+                    <Search />
+                    <Input
+                      placeholder="Search customers"
+                      ref={inputRef}
+                      value={inputValue}
+                      onChange={(e) => {
+                        setInputValue(e.target.value);
+                        setSearchQuery(e.target.value);
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    />
+                    <Button
+                      onClick={() => {
+                        setInputValue('');
+                        setSearchQuery('');
+                        inputRef.current?.focus();
+                      }}
+                      variant="dim"
+                      className="-me-4"
+                      disabled={inputValue === ''}
+                    >
+                      {inputValue !== '' && <X size={16} />}
+                    </Button>
+                  </InputWrapper>
+                </div>
+              </CardToolbar>
+            </div>
+          </Tabs>
         </CardHeader>
         <DataGrid
           table={table}
@@ -717,7 +816,7 @@ export function CustomerListTable({
               <Separator className="h-8 bg-zinc-700" orientation="vertical" />
               <Button variant="ghost" size="sm" onClick={() => setIsGroupDeleteDialogOpen(true)}>
                 <Trash className="h-4 w-4 mr-2" />
-                Delete
+                Archive
               </Button>
             </div>
           </div>
@@ -743,37 +842,56 @@ export function CustomerListTable({
         customer={liveCustomer}
       />
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Customer</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete <strong>{customerToDelete?.customerInfo.title}</strong>?
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setCustomerToDelete(null)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={handleConfirmDelete}>
-              Delete Customer
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <CustomerSoftDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          setIsDeleteDialogOpen(open);
+          if (!open) setCustomerToDelete(null);
+        }}
+        customer={
+          customerToDelete
+            ? {
+                id: customerToDelete.id,
+                title: customerToDelete.customerInfo.title,
+                code: customerToDelete.user,
+                accountBalance: customerToDelete.accountBalance,
+              }
+            : null
+        }
+        onConfirm={handleConfirmDelete}
+        confirming={deleteCustomer.isPending}
+      />
+
+      <CustomerHardDeleteDialog
+        open={Boolean(hardDeleteTarget)}
+        onOpenChange={(open) => {
+          if (!open) setHardDeleteTarget(null);
+        }}
+        customer={
+          hardDeleteTarget
+            ? {
+                id: hardDeleteTarget.id,
+                title: hardDeleteTarget.customerInfo.title,
+                code: hardDeleteTarget.user,
+                accountBalance: hardDeleteTarget.accountBalance,
+              }
+            : null
+        }
+      />
 
       <AlertDialog open={isGroupDeleteDialogOpen} onOpenChange={setIsGroupDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Selected Customers</AlertDialogTitle>
+            <AlertDialogTitle>Archive Customers</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete <strong>{selectedRowsCount} customers</strong>?
-              This action cannot be undone.
+              Archive <strong>{selectedRowsCount} customers</strong>? Customers with a non-zero
+              account balance will fail and need to be settled first.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={handleConfirmGroupDelete}>
-              Delete {selectedRowsCount} Customers
+              Archive {selectedRowsCount} Customers
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

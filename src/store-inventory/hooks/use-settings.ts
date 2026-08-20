@@ -1,8 +1,9 @@
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { defaultStoreSettings } from '../data/settings';
-import { invalidateKeys, restoreQueries, snapshotQueries, toastMutationError } from '../lib/optimistic';
+import { toast } from 'sonner';
+import { invalidateKeys, restoreQueries, snapshotQueries } from '../lib/optimistic';
 import { inventoryKeys } from '../lib/query-keys';
+import { mapSettingsError } from '../lib/settings-errors';
 import { fetchStoreSettings, updateStoreSettings } from '../services/settings';
 import type { StoreSettings } from '../types';
 
@@ -13,7 +14,8 @@ export function useStoreSettings() {
     queryKey: settingsKey,
     queryFn: fetchStoreSettings,
     enabled: isSupabaseConfigured,
-    placeholderData: defaultStoreSettings,
+    // Avoid flashing demo defaults before the real row loads.
+    placeholderData: (previous) => previous,
   });
 }
 
@@ -28,7 +30,7 @@ export function useUpdateStoreSettings() {
     },
     onError: (error, _input, context) => {
       if (context?.previous) restoreQueries(queryClient, context.previous);
-      toastMutationError(error);
+      toast.error(mapSettingsError(error).message);
     },
     onSuccess: (data) => {
       queryClient.setQueryData(settingsKey, data);

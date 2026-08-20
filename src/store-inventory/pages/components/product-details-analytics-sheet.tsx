@@ -5,7 +5,7 @@ import { SquarePen, TrendingUp } from 'lucide-react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { formatMoney, parseMoney, parseQty } from '@/store-inventory/lib/format';
-import { useProductVariants } from '@/store-inventory/hooks/use-inventory';
+import { useCurrentStock, useProductVariants } from '@/store-inventory/hooks/use-inventory';
 import type { ProductListRow } from '@/store-inventory/types';
 import { Badge, BadgeDot, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,6 +61,7 @@ export function ProductDetailsAnalyticsSheet({
   const { data: variants = [], isLoading: variantsLoading } = useProductVariants(
     open ? product?.id : undefined,
   );
+  const { data: currentStock } = useCurrentStock();
   const image = product?.image ?? product?.productInfo.image ?? '11.png';
   const [selectedImage, setSelectedImage] = useState(image);
 
@@ -73,10 +74,11 @@ export function ProductDetailsAnalyticsSheet({
     }
   }, [open, product]);
 
-  const onHandTotal = useMemo(
-    () => variants.reduce((sum, variant) => sum + parseQty(variant.onHand), 0),
-    [variants],
-  );
+  const onHandTotal = useMemo(() => {
+    const stockRow = currentStock?.find((row) => row.id === product?.id);
+    if (stockRow) return Math.max(stockRow.stock - stockRow.rsvd, 0);
+    return 0;
+  }, [currentStock, product?.id]);
   const priceSeries = useMemo(
     () => sparklineFromValues(variants.map((variant) => parseMoney(variant.price)), parseMoney(product?.price)),
     [variants, product?.price],

@@ -30,6 +30,9 @@ export interface ProductListRow {
   categoryId?: string | null;
   brandId?: string | null;
   image?: string;
+  deletedAt?: string | null;
+  /** Live + qty at or below threshold — derived for Action Needed tab */
+  needsAction?: boolean;
 }
 
 export interface CategoryListRow {
@@ -99,6 +102,13 @@ export interface CurrentStockRow {
     label: string;
     variant: BadgeTone;
   };
+  category?: string;
+  price?: string;
+  reorderQty?: number;
+  leadTimeDays?: number;
+  autoReorder?: boolean;
+  created?: string;
+  updated?: string;
 }
 
 export interface InboundStockRow {
@@ -141,6 +151,7 @@ export interface OutboundStockRow {
   };
   expDelivery: string;
   warehouse: string;
+  warehouseId?: string | null;
   carrier: string;
 }
 
@@ -226,6 +237,7 @@ export interface CustomerListRow {
   accountBalance?: number;
   paymentMethods?: CustomerPaymentMethod[];
   reviews?: CustomerReviewGroup[];
+  deletedAt?: string | null;
 }
 
 export type CustomerAccountTransactionType = 'deposit' | 'sale' | 'void';
@@ -245,6 +257,8 @@ export interface CustomerAccountTransaction {
 
 export interface OrderItemRow {
   id: string;
+  productId?: string;
+  warehouseId?: string;
   productInfo: {
     image: string;
     title: string;
@@ -562,6 +576,10 @@ export interface PosSaleRow {
   changeDue: number;
   notes?: string | null;
   status: PosSaleStatus;
+  taxPercent?: number | null;
+  taxCalculation?: string | null;
+  voidReason?: string | null;
+  voidedAt?: string | null;
   itemCount: number;
   createdAt: string;
   items?: PosSaleItemRow[];

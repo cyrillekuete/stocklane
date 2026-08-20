@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { addDays, format } from 'date-fns';
-import { ChevronDown, PlusIcon, Upload } from 'lucide-react';
+import { ChevronDown, PlusIcon } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -11,13 +11,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { allOrderListMockData } from '@/store-inventory/data/orders';
 import { useOrders } from '@/store-inventory/hooks/use-inventory';
@@ -28,7 +21,7 @@ import { OrderListTable } from '../tables/order-list';
 function inDateRange(value: string, range?: DateRange) {
   if (!range?.from) return true;
   const parsed = parseOrderDate(value);
-  if (!parsed) return true;
+  if (!parsed) return false;
   const start = new Date(range.from);
   start.setHours(0, 0, 0, 0);
   const end = new Date(range.to ?? range.from);
@@ -154,21 +147,6 @@ export function OrderList() {
               </div>
             </PopoverContent>
           </Popover>
-          <Button variant="outline" className="gap-2 shrink-0">
-            <Upload className="h-4 w-4" />
-            Export
-          </Button>
-          <Select defaultValue="more-actions" indicatorPosition="right">
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="More Actions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="more-actions">More Actions</SelectItem>
-              <SelectItem value="order-tracking">Order Tracking</SelectItem>
-              <SelectItem value="view-shipping-label">View Shipping Label</SelectItem>
-              <SelectItem value="delete">Delete</SelectItem>
-            </SelectContent>
-          </Select>
           <Button variant="mono" onClick={() => setIsCreateOpen(true)}>
             <PlusIcon />
             New Order

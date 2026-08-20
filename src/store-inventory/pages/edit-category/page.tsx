@@ -1,12 +1,10 @@
-import { useState } from 'react';
 import { EditIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { CategoryFormSheet } from '../components/category-form-sheet';
 import { CategoryListTable } from '../tables/category-list';
 import { useCategories } from '@/store-inventory/hooks/use-inventory';
 
 export function EditCategoryPage() {
-  const [isSheetOpen, setIsSheetOpen] = useState(true);
   const { data } = useCategories();
 
   return (
@@ -15,22 +13,19 @@ export function EditCategoryPage() {
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-bold text-foreground">Edit Category</h1>
           <span className="text-sm text-muted-foreground">
-            Edit existing categories to organize your products
+            Select a category from the table to edit it
           </span>
         </div>
-        <Button variant="mono" onClick={() => setIsSheetOpen(true)}>
+        <Button
+          variant="mono"
+          onClick={() => toast.message('Select a category row, then click Edit')}
+        >
           <EditIcon />
           Edit Category
         </Button>
       </div>
 
       <CategoryListTable mockData={data} />
-      <CategoryFormSheet
-        mode="edit"
-        open={isSheetOpen}
-        onOpenChange={setIsSheetOpen}
-        category={data?.[0]}
-      />
     </div>
   );
 }

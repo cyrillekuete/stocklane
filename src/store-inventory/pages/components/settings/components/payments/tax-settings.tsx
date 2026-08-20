@@ -8,10 +8,13 @@ import { RiMapPinLine } from "@remixicon/react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { clampTaxPercent } from "@/store-inventory/lib/settings-validation";
 import { useSettingsForm } from "../../settings-form-context";
 
 export function TaxSettings() {
-  const { draft, updateDraft } = useSettingsForm();
+  const { draft, saved, updateDraft } = useSettingsForm();
+  const taxChanged =
+    draft.taxPercent !== saved.taxPercent || draft.taxCalculation !== saved.taxCalculation;
 
   const taxOptions = [
     {
@@ -79,9 +82,18 @@ export function TaxSettings() {
                 type="number"
                 min={0}
                 max={100}
+                step="0.01"
                 value={draft.taxPercent}
-                onChange={(event) => updateDraft({ taxPercent: Number(event.target.value) || 0 })}
+                onChange={(event) => {
+                  const raw = Number(event.target.value);
+                  updateDraft({ taxPercent: Number.isFinite(raw) ? clampTaxPercent(raw) : 0 });
+                }}
               />
+              {taxChanged ? (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  New POS sales will use this tax. Completed sales keep their original tax snapshot.
+                </p>
+              ) : null}
             </div>
           </div>
 

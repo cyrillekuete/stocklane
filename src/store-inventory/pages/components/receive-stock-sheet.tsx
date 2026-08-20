@@ -44,6 +44,10 @@ export function ReceiveStockSheet({
 
   const handleSave = async () => {
     const quantity = Number(qty);
+    if (!(warehouses ?? []).length) {
+      toast.error('Activate a warehouse first');
+      return;
+    }
     if (!productId || !selectedWarehouse || !Number.isFinite(quantity) || quantity < 1) {
       toast.error('Product, warehouse, and quantity are required');
       return;
@@ -90,9 +94,9 @@ export function ReceiveStockSheet({
           </div>
           <div className="space-y-2">
             <Label>Warehouse</Label>
-            <Select value={selectedWarehouse} onValueChange={setWarehouseId}>
+            <Select value={selectedWarehouse} onValueChange={setWarehouseId} disabled={!(warehouses ?? []).length}>
               <SelectTrigger>
-                <SelectValue placeholder="Select warehouse" />
+                <SelectValue placeholder={(warehouses ?? []).length ? 'Select warehouse' : 'Activate a warehouse first'} />
               </SelectTrigger>
               <SelectContent>
                 {(warehouses ?? []).map((warehouse) => (
@@ -112,7 +116,7 @@ export function ReceiveStockSheet({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button variant="mono" onClick={handleSave} disabled={createInbound.isPending}>
+          <Button variant="mono" onClick={handleSave} disabled={createInbound.isPending || !(warehouses ?? []).length}>
             Receive
           </Button>
         </SheetFooter>

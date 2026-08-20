@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { Minus, Plus, Search, ShoppingCart, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Info, Minus, Plus, Search, ShoppingCart, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { toAbsoluteUrl } from '@/lib/helpers';
+import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,10 +23,15 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useCustomers } from '@/store-inventory/hooks/use-inventory';
 import { useCompletePosSale, usePosCatalog } from '@/store-inventory/hooks/use-pos';
+import { useActiveWarehouses } from '@/store-inventory/hooks/use-warehouses';
 import { useStoreSettings } from '@/store-inventory/hooks/use-settings';
 import { APP_CURRENCY, formatMoney, generateSaleNumber, parseMoney, roundMoney } from '@/store-inventory/lib/format';
 import { isCustomerAccountPayment, POS_PAYMENT_METHODS } from '@/store-inventory/lib/payment-methods';
-import { computePosTotals } from '@/store-inventory/services/pos';
+import {
+  allocateCartDiscount,
+  computePosTotals,
+  formatPosError,
+} from '@/store-inventory/services/pos';
 import { fetchWarehouseStock } from '@/store-inventory/services/warehouses';
 import { currentStockMockData } from '@/store-inventory/data/stock';
 import { productListMockData } from '@/store-inventory/data/products';
@@ -68,6 +74,7 @@ export function PosRegister() {
   const catalogQuery = usePosCatalog();
   const customersQuery = useCustomers();
   const settingsQuery = useStoreSettings();
+  const { data: activeWarehouses } = useActiveWarehouses();
   const completeSale = useCompletePosSale();
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -78,6 +85,8 @@ export function PosRegister() {
   const [notes, setNotes] = useState('');
   const [receipt, setReceipt] = useState<PosSaleRow | null>(null);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const checkoutSaleIdRef = useRef<string | null>(null);
+  const priceDriftToastAtRef = useRef(0);
 
   const handleWarehouseChange = (next: string | null) => {
     setWarehouseId(next);
@@ -89,23 +98,54 @@ export function PosRegister() {
   const catalog = warehouseId
     ? allCatalog.filter((product) => product.warehouseId === warehouseId)
     : allCatalog;
-  const customers = customersQuery.data ?? [];
+  const hasActiveWarehouse = (activeWarehouses ?? []).length > 0;
+  const customers = useMemo(
+    () =>
+      (customersQuery.data ?? []).filter(
+        (row) => !row.deletedAt && row.status.label.toLowerCase() === 'active',
+      ),
+    [customersQuery.data],
+  );
+
+  useEffect(() => {
+    if (customerId === 'walk-in') return;
+    if (!customers.some((row) => row.id === customerId)) {
+      setCustomerId('walk-in');
+    }
+  }, [customers, customerId]);
 
   useEffect(() => {
     const stock = isSupabaseConfigured ? liveCatalog : mockCatalog;
     if (stock == null) return;
     setCart((current) => {
       let changed = false;
+      let priceChanged = false;
       const next = current.map((line) => {
         const product = stock.find(
           (row) => row.id === line.productId && row.warehouseId === line.warehouseId,
         );
-        const available = product?.qty ?? 0;
+        if (!product) {
+          changed = true;
+          return { ...line, available: 0, quantity: 0 };
+        }
+        const available = product.qty;
         const quantity = Math.min(line.quantity, available);
-        if (line.available === available && line.quantity === quantity) return line;
+        const unitPrice = roundMoney(product.price);
+        if (unitPrice !== roundMoney(line.unitPrice)) {
+          priceChanged = true;
+          changed = true;
+        }
+        if (line.available === available && line.quantity === quantity && unitPrice === roundMoney(line.unitPrice)) {
+          return line;
+        }
         changed = true;
-        return { ...line, available, quantity };
+        return { ...line, available, quantity, unitPrice };
       }).filter((line) => line.quantity > 0);
+
+      if (priceChanged && Date.now() - priceDriftToastAtRef.current > 4000) {
+        priceDriftToastAtRef.current = Date.now();
+        toast.message('Cart prices updated to match the catalog');
+      }
       return changed || next.length !== current.length ? next : current;
     });
   }, [liveCatalog]);
@@ -135,7 +175,7 @@ export function PosRegister() {
         }
         return current.map((line) =>
           line.productId === product.id && line.warehouseId === product.warehouseId
-            ? { ...line, quantity: line.quantity + 1, available: product.qty }
+            ? { ...line, quantity: line.quantity + 1, available: product.qty, unitPrice: product.price }
             : line,
         );
       }
@@ -172,9 +212,10 @@ export function PosRegister() {
 
   const taxPercent = settings?.taxPercent ?? 20;
   const taxCalculation = settings?.taxCalculation ?? 'inclusive';
+  const clampedDiscountPercent = Math.min(Math.max(discountPercent, 0), 100);
   const totals = computePosTotals({
     items: cart,
-    discountPercent,
+    discountPercent: clampedDiscountPercent,
     taxPercent,
     taxCalculation,
   });
@@ -187,6 +228,14 @@ export function PosRegister() {
   const insufficientAccount =
     paymentMethod === 'account' && customerId !== 'walk-in' && balanceAfterSale < 0;
   const creditWouldGoNegative = paymentMethod === 'credit' && customerId !== 'walk-in' && balanceAfterSale < 0;
+  const cashUnderpaid = paymentMethod === 'cash' && tenderedAmount < totals.total;
+  const missingCustomer = chargesCustomerAccount && customerId === 'walk-in';
+  const canComplete =
+    cart.length > 0 &&
+    !completeSale.isPending &&
+    !insufficientAccount &&
+    !cashUnderpaid &&
+    !missingCustomer;
 
   const handleSearchKey = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key !== 'Enter') return;
@@ -199,11 +248,11 @@ export function PosRegister() {
       toast.error('Add at least one item');
       return;
     }
-    if (paymentMethod === 'cash' && tenderedAmount < totals.total) {
+    if (cashUnderpaid) {
       toast.error('Amount tendered is less than the total');
       return;
     }
-    if (chargesCustomerAccount && customerId === 'walk-in') {
+    if (missingCustomer) {
       toast.error(
         paymentMethod === 'account'
           ? 'Select a customer to pay from their account'
@@ -216,12 +265,13 @@ export function PosRegister() {
       return;
     }
 
+    const warehouseIds = [...new Set(cart.map((line) => line.warehouseId))];
+    const saleWarehouseId = warehouseIds.length === 1 ? warehouseIds[0] : null;
     const saleWarehouse = cart[0];
-    const saleWarehouseId = saleWarehouse.warehouseId;
 
     try {
       if (isSupabaseConfigured) {
-        const otherWarehouseIds = [...new Set(cart.map((line) => line.warehouseId))].filter(
+        const otherWarehouseIds = warehouseIds.filter(
           (id) => !allCatalog.some((product) => product.warehouseId === id),
         );
         const stockByWarehouse = new Map<string, Map<string, number>>();
@@ -236,7 +286,10 @@ export function PosRegister() {
         await Promise.all(
           otherWarehouseIds.map(async (id) => {
             const rows = await fetchWarehouseStock(id);
-            stockByWarehouse.set(id, new Map(rows.map((row) => [row.productId, row.qty])));
+            stockByWarehouse.set(
+              id,
+              new Map(rows.map((row) => [row.productId, Math.max(row.qty - row.reserved, 0)])),
+            );
           }),
         );
         const unavailable = cart.some((line) => {
@@ -255,28 +308,38 @@ export function PosRegister() {
         }
       }
 
+      if (!checkoutSaleIdRef.current) {
+        checkoutSaleIdRef.current = crypto.randomUUID();
+      }
+      const saleId = checkoutSaleIdRef.current;
       const saleNumber = generateSaleNumber();
+      const allocated = allocateCartDiscount(cart, totals.discountAmount);
       const payload = {
+        saleId,
         saleNumber,
         warehouseId: saleWarehouseId,
         customerId: customerId === 'walk-in' ? null : customerId,
         customerName: customer?.customerInfo.title ?? 'Walk-in',
         subtotal: totals.subtotal,
         discountAmount: totals.discountAmount,
+        discountPercent: clampedDiscountPercent,
         taxAmount: totals.taxAmount,
+        taxPercent,
+        taxCalculation,
         total: totals.total,
         paymentMethod,
         amountTendered: paymentMethod === 'cash' ? tenderedAmount : totals.total,
         changeDue,
         notes,
-        items: cart.map((line) => ({
+        items: cart.map((line, index) => ({
           productId: line.productId,
           warehouseId: line.warehouseId,
           sku: line.sku,
           name: line.name,
           unitPrice: roundMoney(line.unitPrice),
           quantity: line.quantity,
-          lineTotal: roundMoney(line.unitPrice) * line.quantity,
+          lineDiscount: allocated[index].lineDiscount,
+          lineTotal: allocated[index].lineTotal,
         })),
       };
 
@@ -285,9 +348,9 @@ export function PosRegister() {
         sale = await completeSale.mutateAsync(payload);
       } else {
         sale = {
-          id: crypto.randomUUID(),
+          id: saleId,
           saleNumber,
-          warehouseId: saleWarehouseId,
+          warehouseId: saleWarehouseId ?? saleWarehouse.warehouseId,
           warehouseName: saleWarehouse.warehouseName,
           warehouseCode: saleWarehouse.warehouseCode,
           customerId: payload.customerId,
@@ -301,11 +364,13 @@ export function PosRegister() {
           changeDue,
           notes,
           status: 'completed',
+          taxPercent,
+          taxCalculation,
           itemCount: cart.length,
           createdAt: new Date().toISOString(),
-          items: cart.map((line) => ({
+          items: cart.map((line, index) => ({
             id: crypto.randomUUID(),
-            saleId: '',
+            saleId,
             productId: line.productId,
             warehouseId: line.warehouseId,
             warehouseName: line.warehouseName,
@@ -314,12 +379,13 @@ export function PosRegister() {
             name: line.name,
             unitPrice: roundMoney(line.unitPrice),
             quantity: line.quantity,
-            lineDiscount: 0,
-            lineTotal: roundMoney(line.unitPrice) * line.quantity,
+            lineDiscount: allocated[index].lineDiscount,
+            lineTotal: allocated[index].lineTotal,
           })),
         };
       }
       toast.success(`Sale ${saleNumber} completed`);
+      checkoutSaleIdRef.current = null;
       setReceipt(sale);
       setReceiptOpen(true);
       setCart([]);
@@ -328,7 +394,7 @@ export function PosRegister() {
       setNotes('');
       setCustomerId('walk-in');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to complete sale');
+      toast.error(formatPosError(error));
     }
   };
 
@@ -346,6 +412,15 @@ export function PosRegister() {
           </Button>
         </div>
       </div>
+
+      {isSupabaseConfigured && !hasActiveWarehouse ? (
+        <Alert variant="mono" icon="warning">
+          <AlertIcon>
+            <Info />
+          </AlertIcon>
+          <AlertTitle>Activate a warehouse before selling stock.</AlertTitle>
+        </Alert>
+      ) : null}
 
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
         <Card>
@@ -462,7 +537,10 @@ export function PosRegister() {
                   min={0}
                   max={100}
                   value={discountPercent}
-                  onChange={(e) => setDiscountPercent(Number(e.target.value) || 0)}
+                  onChange={(e) => {
+                    const next = Number(e.target.value);
+                    setDiscountPercent(Number.isFinite(next) ? Math.min(Math.max(next, 0), 100) : 0);
+                  }}
                 />
               </div>
               <div className="space-y-2">
@@ -489,7 +567,7 @@ export function PosRegister() {
               </div>
             )}
 
-            {chargesCustomerAccount && customerId === 'walk-in' && (
+            {missingCustomer && (
               <p className="text-xs text-destructive">
                 Select a customer to {paymentMethod === 'account' ? 'pay from their account' : 'sell on credit'}.
               </p>
@@ -562,7 +640,7 @@ export function PosRegister() {
               )}
             </div>
 
-            <Button className="w-full" variant="mono" onClick={handleComplete} disabled={completeSale.isPending}>
+            <Button className="w-full" variant="mono" onClick={handleComplete} disabled={!canComplete}>
               Complete sale
             </Button>
           </CardContent>

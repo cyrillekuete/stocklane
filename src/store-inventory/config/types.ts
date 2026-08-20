@@ -1,4 +1,5 @@
-import { type LucideIcon } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import type { AppPermission } from '@/auth/lib/roles';
 
 export interface MenuItem {
   title?: string;
@@ -14,6 +15,7 @@ export interface MenuItem {
   expandTitle?: string;
   badge?: string;
   separator?: boolean;
+  permission?: AppPermission;
 }
 
 export type MenuConfig = MenuItem[];

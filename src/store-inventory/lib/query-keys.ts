@@ -1,7 +1,9 @@
 export const inventoryKeys = {
   all: ['inventory'] as const,
   products: () => [...inventoryKeys.all, 'products'] as const,
+  deletedProducts: () => [...inventoryKeys.all, 'deleted-products'] as const,
   product: (id: string) => [...inventoryKeys.all, 'product', id] as const,
+  productDeleteImpact: (id: string) => [...inventoryKeys.all, 'product-delete-impact', id] as const,
   categories: () => [...inventoryKeys.all, 'categories'] as const,
   categoryProducts: (categoryId?: string) =>
     categoryId
@@ -12,7 +14,9 @@ export const inventoryKeys = {
   inbound: () => [...inventoryKeys.all, 'inbound'] as const,
   outbound: () => [...inventoryKeys.all, 'outbound'] as const,
   customers: () => [...inventoryKeys.all, 'customers'] as const,
+  deletedCustomers: () => [...inventoryKeys.all, 'deleted-customers'] as const,
   customer: (id: string) => [...inventoryKeys.all, 'customer', id] as const,
+  customerDeleteImpact: (id: string) => [...inventoryKeys.all, 'customer-delete-impact', id] as const,
   customerOrders: (customerId?: string) =>
     customerId
       ? ([...inventoryKeys.all, 'customer-orders', customerId] as const)
@@ -52,6 +56,7 @@ export const inventoryKeys = {
       : ([...inventoryKeys.all, 'pos-catalog'] as const),
   posSales: () => [...inventoryKeys.all, 'pos-sales'] as const,
   posSale: (id: string) => [...inventoryKeys.all, 'pos-sale', id] as const,
+  users: () => [...inventoryKeys.all, 'users'] as const,
 };
 
 export const REFERENCE_STALE_TIME = 5 * 60_000;

@@ -1561,12 +1561,10 @@ export const orderTrackingEventsByNumber: Record<string, OrderTrackingEventRow[]
   ],
 };
 
+import { deliveryStep as sharedDeliveryStep } from '../lib/order-status';
+
 export function deliveryStep(status?: string) {
-  const normalized = (status ?? '').toLowerCase();
-  if (normalized === 'delivered') return 4;
-  if (normalized === 'shipped' || normalized === 'shipping' || normalized === 'in transit') return 3;
-  if (normalized === 'packed') return 2;
-  return 1;
+  return sharedDeliveryStep(status);
 }
 
 function defaultTrackingEvents(order: OrderListRow): OrderTrackingEventRow[] {

@@ -1,11 +1,11 @@
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import {
   invalidateKeys,
   patchListById,
   restoreQueries,
   snapshotQueries,
-  toastMutationError,
   type QuerySnapshot,
 } from '../lib/optimistic';
 import { inventoryKeys } from '../lib/query-keys';
@@ -14,6 +14,7 @@ import {
   fetchPosCatalog,
   fetchPosSaleById,
   fetchPosSales,
+  formatPosError,
   voidPosSale,
   type CompletePosSaleInput,
 } from '../services/pos';
@@ -56,7 +57,9 @@ export function useCompletePosSale() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CompletePosSaleInput) => completePosSale(input),
-    onError: (error) => toastMutationError(error),
+    onError: (error) => {
+      toast.error(formatPosError(error));
+    },
     onSuccess: (sale) => {
       if (sale) {
         queryClient.setQueryData(inventoryKeys.posSale(sale.id), sale);
@@ -72,8 +75,9 @@ export function useVoidPosSale() {
   const queryClient = useQueryClient();
   const keys = posSaleCacheKeys;
   return useMutation({
-    mutationFn: voidPosSale,
-    onMutate: async (saleId) => {
+    mutationFn: ({ saleId, reason }: { saleId: string; reason?: string }) =>
+      voidPosSale(saleId, { reason }),
+    onMutate: async ({ saleId }) => {
       const previous = await snapshotQueries(queryClient, inventoryKeys.posSales());
       patchListById<PosSaleRow>(queryClient, inventoryKeys.posSales(), saleId, (item) => ({
         ...item,
@@ -81,12 +85,12 @@ export function useVoidPosSale() {
       }));
       return { previous };
     },
-    onError: (error, _saleId, context) => {
+    onError: (error, _vars, context) => {
       if (context?.previous) restoreQueries(queryClient, context.previous as QuerySnapshot);
-      toastMutationError(error);
+      toast.error(formatPosError(error));
     },
-    onSettled: (_data, _error, saleId) => {
-      void invalidateKeys(queryClient, ...keys, inventoryKeys.posSale(saleId));
+    onSettled: (_data, _error, vars) => {
+      void invalidateKeys(queryClient, ...keys, inventoryKeys.posSale(vars.saleId));
     },
   });
 }

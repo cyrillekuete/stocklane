@@ -27,7 +27,7 @@ import {
   defaultOrderDetail,
   orderItemsMockData,
 } from '@/store-inventory/data/orders';
-import { useDeleteOrder, useOrder, useOrderItems } from '@/store-inventory/hooks/use-inventory';
+import { useCancelOrder, useOrder, useOrderItems } from '@/store-inventory/hooks/use-inventory';
 import type { OrderDetailRow, OrderListRow } from '@/store-inventory/types';
 
 const steps = [
@@ -47,9 +47,9 @@ interface OrderDetailsSheetProps {
 }
 
 function resolveFallback(orderId?: string, order?: OrderListRow): OrderDetailRow {
-  if (order) return buildOrderDetail(order, orderItemsMockData);
+  if (order) return buildOrderDetail(order, []);
   const match = allOrderListMockData.find((row) => row.id === orderId || row.order === orderId);
-  return match ? buildOrderDetail(match) : defaultOrderDetail;
+  return match ? buildOrderDetail(match, []) : defaultOrderDetail;
 }
 
 export function OrderDetailsSheet({
@@ -62,12 +62,15 @@ export function OrderDetailsSheet({
 }: OrderDetailsSheetProps) {
   const { data: remoteOrder } = useOrder(isSupabaseConfigured ? orderId : undefined);
   const { data: remoteItems } = useOrderItems(isSupabaseConfigured ? orderId : undefined);
-  const deleteOrder = useDeleteOrder();
+  const cancelOrder = useCancelOrder();
   const fallback = resolveFallback(orderId, order);
   const detail =
     remoteOrder ??
     (order || fallback
-      ? buildOrderDetail(order ?? fallback, remoteItems?.length ? remoteItems : orderItemsMockData)
+      ? buildOrderDetail(
+          order ?? fallback,
+          isSupabaseConfigured ? (remoteItems ?? []) : orderItemsMockData,
+        )
       : defaultOrderDetail);
   const currentStep = Math.min(Math.max(detail.currentStep || 1, 1), 4);
   const items = detail.detailItems;
@@ -77,15 +80,18 @@ export function OrderDetailsSheet({
       onOpenChange(false);
       return;
     }
-    deleteOrder.mutate(detail.id, {
-      onSuccess: () => {
-        toast.success('Order deleted');
-        onOpenChange(false);
+    cancelOrder.mutate(
+      { id: detail.id, reason: 'Canceled from order details' },
+      {
+        onSuccess: () => {
+          toast.success('Order canceled');
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          toast.error(error instanceof Error ? error.message : 'Unable to cancel order');
+        },
       },
-      onError: (error) => {
-        toast.error(error instanceof Error ? error.message : 'Unable to delete order');
-      },
-    });
+    );
   };
 
   return (
@@ -115,7 +121,7 @@ export function OrderDetailsSheet({
               </div>
             </div>
             <div className="flex items-center gap-2.5">
-              <Button variant="ghost" onClick={handleDelete}>Delete</Button>
+              <Button variant="ghost" onClick={handleDelete}>Cancel Order</Button>
               <Button variant="outline" onClick={onTrackShipping}>Order Tracking</Button>
               <Button variant="mono" onClick={onViewShippingLabel}>View Shipping Label</Button>
             </div>
@@ -314,7 +320,7 @@ export function OrderDetailsSheet({
             </Link>
           </div>
           <div className="flex items-center gap-2.5">
-            <Button variant="ghost" onClick={handleDelete}>Delete</Button>
+            <Button variant="ghost" onClick={handleDelete}>Cancel Order</Button>
             <Button variant="outline" onClick={onTrackShipping}>Order Tracking</Button>
             <Button variant="mono" onClick={onViewShippingLabel}>View Shipping Label</Button>
           </div>

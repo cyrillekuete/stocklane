@@ -1,7 +1,30 @@
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { buildOrderDetail } from '../data/orders';
-import { formatMoney, generateCustomerCode, generateOrderNumber, parseMoney, parseQty, stableId } from '../lib/format';
+import {
+  assertNonNegativeMoney,
+  assertNonNegativeQty,
+  formatMoney,
+  generateCustomerCode,
+  generateOrderNumber,
+  parseMoney,
+  parseQty,
+  stableId,
+} from '../lib/format';
+import { mapOrderError } from '../lib/order-errors';
+import { computeOrderPricing } from '../lib/order-pricing';
+import {
+  isCanceledDelivery,
+  normalizeDeliveryStatus,
+  normalizePaymentStatus,
+} from '../lib/order-status';
+import { mapCategoryError } from '../lib/category-errors';
+import {
+  generateCategoryCode,
+  normalizeCategoryName,
+  normalizeCategoryStatus,
+  parseCategoryInput,
+} from '../lib/category-validation';
 import {
   defaultCustomerReviews,
   defaultPaymentMethods,
@@ -28,6 +51,7 @@ import type {
   ProductVariantRow,
   StockPlannerRow,
 } from '../types';
+import { ZodError } from 'zod';
 
 export type InventoryCategory = {
   id: string;
@@ -111,12 +135,40 @@ export type InventoryProduct = {
   category_id: string | null;
   brand_id: string | null;
   supplier_id: string | null;
+  deleted_at?: string | null;
   created_at: string;
   updated_at: string;
   category?: InventoryCategory | null;
   brand?: InventoryBrand | null;
   supplier?: InventorySupplier | null;
   stock_level?: InventoryStockLevel | null;
+};
+
+export type ProductDeleteImpact = {
+  id: string;
+  sku: string;
+  name: string;
+  deleted_at: string | null;
+  variants: number;
+  options: number;
+  warehouse_stock: number;
+  inbound_shipments: number;
+  outbound_shipments: number;
+  order_items: number;
+  pos_sale_items: number;
+  stock_movements: number;
+};
+
+export type CustomerDeleteImpact = {
+  id: string;
+  code: string;
+  name: string;
+  account_balance: number;
+  deleted_at: string | null;
+  ledger_count: number;
+  pos_sales_count: number;
+  orders_count: number;
+  can_hard_delete: boolean;
 };
 
 export type InventoryInboundShipment = {
@@ -144,6 +196,7 @@ export type InventoryOutboundShipment = {
   status_variant: string;
   expected_delivery: string;
   notify: boolean;
+  warehouse_id?: string | null;
   product?: InventoryProduct | null;
   warehouse?: InventoryWarehouse | null;
   carrier?: InventoryCarrier | null;
@@ -172,6 +225,7 @@ export type InventoryCustomer = {
   account_balance?: number | string | null;
   payment_methods: CustomerPaymentMethod[] | null;
   reviews: CustomerReviewGroup[] | null;
+  deleted_at?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -223,6 +277,10 @@ export type InventoryOrder = {
   total_time?: string | null;
   departure_time?: string | null;
   expected_arrival?: string | null;
+  inventory_state?: string | null;
+  store_id?: string | null;
+  canceled_at?: string | null;
+  cancel_reason?: string | null;
   customer?: InventoryCustomer | null;
   carrier?: InventoryCarrier | null;
   items?: InventoryOrderItem[];
@@ -232,6 +290,8 @@ export type InventoryOrder = {
 export type InventoryOrderItem = {
   id: string;
   order_id: string;
+  product_id?: string | null;
+  warehouse_id?: string | null;
   category: string | null;
   price: number | string;
   quantity?: number | null;
@@ -242,6 +302,9 @@ export type InventoryOrderItem = {
   stock: number;
   reserved: number;
   threshold_level: number;
+  product_name?: string | null;
+  product_sku?: string | null;
+  product_image?: string | null;
   product?: InventoryProduct | null;
 };
 
@@ -256,12 +319,16 @@ export type InventoryTrackingEvent = {
 };
 
 export type OrderItemInput = {
-  productId?: string | null;
+  productId: string;
+  warehouseId?: string | null;
   category?: string;
   price: number;
-  quantity?: number;
+  quantity: number;
   color?: string;
   weight?: string;
+  productName?: string;
+  productSku?: string;
+  productImage?: string;
 };
 
 export type OrderInput = {
@@ -276,6 +343,9 @@ export type OrderInput = {
   carrierName?: string;
   carrierLogo?: string;
   items?: OrderItemInput[];
+  warehouseId?: string | null;
+  storeId?: string | null;
+  idempotencyKey?: string | null;
   shippingPriority?: string;
   deliveryMethod?: string;
   originAddress?: string;
@@ -340,6 +410,10 @@ export function statusVariant(label: string) {
 
 export function mapProductList(product: InventoryProduct): ProductListRow {
   const image = product.image ?? '11.png';
+  const qty = product.stock_level?.qty ?? 0;
+  const threshold = product.stock_level?.threshold ?? 0;
+  const needsAction =
+    product.status === 'Live' && !product.deleted_at && threshold > 0 && qty <= threshold;
   return {
     id: product.id,
     productInfo: {
@@ -351,8 +425,8 @@ export function mapProductList(product: InventoryProduct): ProductListRow {
     category: product.category?.name ?? '',
     price: formatMoney(product.price),
     status: {
-      label: product.status,
-      variant: statusVariant(product.status),
+      label: needsAction ? 'Must Act' : product.status,
+      variant: statusVariant(needsAction ? 'Must Act' : product.status),
     },
     created: displayDate(product.created_at),
     updated: displayDate(product.updated_at),
@@ -363,6 +437,8 @@ export function mapProductList(product: InventoryProduct): ProductListRow {
     categoryId: product.category_id,
     brandId: product.brand_id,
     image,
+    deletedAt: product.deleted_at ?? null,
+    needsAction,
   };
 }
 
@@ -376,7 +452,8 @@ export function mapCategory(category: InventoryCategory): CategoryListRow {
       label: category.code ?? '',
     },
     productsQty: qty,
-    totalEarnings: formatMoney(category.total_earnings),
+    // Seeded total_earnings is not maintained by sales — do not present as live earnings.
+    totalEarnings: '—',
     status: {
       label: category.status,
       variant: statusVariant(category.status),
@@ -441,6 +518,13 @@ export function mapCurrentStock(product: InventoryProduct): CurrentStockRow {
       label: stock?.trend_label ?? 'Steady',
       variant: stock?.trend_variant ?? 'secondary',
     },
+    category: product.category?.name ?? '',
+    price: formatMoney(product.price),
+    reorderQty: stock?.reorder_qty ?? 0,
+    leadTimeDays: stock?.lead_time_days ?? 0,
+    autoReorder: Boolean(stock?.auto_reorder),
+    created: displayDate(product.created_at),
+    updated: displayDate(product.updated_at),
   };
 }
 
@@ -505,6 +589,7 @@ export function mapOutbound(row: InventoryOutboundShipment): OutboundStockRow {
     },
     expDelivery: row.expected_delivery,
     warehouse: row.warehouse?.code ?? '',
+    warehouseId: row.warehouse_id ?? row.warehouse?.id ?? null,
     carrier: row.carrier?.name ?? '',
     notify: row.notify,
   };
@@ -532,7 +617,7 @@ export function mapCustomer(row: InventoryCustomer): CustomerListRow {
       variant: statusVariant(row.status),
     },
     created: row.order_count,
-    updated: displayDate(row.updated_at),
+    updated: row.last_visit ? displayDate(row.last_visit) : displayDate(row.updated_at),
     phone: row.phone ?? undefined,
     company: row.company ?? undefined,
     timezone: row.timezone ?? undefined,
@@ -544,6 +629,7 @@ export function mapCustomer(row: InventoryCustomer): CustomerListRow {
     accountBalance: parseMoney(row.account_balance),
     paymentMethods: row.payment_methods ?? undefined,
     reviews: row.reviews ?? undefined,
+    deletedAt: row.deleted_at ?? null,
   });
 }
 
@@ -613,13 +699,19 @@ export function mapOrder(row: InventoryOrder): OrderListRow {
 }
 
 export function mapOrderItem(row: InventoryOrderItem): OrderItemRow {
+  const snapshotTitle = row.product_name?.trim() || '';
+  const snapshotSku = row.product_sku?.trim() || '';
+  const title = row.product?.name || snapshotTitle || 'Deleted product';
+  const sku = row.product?.sku || snapshotSku || '';
   return {
     id: row.id,
+    productId: row.product_id ?? row.product?.id ?? undefined,
+    warehouseId: row.warehouse_id ?? undefined,
     productInfo: {
-      image: row.product?.image ?? '11.png',
-      title: row.product?.name ?? '',
-      label: row.product?.sku ?? '',
-      tooltip: row.product?.full_name ?? row.product?.name ?? '',
+      image: row.product?.image || row.product_image || '11.png',
+      title,
+      label: sku,
+      tooltip: row.product?.full_name ?? title,
     },
     category: row.category ?? row.product?.category?.name ?? '',
     price: formatMoney(row.price),
@@ -726,7 +818,19 @@ export async function fetchProducts() {
   const { data, error } = await client
     .from('inventory_products')
     .select(productSelect)
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as InventoryProduct[]).map(mapProductList);
+}
+
+export async function fetchDeletedProducts() {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('inventory_products')
+    .select(productSelect)
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false });
   if (error) throw error;
   return ((data ?? []) as InventoryProduct[]).map(mapProductList);
 }
@@ -759,6 +863,7 @@ export async function fetchProductsByCategory(categoryId: string) {
     .from('inventory_products')
     .select(productSelect)
     .eq('category_id', categoryId)
+    .is('deleted_at', null)
     .order('name');
   if (error) throw error;
   return (data ?? []) as InventoryProduct[];
@@ -769,6 +874,7 @@ export async function fetchStockProducts() {
   const { data, error } = await client
     .from('inventory_products')
     .select(productSelect)
+    .is('deleted_at', null)
     .order('updated_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as InventoryProduct[];
@@ -799,7 +905,19 @@ export async function fetchCustomers() {
   const { data, error } = await client
     .from('inventory_customers')
     .select('*')
+    .is('deleted_at', null)
     .order('updated_at', { ascending: false });
+  if (error) throw error;
+  return ((data ?? []) as InventoryCustomer[]).map(mapCustomer);
+}
+
+export async function fetchDeletedCustomers() {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('inventory_customers')
+    .select('*')
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false });
   if (error) throw error;
   return ((data ?? []) as InventoryCustomer[]).map(mapCustomer);
 }
@@ -835,12 +953,17 @@ const orderSelect = `
   tracking_events:inventory_order_tracking_events(*)
 `;
 
-export async function fetchOrders() {
+export async function fetchOrders(storeId?: string | null) {
   const client = requireClient();
-  const { data, error } = await client
+  let query = client
     .from('inventory_orders')
     .select(`*, customer:inventory_customers(*), carrier:inventory_carriers(*)`)
     .order('date', { ascending: false });
+  const scopedStoreId = storeId ?? import.meta.env.VITE_STORE_ID ?? null;
+  if (scopedStoreId) {
+    query = query.eq('store_id', scopedStoreId);
+  }
+  const { data, error } = await query;
   if (error) throw error;
   return ((data ?? []) as InventoryOrder[]).map(mapOrder);
 }
@@ -907,6 +1030,20 @@ export async function fetchOptions(productId: string) {
   return mapOptions((data ?? []) as InventoryOption[]);
 }
 
+function validateProductVariants(variants?: ProductVariantRow[]) {
+  if (!variants?.length) return;
+  const seen = new Set<string>();
+  for (const variant of variants) {
+    const key = `${variant.size}::${variant.color}`.toLowerCase();
+    if (seen.has(key)) {
+      throw new Error(`Duplicate variant size/color: ${variant.size} / ${variant.color}`);
+    }
+    seen.add(key);
+    assertNonNegativeMoney(parseMoney(variant.price), 'Variant price');
+    assertNonNegativeQty(parseQty(variant.onHand), 'Variant on hand');
+  }
+}
+
 export async function createProduct(input: {
   name: string;
   sku: string;
@@ -923,62 +1060,44 @@ export async function createProduct(input: {
   variants?: ProductVariantRow[];
 }) {
   const client = requireClient();
+  const name = input.name.trim();
+  const sku = input.sku.trim();
+  if (!name || !sku) {
+    throw new Error('Product name and SKU are required');
+  }
+  const price = assertNonNegativeMoney(input.price ?? 0);
+  validateProductVariants(input.variants);
+
   const productId = crypto.randomUUID();
-  const { error } = await client.from('inventory_products').insert({
-    id: productId,
-    name: input.name,
-    sku: input.sku,
-    barcode: input.barcode ?? null,
-    description: input.description ?? null,
-    category_id: input.categoryId ?? null,
-    brand_id: input.brandId ?? null,
-    price: input.price ?? 0,
-    status: input.status ?? 'Live',
-    featured: Boolean(input.featured),
-    tags: input.tags ?? [],
-    image: input.image ?? '11.png',
-    full_name: input.name,
-  });
-  if (error) throw error;
-
-  await client.from('inventory_stock_levels').insert({
-    id: crypto.randomUUID(),
-    product_id: productId,
-  });
-
-  let warehouseId = input.warehouseId;
-  if (!warehouseId) {
-    const { data: defaultWarehouse } = await client
-      .from('inventory_warehouses')
-      .select('id')
-      .eq('is_default', true)
-      .maybeSingle();
-    warehouseId = defaultWarehouse?.id;
-  }
-  if (warehouseId) {
-    await client.rpc('inventory_set_warehouse_qty', {
-      p_warehouse_id: warehouseId,
-      p_product_id: productId,
-      p_qty: 0,
-    });
-  }
-
-  if (input.variants?.length) {
-    const { error: variantError } = await client.from('inventory_product_variants').insert(
-      input.variants.map((variant) => ({
+  const { data, error } = await client.rpc('inventory_create_product', {
+    payload: {
+      id: productId,
+      name,
+      sku,
+      barcode: input.barcode?.trim() || null,
+      description: input.description ?? null,
+      category_id: input.categoryId ?? null,
+      brand_id: input.brandId ?? null,
+      price,
+      status: input.status ?? 'Live',
+      featured: Boolean(input.featured),
+      tags: input.tags ?? [],
+      image: input.image ?? '11.png',
+      full_name: name,
+      warehouse_id: input.warehouseId ?? null,
+      variants: (input.variants ?? []).map((variant) => ({
         id: persistVariantId(variant.id),
-        product_id: productId,
         size: variant.size,
         color: variant.color,
-        on_hand: parseQty(variant.onHand),
+        // Variant on_hand is display metadata only; warehouse stock is source of truth.
+        on_hand: 0,
         price: parseMoney(variant.price),
         available: variant.available === 'Yes',
       })),
-    );
-    if (variantError) throw variantError;
-  }
-
-  return productId;
+    },
+  });
+  if (error) throw error;
+  return (data as string) || productId;
 }
 
 export async function updateProduct(
@@ -1008,7 +1127,7 @@ export async function updateProduct(
   if (input.description !== undefined) payload.description = input.description || null;
   if (input.categoryId !== undefined) payload.category_id = input.categoryId;
   if (input.brandId !== undefined) payload.brand_id = input.brandId;
-  if (input.price !== undefined) payload.price = input.price;
+  if (input.price !== undefined) payload.price = assertNonNegativeMoney(input.price);
   if (input.status !== undefined) payload.status = input.status;
   if (input.featured !== undefined) payload.featured = input.featured;
   if (input.tags !== undefined) payload.tags = input.tags;
@@ -1016,14 +1135,80 @@ export async function updateProduct(
 
   if (Object.keys(payload).length === 0) return;
 
-  const { error } = await client.from('inventory_products').update(payload).eq('id', id);
+  const { error } = await client
+    .from('inventory_products')
+    .update(payload)
+    .eq('id', id)
+    .is('deleted_at', null);
   if (error) throw error;
 }
 
-export async function deleteProduct(id: string) {
+export async function softDeleteProduct(id: string) {
   const client = requireClient();
-  const { error } = await client.from('inventory_products').delete().eq('id', id);
+  const { error } = await client.rpc('inventory_soft_delete_product', {
+    p_product_id: id,
+  });
   if (error) throw error;
+}
+
+/** Soft-deletes a product. Prefer this over hard delete. */
+export async function deleteProduct(id: string) {
+  return softDeleteProduct(id);
+}
+
+export async function restoreProduct(id: string) {
+  const client = requireClient();
+  const { error } = await client.rpc('inventory_restore_product', {
+    p_product_id: id,
+  });
+  if (error) throw error;
+}
+
+export async function fetchProductDeleteImpact(id: string): Promise<ProductDeleteImpact> {
+  const client = requireClient();
+  const { data, error } = await client.rpc('inventory_product_delete_impact', {
+    p_product_id: id,
+  });
+  if (error) throw error;
+  return data as ProductDeleteImpact;
+}
+
+export async function hardDeleteProduct(id: string) {
+  const client = requireClient();
+  const { error } = await client.rpc('inventory_hard_delete_product', {
+    p_product_id: id,
+  });
+  if (error) throw error;
+}
+
+export async function uploadProductImage(file: File, productId?: string) {
+  const client = requireClient();
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
+  const path = `${productId || 'draft'}/${crypto.randomUUID()}.${safeExt}`;
+  const { error } = await client.storage.from('product-images').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type || `image/${safeExt}`,
+  });
+  if (error) throw error;
+  const { data } = client.storage.from('product-images').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function uploadCategoryIcon(file: File, categoryId?: string) {
+  const client = requireClient();
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+  const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'].includes(ext) ? ext : 'png';
+  const path = `categories/${categoryId || 'draft'}/${crypto.randomUUID()}.${safeExt}`;
+  const { error } = await client.storage.from('product-images').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type || `image/${safeExt === 'svg' ? 'svg+xml' : safeExt}`,
+  });
+  if (error) throw mapCategoryError(error, 'Unable to upload category icon');
+  const { data } = client.storage.from('product-images').getPublicUrl(path);
+  return data.publicUrl;
 }
 
 export async function createCategory(input: {
@@ -1034,18 +1219,28 @@ export async function createCategory(input: {
   icon?: string;
 }) {
   const client = requireClient();
+  let parsed;
+  try {
+    parsed = parseCategoryInput(input);
+  } catch (error) {
+    throw formatCategoryValidationError(error);
+  }
+
+  await assertCategoryNameAvailable(parsed.name);
+
   const id = crypto.randomUUID();
+  const code = generateCategoryCode(parsed.name, id);
   const { error } = await client.from('inventory_categories').insert({
     id,
-    name: input.name,
-    status: input.status ?? 'Active',
-    featured: Boolean(input.featured),
-    description: input.description ?? null,
-    icon: input.icon ?? 'running-shoes.svg',
-    code: stableId('code', input.name).replace('code_', '').slice(0, 12).toUpperCase(),
+    name: parsed.name,
+    status: parsed.status ?? 'Active',
+    featured: Boolean(parsed.featured),
+    description: parsed.description ?? null,
+    icon: parsed.icon ?? 'running-shoes.svg',
+    code,
   });
-  if (error) throw error;
-  return id;
+  if (error) throw mapCategoryError(error, 'Unable to create category');
+  return { id, code };
 }
 
 export async function updateCategory(
@@ -1053,36 +1248,210 @@ export async function updateCategory(
   input: Partial<{ name: string; status: string; featured: boolean; description: string; icon: string }>,
 ) {
   const client = requireClient();
-  const { error } = await client.from('inventory_categories').update(input).eq('id', id);
-  if (error) throw error;
+  // Intentionally never patch `code` — category codes are immutable after create.
+  const payload: Record<string, unknown> = {};
+
+  if (input.name !== undefined) {
+    let parsedName: string;
+    try {
+      parsedName = parseCategoryInput({ name: input.name }).name;
+    } catch (error) {
+      throw formatCategoryValidationError(error);
+    }
+    await assertCategoryNameAvailable(parsedName, id);
+    payload.name = parsedName;
+  }
+  if (input.status !== undefined) {
+    payload.status = normalizeCategoryStatus(input.status);
+  }
+  if (input.featured !== undefined) {
+    payload.featured = Boolean(input.featured);
+  }
+  if (input.description !== undefined) {
+    const description = input.description ?? '';
+    if (description.length > 500) {
+      throw new Error('Description must be 500 characters or fewer');
+    }
+    payload.description = description;
+  }
+  if (input.icon !== undefined) {
+    payload.icon = input.icon;
+  }
+
+  if (!Object.keys(payload).length) return;
+
+  const { error } = await client.from('inventory_categories').update(payload).eq('id', id);
+  if (error) throw mapCategoryError(error, 'Unable to update category');
 }
 
-export async function deleteCategory(id: string) {
+export type CategoryDeleteInfo = {
+  productCount: number;
+  messages: string[];
+};
+
+export async function getCategoryDeleteInfo(id: string): Promise<CategoryDeleteInfo> {
   const client = requireClient();
+  const { count, error } = await client
+    .from('inventory_products')
+    .select('id', { count: 'exact', head: true })
+    .eq('category_id', id);
+  if (error) throw mapCategoryError(error, 'Unable to check category products');
+
+  const productCount = count ?? 0;
+  const messages: string[] = [];
+  if (productCount > 0) {
+    messages.push(
+      `${productCount} ${productCount === 1 ? 'product is' : 'products are'} linked to this category.`,
+    );
+    messages.push(
+      'Reassign them to another category, or continue to leave them Uncategorized.',
+    );
+  } else {
+    messages.push('Delete this category? This cannot be undone.');
+  }
+
+  return { productCount, messages };
+}
+
+export async function deleteCategory(
+  id: string,
+  options?: { reassignToCategoryId?: string | null },
+) {
+  const client = requireClient();
+  const info = await getCategoryDeleteInfo(id);
+
+  if (options?.reassignToCategoryId) {
+    if (options.reassignToCategoryId === id) {
+      throw new Error('Choose a different category to reassign products');
+    }
+    const { error: reassignError } = await client
+      .from('inventory_products')
+      .update({ category_id: options.reassignToCategoryId })
+      .eq('category_id', id);
+    if (reassignError) throw mapCategoryError(reassignError, 'Unable to reassign products');
+  }
+
   const { error } = await client.from('inventory_categories').delete().eq('id', id);
-  if (error) throw error;
+  if (error) throw mapCategoryError(error, 'Unable to delete category');
+
+  return { productCount: info.productCount, reassigned: Boolean(options?.reassignToCategoryId) };
+}
+
+export async function archiveCategories(ids: string[]) {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+  if (!uniqueIds.length) return { count: 0 };
+  const client = requireClient();
+  const { error } = await client
+    .from('inventory_categories')
+    .update({ status: 'Archived' })
+    .in('id', uniqueIds);
+  if (error) throw mapCategoryError(error, 'Unable to archive categories');
+  return { count: uniqueIds.length };
+}
+
+export async function deleteCategories(
+  ids: string[],
+  options?: { reassignToCategoryId?: string | null },
+) {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+  let productCount = 0;
+  for (const id of uniqueIds) {
+    if (options?.reassignToCategoryId === id) {
+      throw new Error('Choose a different category to reassign products');
+    }
+    const result = await deleteCategory(id, {
+      reassignToCategoryId:
+        options?.reassignToCategoryId && options.reassignToCategoryId !== id
+          ? options.reassignToCategoryId
+          : null,
+    });
+    productCount += result.productCount;
+  }
+  return {
+    count: uniqueIds.length,
+    productCount,
+    reassigned: Boolean(options?.reassignToCategoryId),
+  };
+}
+
+export async function getCategoriesDeleteInfo(ids: string[]) {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+  let productCount = 0;
+  for (const id of uniqueIds) {
+    const info = await getCategoryDeleteInfo(id);
+    productCount += info.productCount;
+  }
+  const messages: string[] = [];
+  if (productCount > 0) {
+    messages.push(
+      `${productCount} ${productCount === 1 ? 'product is' : 'products are'} linked across the selected categories.`,
+    );
+    messages.push(
+      'Reassign them to another category, or continue to leave them Uncategorized.',
+    );
+  } else {
+    messages.push(`Delete ${uniqueIds.length} ${uniqueIds.length === 1 ? 'category' : 'categories'}? This cannot be undone.`);
+  }
+  return { productCount, messages, count: uniqueIds.length };
+}
+
+async function assertCategoryNameAvailable(name: string, excludeId?: string) {
+  const client = requireClient();
+  const normalized = normalizeCategoryName(name);
+  const { data, error } = await client.from('inventory_categories').select('id, name');
+  if (error) throw mapCategoryError(error, 'Unable to validate category name');
+
+  const conflict = (data ?? []).find(
+    (row) => row.id !== excludeId && normalizeCategoryName(row.name ?? '') === normalized,
+  );
+  if (conflict) {
+    throw new Error('A category with this name already exists');
+  }
+}
+
+function formatCategoryValidationError(error: unknown): Error {
+  if (error instanceof ZodError) {
+    return new Error(error.issues[0]?.message ?? 'Invalid category input');
+  }
+  return mapCategoryError(error, 'Invalid category input');
 }
 
 export async function updateStockLevel(
   productId: string,
-  input: Partial<InventoryStockLevel> & { warehouseId?: string },
+  input: Partial<InventoryStockLevel> & { warehouseId?: string; expectedQty?: number },
 ) {
   const client = requireClient();
   const warehouseId = input.warehouseId;
-  const { warehouseId: _warehouseId, ...stockPayload } = input;
+  const expectedQty = input.expectedQty;
+  const { warehouseId: _warehouseId, expectedQty: _expectedQty, ...stockPayload } = input;
+  if (stockPayload.qty !== undefined && !warehouseId) {
+    throw new Error('Select a warehouse before editing quantity');
+  }
   if (warehouseId && stockPayload.qty !== undefined) {
+    const { data: warehouse, error: warehouseError } = await client
+      .from('inventory_warehouses')
+      .select('id, status')
+      .eq('id', warehouseId)
+      .maybeSingle();
+    if (warehouseError) throw warehouseError;
+    if (!warehouse?.id || String(warehouse.status).toLowerCase() !== 'active') {
+      throw new Error('Select an Active warehouse');
+    }
     const { error: qtyError } = await client.rpc('inventory_set_warehouse_qty', {
       p_warehouse_id: warehouseId,
       p_product_id: productId,
       p_qty: stockPayload.qty,
+      p_expected_qty: expectedQty ?? null,
+      p_reason: 'stock_level_edit',
     });
     if (qtyError) throw qtyError;
   }
   const payload: Record<string, unknown> = { ...stockPayload };
   delete payload.warehouseId;
-  if (warehouseId && stockPayload.qty !== undefined) {
-    delete payload.qty;
-  }
+  delete payload.expectedQty;
+  // Never write aggregate qty/reserved directly — warehouse sync owns those fields.
+  delete payload.qty;
+  delete payload.reserved;
   if (!Object.keys(payload).length) return;
   const { error } = await client
     .from('inventory_stock_levels')
@@ -1107,6 +1476,16 @@ export async function createInboundShipment(input: {
   status?: string;
 }) {
   const client = requireClient();
+  const { data: warehouse, error: warehouseError } = await client
+    .from('inventory_warehouses')
+    .select('id, status')
+    .eq('id', input.warehouseId)
+    .maybeSingle();
+  if (warehouseError) throw warehouseError;
+  if (!warehouse?.id || String(warehouse.status).toLowerCase() !== 'active') {
+    throw new Error('Select an Active warehouse');
+  }
+
   const id = crypto.randomUUID();
   const orderDate = input.orderDate ?? format(new Date(), 'd MMM, yyyy');
   const arrivalDate = input.arrivalDate ?? orderDate;
@@ -1140,19 +1519,134 @@ export async function deleteInboundShipment(id: string) {
 
 export async function deleteOutboundShipment(id: string) {
   const client = requireClient();
-  const { error } = await client.from('inventory_outbound_shipments').delete().eq('id', id);
+  const { error } = await client.rpc('inventory_delete_outbound_shipment', {
+    p_id: id,
+  });
   if (error) throw error;
+}
+
+export async function createOutboundShipment(input: {
+  productId: string;
+  warehouseId: string;
+  qty: number;
+  orderRef?: string;
+  carrierId?: string | null;
+  expectedDelivery?: string;
+  status?: string;
+  notify?: boolean;
+}) {
+  const client = requireClient();
+  const { data: warehouse, error: warehouseError } = await client
+    .from('inventory_warehouses')
+    .select('id, status')
+    .eq('id', input.warehouseId)
+    .maybeSingle();
+  if (warehouseError) throw warehouseError;
+  if (!warehouse?.id || String(warehouse.status).toLowerCase() !== 'active') {
+    throw new Error('Select an Active warehouse');
+  }
+
+  const id = crypto.randomUUID();
+  const status = input.status ?? 'Allocated';
+  const { data, error } = await client.rpc('inventory_create_outbound_shipment', {
+    payload: {
+      id,
+      product_id: input.productId,
+      warehouse_id: input.warehouseId,
+      carrier_id: input.carrierId ?? '',
+      order_ref: input.orderRef ?? '',
+      qty: input.qty,
+      status,
+      status_variant: statusVariant(status),
+      expected_delivery: input.expectedDelivery ?? format(new Date(), 'd MMM, yyyy'),
+      notify: Boolean(input.notify),
+    },
+  });
+  if (error) throw error;
+  return (typeof data === 'string' && data) || id;
+}
+
+export async function transferWarehouseQty(input: {
+  fromWarehouseId: string;
+  toWarehouseId: string;
+  productId: string;
+  qty: number;
+}) {
+  const client = requireClient();
+  const { data, error } = await client.rpc('inventory_transfer_warehouse_qty', {
+    p_from_warehouse_id: input.fromWarehouseId,
+    p_to_warehouse_id: input.toWarehouseId,
+    p_product_id: input.productId,
+    p_qty: input.qty,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchStockSummary() {
+  const client = requireClient();
+  const { data, error } = await client
+    .from('inventory_products')
+    .select('id, name, price, stock_level:inventory_stock_levels(qty, reserved, threshold, total_value)');
+  if (error) throw error;
+
+  type Row = {
+    id: string;
+    name: string;
+    price: number | string;
+    stock_level:
+      | { qty: number; reserved: number; threshold: number; total_value: number | string }
+      | { qty: number; reserved: number; threshold: number; total_value: number | string }[]
+      | null;
+  };
+
+  let inStock = 0;
+  let lowStock = 0;
+  let outOfStock = 0;
+  let totalValue = 0;
+  const lowStockProducts: Array<{ id: string; name: string; qty: number }> = [];
+
+  for (const row of (data ?? []) as Row[]) {
+    const stock = Array.isArray(row.stock_level) ? row.stock_level[0] : row.stock_level;
+    const qty = Number(stock?.qty ?? 0);
+    const reserved = Number(stock?.reserved ?? 0);
+    const available = Math.max(qty - reserved, 0);
+    const threshold = Number(stock?.threshold ?? 0);
+    const value = Number(stock?.total_value ?? 0) || parseMoney(row.price) * qty;
+    totalValue += value;
+
+    if (available <= 0) {
+      outOfStock += 1;
+    } else if (threshold > 0 && available <= threshold) {
+      lowStock += 1;
+      lowStockProducts.push({ id: row.id, name: row.name, qty: available });
+    } else {
+      inStock += 1;
+    }
+  }
+
+  lowStockProducts.sort((a, b) => a.qty - b.qty);
+
+  return {
+    productCount: (data ?? []).length,
+    inStock,
+    lowStock,
+    outOfStock,
+    totalValue: Math.round(totalValue * 100) / 100,
+    lowStockProducts: lowStockProducts.slice(0, 8),
+  };
 }
 
 export async function createCustomer(input: CustomerInput) {
   const client = requireClient();
   const location = locationProfile(input.locationName);
   const name = input.name.trim();
-  const email = input.email?.trim() || null;
+  if (!name) throw new Error('Customer name is required');
+  const emailRaw = input.email?.trim() || null;
+  const email = emailRaw ? emailRaw.toLowerCase() : null;
   const id = crypto.randomUUID();
-  const { error } = await client.from('inventory_customers').insert({
+  const row = {
     id,
-    code: generateCustomerCode(),
     name,
     email,
     status: input.status ?? 'Active',
@@ -1166,18 +1660,39 @@ export async function createCustomer(input: CustomerInput) {
     location_flag: input.locationFlag ?? null,
     status_color: input.statusColor ?? 'offline',
     verified: Boolean(input.verified),
-    payment_methods: input.paymentMethods ?? defaultPaymentMethods(name, email),
+    payment_methods: input.paymentMethods ?? defaultPaymentMethods(name, email ?? undefined),
     reviews: input.reviews ?? defaultCustomerReviews,
-  });
-  if (error) throw error;
-  return id;
+  };
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const { error } = await client.from('inventory_customers').insert({
+      ...row,
+      code: generateCustomerCode(),
+    });
+    if (!error) return id;
+    lastError = error;
+    const message = String((error as { message?: string })?.message ?? '').toLowerCase();
+    const code = String((error as { code?: string })?.code ?? '');
+    const isCodeCollision =
+      code === '23505' && (message.includes('code') || message.includes('inventory_customers_code'));
+    if (!isCodeCollision) throw error;
+  }
+  throw lastError instanceof Error ? lastError : new Error('Unable to create customer');
 }
 
 export async function updateCustomer(id: string, input: Partial<CustomerInput>) {
   const client = requireClient();
   const payload: Record<string, unknown> = {};
-  if (input.name !== undefined) payload.name = input.name;
-  if (input.email !== undefined) payload.email = input.email || null;
+  if (input.name !== undefined) {
+    const name = input.name.trim();
+    if (!name) throw new Error('Customer name is required');
+    payload.name = name;
+  }
+  if (input.email !== undefined) {
+    const email = input.email?.trim() || null;
+    payload.email = email ? email.toLowerCase() : null;
+  }
   if (input.status !== undefined) payload.status = input.status;
   if (input.image !== undefined) payload.image = input.image;
   if (input.phone !== undefined) payload.phone = input.phone || null;
@@ -1192,62 +1707,117 @@ export async function updateCustomer(id: string, input: Partial<CustomerInput>) 
   if (input.paymentMethods !== undefined) payload.payment_methods = input.paymentMethods;
   if (input.reviews !== undefined) payload.reviews = input.reviews;
   if (Object.keys(payload).length === 0) return;
-  const { error } = await client.from('inventory_customers').update(payload).eq('id', id);
+  const { error } = await client
+    .from('inventory_customers')
+    .update(payload)
+    .eq('id', id)
+    .is('deleted_at', null);
   if (error) throw error;
 }
 
-export async function deleteCustomer(id: string) {
+export async function softDeleteCustomer(id: string) {
   const client = requireClient();
-  const { error } = await client.from('inventory_customers').delete().eq('id', id);
+  const { error } = await client.rpc('inventory_soft_delete_customer', {
+    p_customer_id: id,
+  });
+  if (error) throw error;
+}
+
+/** Soft-deletes a customer. Prefer this over hard delete. */
+export async function deleteCustomer(id: string) {
+  return softDeleteCustomer(id);
+}
+
+export async function restoreCustomer(id: string) {
+  const client = requireClient();
+  const { error } = await client.rpc('inventory_restore_customer', {
+    p_customer_id: id,
+  });
+  if (error) throw error;
+}
+
+export async function fetchCustomerDeleteImpact(id: string): Promise<CustomerDeleteImpact> {
+  const client = requireClient();
+  const { data, error } = await client.rpc('inventory_customer_delete_impact', {
+    p_customer_id: id,
+  });
+  if (error) throw error;
+  return data as CustomerDeleteImpact;
+}
+
+export async function hardDeleteCustomer(id: string) {
+  const client = requireClient();
+  const { error } = await client.rpc('inventory_hard_delete_customer', {
+    p_customer_id: id,
+  });
   if (error) throw error;
 }
 
 export async function updateCustomersStatus(ids: string[], status: string) {
   if (!ids.length) return;
   const client = requireClient();
-  const { error } = await client.from('inventory_customers').update({ status }).in('id', ids);
+  const { error } = await client
+    .from('inventory_customers')
+    .update({ status })
+    .in('id', ids)
+    .is('deleted_at', null);
   if (error) throw error;
 }
 
 export async function deleteCustomers(ids: string[]) {
   if (!ids.length) return;
-  const client = requireClient();
-  const { error } = await client.from('inventory_customers').delete().in('id', ids);
-  if (error) throw error;
+  for (const id of ids) {
+    await softDeleteCustomer(id);
+  }
 }
 
 export async function duplicateCustomers(customers: CustomerListRow[]) {
   if (!customers.length) return [];
   const client = requireClient();
-  const rows = customers.map((customer) => {
+  const ids: string[] = [];
+  for (const customer of customers) {
     const name = `${customer.customerInfo.title} (Copy)`;
-    return {
-      id: crypto.randomUUID(),
-      code: generateCustomerCode(),
-      name,
-      email: customer.customerInfo.label || null,
-      image: customer.customerInfo.image,
-      phone: customer.phone ?? null,
-      company: customer.company ?? null,
-      timezone: customer.timezone ?? null,
-      billing_address: customer.billingAddress ?? null,
-      vat_id: customer.vatId ?? null,
-      location_name: customer.location.name || null,
-      location_flag: customer.location.flag || null,
-      status_color: customer.customerInfo.statusColor,
-      verified: Boolean(customer.customerInfo.verified),
-      order_count: '0',
-      total_spent: 0,
-      avg_price: parseMoney(customer.price),
-      account_balance: 0,
-      status: customer.status.label,
-      payment_methods: defaultPaymentMethods(name, customer.customerInfo.label),
-      reviews: customer.reviews ?? defaultCustomerReviews,
-    };
-  });
-  const { error } = await client.from('inventory_customers').insert(rows);
-  if (error) throw error;
-  return rows.map((row) => row.id);
+    let lastError: unknown;
+    const id = crypto.randomUUID();
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const { error } = await client.from('inventory_customers').insert({
+        id,
+        code: generateCustomerCode(),
+        name,
+        email: null,
+        image: customer.customerInfo.image,
+        phone: customer.phone ?? null,
+        company: customer.company ?? null,
+        timezone: customer.timezone ?? null,
+        billing_address: customer.billingAddress ?? null,
+        vat_id: customer.vatId ?? null,
+        location_name: customer.location.name || null,
+        location_flag: customer.location.flag || null,
+        status_color: customer.customerInfo.statusColor,
+        verified: Boolean(customer.customerInfo.verified),
+        order_count: '0',
+        total_spent: 0,
+        avg_price: parseMoney(customer.price),
+        account_balance: 0,
+        status: customer.status.label === 'Archived' ? 'Active' : customer.status.label,
+        payment_methods: defaultPaymentMethods(name),
+        reviews: customer.reviews ?? defaultCustomerReviews,
+      });
+      if (!error) {
+        ids.push(id);
+        lastError = null;
+        break;
+      }
+      lastError = error;
+      const message = String((error as { message?: string })?.message ?? '').toLowerCase();
+      const code = String((error as { code?: string })?.code ?? '');
+      const isCodeCollision =
+        code === '23505' && (message.includes('code') || message.includes('inventory_customers_code'));
+      if (!isCodeCollision) throw error;
+    }
+    if (lastError) throw lastError instanceof Error ? lastError : new Error('Unable to duplicate customer');
+  }
+  return ids;
 }
 
 async function resolveCarrierId(input: Pick<OrderInput, 'carrierId' | 'carrierName' | 'carrierLogo'>) {
@@ -1270,109 +1840,86 @@ async function resolveCarrierId(input: Pick<OrderInput, 'carrierId' | 'carrierNa
   return carrierId;
 }
 
-function orderPricing(items: OrderItemInput[] = []) {
-  const subtotal = items.reduce((sum, item) => sum + item.price * (item.quantity ?? 1), 0);
-  const shippingCost = items.length ? 10 : 0;
-  const tax = items.length ? 20 : 0;
-  return { subtotal, shippingCost, tax, total: subtotal + shippingCost + tax };
+function validateOrderItems(items: OrderItemInput[] | undefined, required: boolean) {
+  if (!items || !items.length) {
+    if (required) throw new Error('Order requires at least one line item');
+    return;
+  }
+  for (const item of items) {
+    if (!item.productId?.trim()) throw new Error('Product is required on each order line');
+    assertNonNegativeQty(item.quantity, 'Quantity');
+    if (item.quantity < 1) throw new Error('Quantity must be at least 1');
+    assertNonNegativeMoney(item.price, 'Price');
+  }
 }
 
-async function insertOrderItems(orderId: string, items: OrderItemInput[]) {
-  if (!items.length) return;
-  const client = requireClient();
-  const { error } = await client.from('inventory_order_items').insert(
-    items.map((item) => ({
-      id: crypto.randomUUID(),
-      order_id: orderId,
-      product_id: item.productId ?? null,
-      category: item.category ?? null,
-      price: item.price,
-      quantity: item.quantity ?? 1,
-      color: item.color ?? null,
-      weight: item.weight ?? null,
-      trend_label: 'Steady',
-      trend_variant: 'secondary',
-      stock: 0,
-      reserved: 0,
-      threshold_level: 0,
-    })),
-  );
-  if (error) throw error;
+function orderItemsPayload(items: OrderItemInput[]) {
+  return items.map((item) => ({
+    product_id: item.productId,
+    warehouse_id: item.warehouseId ?? null,
+    category: item.category ?? null,
+    price: item.price,
+    quantity: item.quantity,
+    color: item.color ?? null,
+    weight: item.weight ?? null,
+    product_name: item.productName ?? null,
+    product_sku: item.productSku ?? null,
+    product_image: item.productImage ?? null,
+  }));
+}
+
+/** Exported for optimistic UI totals — uses store-aware pricing when options provided. */
+export function orderPricing(
+  items: OrderItemInput[] = [],
+  options?: Parameters<typeof computeOrderPricing>[1],
+) {
+  return computeOrderPricing(items, options);
 }
 
 export async function createOrder(input: OrderInput) {
   const client = requireClient();
-  const orderId = crypto.randomUUID();
-  const items = input.items ?? [];
-  const pricing = orderPricing(items);
-  const firstName = input.customerName.split(' ')[0] || 'Customer';
+  validateOrderItems(input.items, true);
+  const items = input.items!;
   const orderNumber = input.orderNumber?.trim() || generateOrderNumber();
-  const deliveryStatus = input.deliveryStatus ?? 'Pending';
-  const paymentStatus = input.paymentStatus ?? 'Unpaid';
-  const detail = buildOrderDetail({
-    id: orderId,
-    order: orderNumber,
-    date: input.date,
-    customer: input.customerName,
-    total: formatMoney(pricing.total),
-    items: items.length,
-    category: input.category ?? '',
-    deliveryStatus: { label: deliveryStatus, variant: statusVariant(deliveryStatus) },
-    paymentStatus: { label: paymentStatus, variant: statusVariant(paymentStatus) },
-    carrier: { name: input.carrierName ?? '', logo: input.carrierLogo ?? 'ups.svg' },
-  });
-  const { error } = await client.from('inventory_orders').insert({
-    id: orderId,
+  const deliveryStatus = normalizeDeliveryStatus(input.deliveryStatus);
+  const paymentStatus = normalizePaymentStatus(input.paymentStatus);
+  const firstName = input.customerName.split(' ')[0] || 'Customer';
+  const carrierId = await resolveCarrierId(input);
+
+  const payload = {
+    id: crypto.randomUUID(),
+    idempotency_key: input.idempotencyKey ?? null,
     order_number: orderNumber,
     date: input.date,
     customer_id: input.customerId ?? null,
     customer_name: input.customerName,
-    total: pricing.total,
-    item_count: items.length,
     category: input.category ?? null,
-    delivery_status: deliveryStatus,
-    delivery_status_variant: statusVariant(deliveryStatus),
     payment_status: paymentStatus,
-    payment_status_variant: statusVariant(paymentStatus),
-    carrier_id: await resolveCarrierId(input),
-    subtotal: pricing.subtotal,
-    shipping_cost: pricing.shippingCost,
-    tax: pricing.tax,
-    shipment_number: detail.shipmentNumber,
-    tracking_number: detail.trackingNumber,
-    shipping_priority: input.shippingPriority ?? detail.shippingPriority,
-    delivery_method: input.deliveryMethod ?? detail.deliveryMethod,
-    current_step: detail.currentStep,
-    origin_address: input.originAddress ?? detail.originAddress,
-    destination_address: input.destinationAddress ?? detail.destinationAddress,
+    delivery_status: deliveryStatus,
+    carrier_id: carrierId,
+    warehouse_id: input.warehouseId ?? null,
+    store_id: input.storeId ?? import.meta.env.VITE_STORE_ID ?? null,
+    shipping_priority: input.shippingPriority ?? null,
+    delivery_method: input.deliveryMethod ?? null,
+    origin_address: input.originAddress ?? null,
+    destination_address: input.destinationAddress ?? null,
     shipping_label: input.shippingLabel ?? `Shipping to ${firstName}'s Home`,
-    shipping_line1: input.shippingLine1 ?? detail.shippingLine1,
-    shipping_line2: input.shippingLine2 ?? detail.shippingLine2,
-    total_time: detail.totalTime,
-    departure_time: detail.departureTime,
-    expected_arrival: detail.expectedArrival,
-  });
-  if (error) throw error;
-  await insertOrderItems(orderId, items);
-  if (detail.trackingEvents.length) {
-    const { error: eventError } = await client.from('inventory_order_tracking_events').insert(
-      detail.trackingEvents.map((event, index) => ({
-        id: crypto.randomUUID(),
-        order_id: orderId,
-        title: event.title,
-        date: event.date,
-        description: event.description,
-        location: event.location ?? null,
-        sort_order: event.sortOrder ?? index,
-      })),
-    );
-    if (eventError) throw eventError;
-  }
-  return orderId;
+    shipping_line1: input.shippingLine1 ?? null,
+    shipping_line2: input.shippingLine2 ?? null,
+    items: orderItemsPayload(items),
+  };
+
+  const { data, error } = await client.rpc('inventory_create_order', { payload });
+  if (error) throw mapOrderError(error);
+  const result = data as { id?: string } | null;
+  if (!result?.id) throw new Error('Unable to create order');
+  return result.id;
 }
 
 export async function updateOrder(id: string, input: Partial<OrderInput>) {
   const client = requireClient();
+  if (input.items !== undefined) validateOrderItems(input.items, true);
+
   const payload: Record<string, unknown> = {};
   if (input.orderNumber !== undefined) payload.order_number = input.orderNumber;
   if (input.date !== undefined) payload.date = input.date;
@@ -1380,12 +1927,10 @@ export async function updateOrder(id: string, input: Partial<OrderInput>) {
   if (input.customerName !== undefined) payload.customer_name = input.customerName;
   if (input.category !== undefined) payload.category = input.category;
   if (input.paymentStatus !== undefined) {
-    payload.payment_status = input.paymentStatus;
-    payload.payment_status_variant = statusVariant(input.paymentStatus);
+    payload.payment_status = normalizePaymentStatus(input.paymentStatus);
   }
   if (input.deliveryStatus !== undefined) {
-    payload.delivery_status = input.deliveryStatus;
-    payload.delivery_status_variant = statusVariant(input.deliveryStatus);
+    payload.delivery_status = normalizeDeliveryStatus(input.deliveryStatus);
   }
   if (input.carrierId !== undefined || input.carrierName !== undefined) {
     payload.carrier_id = await resolveCarrierId({
@@ -1394,6 +1939,8 @@ export async function updateOrder(id: string, input: Partial<OrderInput>) {
       carrierLogo: input.carrierLogo,
     });
   }
+  if (input.warehouseId !== undefined) payload.warehouse_id = input.warehouseId;
+  if (input.storeId !== undefined) payload.store_id = input.storeId;
   if (input.shippingPriority !== undefined) payload.shipping_priority = input.shippingPriority;
   if (input.deliveryMethod !== undefined) payload.delivery_method = input.deliveryMethod;
   if (input.originAddress !== undefined) payload.origin_address = input.originAddress;
@@ -1401,99 +1948,114 @@ export async function updateOrder(id: string, input: Partial<OrderInput>) {
   if (input.shippingLabel !== undefined) payload.shipping_label = input.shippingLabel;
   if (input.shippingLine1 !== undefined) payload.shipping_line1 = input.shippingLine1;
   if (input.shippingLine2 !== undefined) payload.shipping_line2 = input.shippingLine2;
-  if (input.items) {
-    const pricing = orderPricing(input.items);
-    payload.subtotal = pricing.subtotal;
-    payload.shipping_cost = pricing.shippingCost;
-    payload.tax = pricing.tax;
-    payload.total = pricing.total;
-    payload.item_count = input.items.length;
+  if (input.items) payload.items = orderItemsPayload(input.items);
+
+  if (isCanceledDelivery(input.deliveryStatus)) {
+    const { error } = await client.rpc('inventory_cancel_order', {
+      p_order_id: id,
+      p_reason: 'Canceled via update',
+    });
+    if (error) throw mapOrderError(error);
+    // Still apply non-status fields if any remain (items already blocked for cancel-only path).
+    const { delivery_status: _d, payment_status: _p, ...rest } = payload;
+    if (Object.keys(rest).length && !input.items) {
+      const { error: updateError } = await client.rpc('inventory_update_order', {
+        p_order_id: id,
+        payload: rest,
+      });
+      if (updateError) throw mapOrderError(updateError);
+    }
+    return;
   }
-  if (Object.keys(payload).length) {
-    const { error } = await client.from('inventory_orders').update(payload).eq('id', id);
-    if (error) throw error;
-  }
-  if (input.items) {
-    const { error: deleteError } = await client.from('inventory_order_items').delete().eq('order_id', id);
-    if (deleteError) throw deleteError;
-    await insertOrderItems(id, input.items);
-  }
+
+  const { error } = await client.rpc('inventory_update_order', {
+    p_order_id: id,
+    payload,
+  });
+  if (error) throw mapOrderError(error);
 }
 
+/** Soft-cancel preferred path — releases reservation or restocks fulfilled qty. */
+export async function cancelOrder(id: string, reason?: string) {
+  const client = requireClient();
+  const { error } = await client.rpc('inventory_cancel_order', {
+    p_order_id: id,
+    p_reason: reason ?? null,
+  });
+  if (error) throw mapOrderError(error);
+}
+
+/**
+ * Hard delete only when the RPC allows it (not paid / not fulfilled).
+ * Prefer {@link cancelOrder} from the UI.
+ */
 export async function deleteOrder(id: string) {
   const client = requireClient();
-  const { error } = await client.from('inventory_orders').delete().eq('id', id);
-  if (error) throw error;
+  const { error } = await client.rpc('inventory_delete_order', {
+    p_order_id: id,
+  });
+  if (error) {
+    // Fall back to soft-cancel so existing "Cancel Order" actions still succeed.
+    const message = String(error.message ?? '').toLowerCase();
+    if (message.includes('hard-delete') || message.includes('cancel it instead') || message.includes('fulfilled')) {
+      await cancelOrder(id, 'Canceled from delete action');
+      return;
+    }
+    throw mapOrderError(error);
+  }
 }
 
 export async function updateOrderStatus(id: string, paymentStatus: string, deliveryStatus?: string) {
   const client = requireClient();
-  const { error } = await client
-    .from('inventory_orders')
-    .update({
-      payment_status: paymentStatus,
-      payment_status_variant: statusVariant(paymentStatus),
-      ...(deliveryStatus
-        ? {
-            delivery_status: deliveryStatus,
-            delivery_status_variant: statusVariant(deliveryStatus),
-          }
-        : {}),
-    })
-    .eq('id', id);
-  if (error) throw error;
+  if (deliveryStatus && isCanceledDelivery(deliveryStatus)) {
+    await cancelOrder(id, 'Canceled via status update');
+    if (normalizePaymentStatus(paymentStatus) !== 'Cancelled') {
+      // payment already forced to Cancelled by cancel RPC
+    }
+    return;
+  }
+  const { error } = await client.rpc('inventory_update_order_status', {
+    p_order_id: id,
+    p_payment_status: normalizePaymentStatus(paymentStatus),
+    p_delivery_status: deliveryStatus ? normalizeDeliveryStatus(deliveryStatus) : null,
+  });
+  if (error) throw mapOrderError(error);
 }
 
 export async function replaceVariants(productId: string, variants: ProductVariantRow[]) {
   const client = requireClient();
-  const { error: deleteError } = await client
-    .from('inventory_product_variants')
-    .delete()
-    .eq('product_id', productId);
-  if (deleteError) throw deleteError;
-  if (!variants.length) return;
-  const { error } = await client.from('inventory_product_variants').insert(
-    variants.map((variant) => ({
+  validateProductVariants(variants);
+  const { error } = await client.rpc('inventory_replace_product_variants', {
+    p_product_id: productId,
+    p_variants: variants.map((variant) => ({
       id: persistVariantId(variant.id),
-      product_id: productId,
       size: variant.size,
       color: variant.color,
-      on_hand: parseQty(variant.onHand),
+      // Variant on_hand is display metadata only; warehouse stock is source of truth.
+      on_hand: 0,
       price: parseMoney(variant.price),
       available: variant.available === 'Yes',
     })),
-  );
+  });
   if (error) throw error;
 }
 
 export async function replaceOptions(productId: string, options: ProductOptionCard[]) {
   const client = requireClient();
-  const { error: deleteError } = await client
-    .from('inventory_product_options')
-    .delete()
-    .eq('product_id', productId);
-  if (deleteError) throw deleteError;
-
-  for (const [index, option] of options.entries()) {
-    const optionId = option.id.length > 20 ? option.id : crypto.randomUUID();
-    const { error } = await client.from('inventory_product_options').insert({
-      id: optionId,
-      product_id: productId,
+  const { error } = await client.rpc('inventory_replace_product_options', {
+    p_product_id: productId,
+    p_options: options.map((option, index) => ({
+      id: option.id.length > 20 ? option.id : crypto.randomUUID(),
       name: option.name,
       sort_order: index,
-    });
-    if (error) throw error;
-    if (!option.values.length) continue;
-    const { error: valueError } = await client.from('inventory_product_option_values').insert(
-      option.values.map((value, valueIndex) => ({
+      values: option.values.map((value, valueIndex) => ({
         id: value.id.length > 20 ? value.id : crypto.randomUUID(),
-        option_id: optionId,
         value: value.value,
         sort_order: valueIndex,
       })),
-    );
-    if (valueError) throw valueError;
-  }
+    })),
+  });
+  if (error) throw error;
 }
 
 export async function fetchBrands() {

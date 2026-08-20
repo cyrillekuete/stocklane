@@ -27,6 +27,9 @@ import {
   XIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { isRemoteAsset, resolveProductImageSrc } from '@/store-inventory/lib/format';
+import { isSupabaseConfigured } from '@/lib/supabase';
+import { uploadProductImage } from '@/store-inventory/services/inventory';
 import {
   Alert,
   AlertContent,
@@ -46,6 +49,7 @@ interface ImageFile {
   progress: number;
   status: 'uploading' | 'completed' | 'error';
   error?: string;
+  storageUrl?: string;
 }
 
 interface DefaultImage {
@@ -139,14 +143,19 @@ function SortableImageItem({
 }
 
 function filenameFromSrc(src: string) {
+  if (isRemoteAsset(src)) return src;
   const parts = src.split('/');
   return parts[parts.length - 1] || '11.png';
 }
 
 function primaryFilename(images: SortableImage[]) {
-  const firstDefault = images.find((img) => img.id.startsWith('default-')) as DefaultImage | undefined;
-  if (firstDefault) return filenameFromSrc(firstDefault.src);
-  return undefined;
+  const first = images[0];
+  if (!first) return undefined;
+  if (first.id.startsWith('default-')) {
+    return filenameFromSrc((first as DefaultImage).src);
+  }
+  const uploaded = first as ImageFile;
+  return uploaded.storageUrl || uploaded.file.name;
 }
 
 export function ProductFormImageUpload({ 
@@ -162,11 +171,14 @@ export function ProductFormImageUpload({
 }: ImageUploadProps & { mode: 'new' | 'edit' }) {
   const isEditMode = mode === 'edit';
 
-  const imageFromFilename = (filename: string): DefaultImage => ({
-    id: 'default-primary',
-    src: toAbsoluteUrl(`/media/store/client/1200x1200/${filename}`),
-    alt: 'Product image',
-  });
+  const imageFromFilename = (filename: string): DefaultImage => {
+    const resolved = resolveProductImageSrc(filename);
+    return {
+      id: 'default-primary',
+      src: isRemoteAsset(resolved) ? resolved : toAbsoluteUrl(resolved),
+      alt: 'Product image',
+    };
+  };
   
   const [allImages, setAllImages] = useState<SortableImage[]>(
     image ? [imageFromFilename(image)] : isEditMode ? [
@@ -203,6 +215,7 @@ export function ProductFormImageUpload({
     setAllImages((prev) => {
       const current = prev.find((item) => item.id.startsWith('default-')) as DefaultImage | undefined;
       if (current && filenameFromSrc(current.src) === image) return prev;
+      if (current && isRemoteAsset(image) && current.src === image) return prev;
       return [imageFromFilename(image), ...prev.filter((item) => !item.id.startsWith('default-'))];
     });
   }, [image, isEditMode]);
@@ -233,6 +246,42 @@ export function ProductFormImageUpload({
     return null;
   }, [maxSize, maxFiles]);
 
+  const uploadImageFile = useCallback(async (imageFile: ImageFile) => {
+    try {
+      let storageUrl = imageFile.preview;
+      if (isSupabaseConfigured) {
+        storageUrl = await uploadProductImage(imageFile.file);
+      }
+      setAllImages((prev) => {
+        const updatedImages = prev.map((img) =>
+          img.id === imageFile.id
+            ? { ...img, progress: 100, status: 'completed' as const, storageUrl }
+            : img,
+        );
+        const primary = primaryFilename(updatedImages);
+        if (primary) onImageChange?.(primary);
+
+        const uploadedImages = updatedImages.filter((item): item is ImageFile =>
+          !item.id.startsWith('default-'),
+        );
+        if (uploadedImages.every((img) => img.status === 'completed')) {
+          onUploadComplete?.(uploadedImages);
+        }
+        return updatedImages;
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Upload failed';
+      setErrors((prev) => [...prev, `${imageFile.file.name}: ${message}`]);
+      setAllImages((prev) =>
+        prev.map((img) =>
+          img.id === imageFile.id
+            ? { ...img, status: 'error' as const, error: message, progress: 0 }
+            : img,
+        ),
+      );
+    }
+  }, [onImageChange, onUploadComplete]);
+
   const addImages = useCallback(
     (files: FileList | File[]) => {
       setAllImages((prevImages) => {
@@ -250,7 +299,7 @@ export function ProductFormImageUpload({
             id: `${Date.now()}-${Math.random()}`,
             file,
             preview: URL.createObjectURL(file),
-            progress: 0,
+            progress: 30,
             status: 'uploading',
           };
 
@@ -264,15 +313,13 @@ export function ProductFormImageUpload({
         if (newImages.length > 0) {
           const updatedImages = [...prevImages, ...newImages];
           
-          // Notify parent component with only the uploaded images
           const uploadedImages = updatedImages.filter((item): item is ImageFile => 
             !item.id.startsWith('default-')
           );
           onImagesChange?.(uploadedImages);
 
-          // Simulate upload progress
           newImages.forEach((imageFile) => {
-            simulateUpload(imageFile);
+            void uploadImageFile(imageFile);
           });
 
           return updatedImages;
@@ -281,43 +328,8 @@ export function ProductFormImageUpload({
         return prevImages;
       });
     },
-    [validateFile, onImagesChange],
+    [validateFile, onImagesChange, uploadImageFile],
   );
-
-  const simulateUpload = (imageFile: ImageFile) => {
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 20;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
-
-        setAllImages((prev) => {
-          const updatedImages = prev.map((img) =>
-            img.id === imageFile.id
-              ? { ...img, progress: 100, status: 'completed' as const }
-              : img,
-          );
-
-          // Check if all uploads are complete
-          const uploadedImages = updatedImages.filter((item): item is ImageFile => 
-            !item.id.startsWith('default-')
-          );
-          if (uploadedImages.every((img) => img.status === 'completed')) {
-            onUploadComplete?.(uploadedImages);
-          }
-
-          return updatedImages;
-        });
-      } else {
-        setAllImages((prev) =>
-          prev.map((img) =>
-            img.id === imageFile.id ? { ...img, progress } : img,
-          ),
-        );
-      }
-    }, 100);
-  };
 
   const removeImage = useCallback((id: string) => {
     setAllImages((prev) => {

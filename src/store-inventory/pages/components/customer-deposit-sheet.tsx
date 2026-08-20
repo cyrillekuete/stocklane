@@ -53,6 +53,10 @@ export function CustomerDepositSheet({
       toast.error('Select a customer first');
       return;
     }
+    if (customer.deletedAt || customer.status.label.toLowerCase() !== 'active') {
+      toast.error('Only Active customers can receive deposits');
+      return;
+    }
     const value = parseMoney(amount);
     if (!Number.isFinite(value) || value <= 0) {
       toast.error('Enter a deposit amount greater than 0');

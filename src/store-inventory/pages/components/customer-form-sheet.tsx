@@ -5,6 +5,7 @@ import { X, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { isRemoteAsset } from '@/store-inventory/lib/format';
+import { mapCustomerError } from '@/store-inventory/lib/customer-errors';
 import { locationProfile } from '@/store-inventory/data/customer-profile';
 import { useCreateCustomer, useUpdateCustomer } from '@/store-inventory/hooks/use-inventory';
 import type { CustomerListRow } from '@/store-inventory/types';
@@ -343,11 +344,16 @@ export function CustomerFormSheet({
       toast.error('Customer name is required');
       return;
     }
+    const trimmedEmail = email.trim();
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast.error('Enter a valid email address');
+      return;
+    }
     const nextStatus = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Active';
     const locationName = country.name === 'United States' ? 'USA' : country.name;
     const payload = {
       name: fullName.trim(),
-      email,
+      email: trimmedEmail || undefined,
       status: nextStatus,
       image: image ?? undefined,
       phone: phoneNumber ? `${country.dialCode} ${phoneNumber}` : undefined,
@@ -366,7 +372,7 @@ export function CustomerFormSheet({
       toast.success(isNewMode ? 'Customer created' : 'Customer saved');
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to save customer');
+      toast.error(mapCustomerError(error).message);
     }
   };
 

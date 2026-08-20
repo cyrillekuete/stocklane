@@ -65,3 +65,32 @@ export function isRemoteAsset(value?: string | null) {
   if (!value) return false;
   return value.startsWith('data:') || value.startsWith('blob:') || value.startsWith('http://') || value.startsWith('https://');
 }
+
+/** Resolve a product image filename or remote URL for <img src>. */
+export function resolveProductImageSrc(image?: string | null, size = '1200x1200') {
+  if (!image) return `/media/store/client/${size}/11.png`;
+  if (isRemoteAsset(image)) return image;
+  return `/media/store/client/${size}/${image}`;
+}
+
+/** Resolve a category icon filename or remote URL for <img src>. */
+export function resolveCategoryIconSrc(icon?: string | null, theme: 'light' | 'dark' = 'light') {
+  if (!icon) return `/media/store/client/icons/${theme}/running-shoes.svg`;
+  if (isRemoteAsset(icon)) return icon;
+  const file = icon.includes('/') ? (icon.split('/').pop() as string) : icon;
+  return `/media/store/client/icons/${theme}/${file}`;
+}
+
+export function assertNonNegativeMoney(value: number, label = 'Price') {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`${label} cannot be negative`);
+  }
+  return value;
+}
+
+export function assertNonNegativeQty(value: number, label = 'Quantity') {
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`${label} cannot be negative`);
+  }
+  return Math.trunc(value);
+}

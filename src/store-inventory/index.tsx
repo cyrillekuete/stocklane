@@ -1,5 +1,6 @@
 import { lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { RequirePermission } from '@/auth';
 import { DefaultLayout } from './layout';
 
 const Dashboard = lazy(() =>
@@ -59,15 +60,6 @@ const ManageVariantsPage = lazy(() =>
 const CategoryList = lazy(() =>
   import('./pages/category-list/page').then((m) => ({ default: m.CategoryList })),
 );
-const CreateCategoryPage = lazy(() =>
-  import('./pages/create-category/page').then((m) => ({ default: m.CreateCategoryPage })),
-);
-const EditCategoryPage = lazy(() =>
-  import('./pages/edit-category/page').then((m) => ({ default: m.EditCategoryPage })),
-);
-const CategoryDetails = lazy(() =>
-  import('./pages/category-details/page').then((m) => ({ default: m.CategoryDetails })),
-);
 const OrderList = lazy(() =>
   import('./pages/order-list/page').then((m) => ({ default: m.OrderList })),
 );
@@ -89,42 +81,57 @@ const PosRegister = lazy(() =>
 const PosSalesPage = lazy(() =>
   import('./pages/pos-sales/page').then((m) => ({ default: m.PosSalesPage })),
 );
+const UsersPage = lazy(() =>
+  import('./pages/users/page').then((m) => ({ default: m.UsersPage })),
+);
 
 export default function StoreInventoryModule() {
   return (
     <Routes>
       <Route element={<DefaultLayout />}>
-        <Route index element={<Navigate to="dashboard" replace />} />
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="dark-sidebar" element={<Dashboard />} />
-        <Route path="all-stock" element={<AllStock />} />
-        <Route path="current-stock" element={<CurrentStock />} />
-        <Route path="inbound-stock" element={<InboundStock />} />
-        <Route path="outbound-stock" element={<OutboundStock />} />
-        <Route path="stock-planner" element={<StockPlanner />} />
-        <Route path="product-list" element={<ProductList />} />
-        <Route path="product-details" element={<ProductDetailsPage />} />
-        <Route path="create-product" element={<CreateProductPage />} />
-        <Route path="edit-product" element={<EditProductPage />} />
-        <Route path="per-product-stock" element={<PerProductStockPage />} />
-        <Route path="track-shipping" element={<TrackShippingPage />} />
-        <Route path="product-info" element={<ProductInfoPage />} />
-        <Route path="customer-list" element={<CustomerList />} />
-        <Route path="customer-list-details" element={<CustomerListDetails />} />
-        <Route path="settings-modal" element={<SettingsModal />} />
-        <Route path="create-shipping-label" element={<CreateShippingLabelPage />} />
-        <Route path="manage-variants" element={<ManageVariantsPage />} />
-        <Route path="category-list" element={<CategoryList />} />
-        <Route path="create-category" element={<CreateCategoryPage />} />
-        <Route path="edit-category" element={<EditCategoryPage />} />
-        <Route path="category-details" element={<CategoryDetails />} />
-        <Route path="order-list" element={<OrderList />} />
-        <Route path="order-list-products" element={<OrderListProducts />} />
-        <Route path="order-details" element={<OrderDetailsPage />} />
-        <Route path="order-tracking" element={<OrderTrackingPage />} />
-        <Route path="warehouses" element={<WarehouseList />} />
-        <Route path="pos" element={<PosRegister />} />
-        <Route path="pos/sales" element={<PosSalesPage />} />
+        <Route element={<RequirePermission />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="dark-sidebar" element={<Dashboard />} />
+          <Route path="all-stock" element={<AllStock />} />
+          <Route path="current-stock" element={<CurrentStock />} />
+          <Route path="inbound-stock" element={<InboundStock />} />
+          <Route path="outbound-stock" element={<OutboundStock />} />
+          <Route path="stock-planner" element={<StockPlanner />} />
+          <Route path="product-list" element={<ProductList />} />
+          <Route path="product-details" element={<ProductDetailsPage />} />
+          <Route path="create-product" element={<CreateProductPage />} />
+          <Route path="edit-product" element={<EditProductPage />} />
+          <Route path="per-product-stock" element={<PerProductStockPage />} />
+          <Route path="track-shipping" element={<TrackShippingPage />} />
+          <Route path="product-info" element={<ProductInfoPage />} />
+          <Route path="customer-list" element={<CustomerList />} />
+          <Route path="customer-list-details" element={<CustomerListDetails />} />
+          <Route path="settings-modal" element={<SettingsModal />} />
+          <Route path="create-shipping-label" element={<CreateShippingLabelPage />} />
+          <Route path="manage-variants" element={<ManageVariantsPage />} />
+          <Route path="category-list" element={<CategoryList />} />
+          <Route
+            path="create-category"
+            element={<Navigate to="/store-inventory/category-list?sheet=create" replace />}
+          />
+          <Route
+            path="edit-category"
+            element={<Navigate to="/store-inventory/category-list" replace />}
+          />
+          <Route
+            path="category-details"
+            element={<Navigate to="/store-inventory/category-list" replace />}
+          />
+          <Route path="order-list" element={<OrderList />} />
+          <Route path="order-list-products" element={<OrderListProducts />} />
+          <Route path="order-details" element={<OrderDetailsPage />} />
+          <Route path="order-tracking" element={<OrderTrackingPage />} />
+          <Route path="warehouses" element={<WarehouseList />} />
+          <Route path="pos" element={<PosRegister />} />
+          <Route path="pos/sales" element={<PosSalesPage />} />
+          <Route path="users" element={<UsersPage />} />
+        </Route>
       </Route>
     </Routes>
   );

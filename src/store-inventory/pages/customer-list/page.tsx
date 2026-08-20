@@ -8,6 +8,7 @@ import { CustomerListDisplaySheet, CustomerListTable } from '../tables/customer-
 import { useCustomers, useDeleteCustomers } from '@/store-inventory/hooks/use-inventory';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { customerListMockData } from '@/store-inventory/data/customers';
+import { mapCustomerError } from '@/store-inventory/lib/customer-errors';
 import type { CustomerListRow } from '@/store-inventory/types';
 import {
   DropdownMenu,
@@ -82,14 +83,14 @@ export function CustomerList() {
 
   const handleDeleteSelected = () => {
     if (!selectedRows.length) {
-      toast.error('Select customers to delete');
+      toast.error('Select customers to archive');
       return;
     }
     deleteCustomers.mutate(
       selectedRows.map((customer) => customer.id),
       {
-        onSuccess: () => toast.success(`Deleted ${selectedRows.length} customers`),
-        onError: (error) => toast.error(error instanceof Error ? error.message : 'Unable to delete customers'),
+        onSuccess: () => toast.success(`Archived ${selectedRows.length} customers`),
+        onError: (error) => toast.error(mapCustomerError(error).message),
       },
     );
   };
@@ -128,7 +129,7 @@ export function CustomerList() {
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={handleDeleteSelected}>
                 <Trash2 />
-                Delete Selected
+                Archive Selected
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

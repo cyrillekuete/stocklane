@@ -5,6 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import {
+  clampPasswordMinLength,
+  clampSessionTimeout,
+} from "@/store-inventory/lib/settings-validation";
 import { useSettingsForm } from "./settings-form-context";
 
 export function Security() {
@@ -43,8 +47,14 @@ export function Security() {
                 className="basis-2/3"
                 type="number"
                 min={5}
+                max={1440}
                 value={draft.sessionTimeoutMinutes}
-                onChange={(e) => updateDraft({ sessionTimeoutMinutes: Number(e.target.value) || 5 })}
+                onChange={(e) => {
+                  const raw = Number(e.target.value);
+                  updateDraft({
+                    sessionTimeoutMinutes: Number.isFinite(raw) ? clampSessionTimeout(raw) : 5,
+                  });
+                }}
               />
             </div>
 
@@ -77,8 +87,14 @@ export function Security() {
                 className="basis-2/3"
                 type="number"
                 min={6}
+                max={128}
                 value={draft.passwordMinLength}
-                onChange={(e) => updateDraft({ passwordMinLength: Number(e.target.value) || 6 })}
+                onChange={(e) => {
+                  const raw = Number(e.target.value);
+                  updateDraft({
+                    passwordMinLength: Number.isFinite(raw) ? clampPasswordMinLength(raw) : 6,
+                  });
+                }}
               />
             </div>
 

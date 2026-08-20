@@ -14,6 +14,8 @@ import { isSupabaseConfigured } from '@/lib/supabase';
 import { defaultStoreSettings } from '@/store-inventory/data/settings';
 import { useOrders } from '@/store-inventory/hooks/use-inventory';
 import { useStoreSettings, useUpdateStoreSettings } from '@/store-inventory/hooks/use-settings';
+import { mapSettingsError } from '@/store-inventory/lib/settings-errors';
+import { settingsAreEqual } from '@/store-inventory/lib/settings-validation';
 import type { StoreSettings } from '@/store-inventory/types';
 
 type SettingsFormContextValue = {
@@ -37,14 +39,16 @@ export function SettingsFormProvider({ children }: { children: ReactNode }) {
   const ordersQuery = useOrders();
   const saved = settingsQuery.data ?? defaultStoreSettings;
   const [draft, setDraft] = useState<StoreSettings>(saved);
+  const [hydrated, setHydrated] = useState(Boolean(settingsQuery.data));
 
   useEffect(() => {
     if (settingsQuery.data) {
       setDraft(settingsQuery.data);
+      setHydrated(true);
     }
   }, [settingsQuery.data]);
 
-  const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
+  const dirty = hydrated && settingsAreEqual(draft, saved) === false;
 
   const lastOrderLabel = useMemo(() => {
     const latest = ordersQuery.data?.[0]?.date;
@@ -69,7 +73,7 @@ export function SettingsFormProvider({ children }: { children: ReactNode }) {
       setDraft(next);
       toast.success('Settings saved');
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save settings');
+      toast.error(mapSettingsError(error).message);
     }
   }, [draft, updateSettings]);
 
@@ -81,8 +85,8 @@ export function SettingsFormProvider({ children }: { children: ReactNode }) {
     link.download = `${draft.storeCode || 'store'}-settings.json`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success('Settings exported');
-  }, [draft]);
+    toast.success(dirty ? 'Draft settings exported (unsaved changes included)' : 'Settings exported');
+  }, [draft, dirty]);
 
   const value = useMemo<SettingsFormContextValue>(
     () => ({
