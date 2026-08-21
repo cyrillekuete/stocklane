@@ -121,6 +121,7 @@ interface AllStockProps {
   mockData?: IData[];
   isLoading?: boolean;
   isError?: boolean;
+  warehouseId?: string | null;
 }
 
 const mockData: IData[] = allStockMockData;
@@ -129,6 +130,7 @@ const AllStockTable = ({
   mockData: propsMockData,
   isLoading = false,
   isError = false,
+  warehouseId = null,
 }: AllStockProps) => {
   const t = useT();
   const data = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
@@ -272,8 +274,7 @@ const AllStockTable = ({
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [, setSelectedProduct] = useState<IData | undefined>(
+  const [selectedProduct, setSelectedProduct] = useState<IData | undefined>(
     undefined,
   );
 
@@ -945,6 +946,25 @@ const AllStockTable = ({
       <PerProductStockSheet
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
+        data={
+          selectedProduct
+            ? {
+                id: selectedProduct.id,
+                productInfo: selectedProduct.productInfo,
+                stock: selectedProduct.stockFlow.number1,
+                rsvd: 0,
+                tlvl: 0,
+                delta: selectedProduct.delta,
+                sum: selectedProduct.price,
+                lastMoved: selectedProduct.updated,
+                handler: '',
+                trend: { label: 'Steady', variant: 'secondary' },
+                category: selectedProduct.category,
+                price: selectedProduct.price,
+              }
+            : undefined
+        }
+        initialWarehouseId={warehouseId}
       />
 
       <ProductSoftDeleteDialog
