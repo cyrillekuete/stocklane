@@ -238,95 +238,99 @@ export function UsersPage() {
 
   if (!isAdmin) {
     return (
-      <Card>
-        <CardHeader>
-          <CardHeading>User Management</CardHeading>
-        </CardHeader>
-        <div className="p-6 text-sm text-muted-foreground">
-          Only Admins can manage staff users.
-        </div>
-      </Card>
+      <div className="container-fluid">
+        <Card>
+          <CardHeader>
+            <CardHeading>User Management</CardHeading>
+          </CardHeader>
+          <div className="p-6 text-sm text-muted-foreground">
+            Only Admins can manage staff users.
+          </div>
+        </Card>
+      </div>
     );
   }
 
   return (
     <>
-      <DataGrid
-        table={table}
-        recordCount={filtered.length}
-        isLoading={isLoading}
-        tableLayout={{ cellBorder: true, rowBorder: true, headerSticky: true }}
-      >
-        <Card>
-          <CardHeader>
-            <CardHeading className="flex items-center gap-2">
-              <Shield className="size-4" />
-              Users
-            </CardHeading>
-            <CardToolbar>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <div className="relative">
-                  <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    placeholder="Search users"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    className="ps-9 w-56"
-                  />
-                  {query && (
-                    <Button
-                      variant="ghost"
-                      mode="icon"
-                      size="sm"
-                      className="absolute end-1 top-1/2 -translate-y-1/2"
-                      onClick={() => setQuery('')}
-                    >
-                      <X />
-                    </Button>
-                  )}
+      <div className="container-fluid">
+        <DataGrid
+          table={table}
+          recordCount={filtered.length}
+          isLoading={isLoading}
+          tableLayout={{ cellBorder: true, rowBorder: true, headerSticky: true }}
+        >
+          <Card>
+            <CardHeader>
+              <CardHeading className="flex items-center gap-2">
+                <Shield className="size-4" />
+                Users
+              </CardHeading>
+              <CardToolbar>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="relative">
+                    <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      placeholder="Search users"
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      className="ps-9 w-56"
+                    />
+                    {query && (
+                      <Button
+                        variant="ghost"
+                        mode="icon"
+                        size="sm"
+                        className="absolute end-1 top-1/2 -translate-y-1/2"
+                        onClick={() => setQuery('')}
+                      >
+                        <X />
+                      </Button>
+                    )}
+                  </div>
+                  <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All roles</SelectItem>
+                      {APP_ROLES.map((role) => (
+                        <SelectItem key={role} value={role}>
+                          {ROLE_LABELS[role]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    onClick={() => {
+                      setForm({
+                        email: '',
+                        password: '',
+                        firstName: '',
+                        lastName: '',
+                        role: 'cashier',
+                      });
+                      setCreateOpen(true);
+                    }}
+                  >
+                    <Plus />
+                    Add user
+                  </Button>
                 </div>
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All roles</SelectItem>
-                    {APP_ROLES.map((role) => (
-                      <SelectItem key={role} value={role}>
-                        {ROLE_LABELS[role]}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  onClick={() => {
-                    setForm({
-                      email: '',
-                      password: '',
-                      firstName: '',
-                      lastName: '',
-                      role: 'cashier',
-                    });
-                    setCreateOpen(true);
-                  }}
-                >
-                  <Plus />
-                  Add user
-                </Button>
-              </div>
-            </CardToolbar>
-          </CardHeader>
-          <CardTable>
-            <ScrollArea>
-              <DataGridTable />
-              <ScrollBar orientation="horizontal" />
-            </ScrollArea>
-          </CardTable>
-          <CardFooter>
-            <DataGridPagination />
-          </CardFooter>
-        </Card>
-      </DataGrid>
+              </CardToolbar>
+            </CardHeader>
+            <CardTable>
+              <ScrollArea>
+                <DataGridTable />
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
+            </CardTable>
+            <CardFooter>
+              <DataGridPagination />
+            </CardFooter>
+          </Card>
+        </DataGrid>
+      </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>

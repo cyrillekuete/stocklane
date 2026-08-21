@@ -1,0 +1,11 @@
+.git
+.cursor
+.vscode
+*.md
+.env
+.env.*
+!.env.example
+coverage
+agent-transcripts
+scripts
+prisma

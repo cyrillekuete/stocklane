@@ -2,6 +2,10 @@ node_modules
 dist
 .env
 .env.local
+.vercel
 generated
 *.tsbuildinfo
 .DS_Store
+
+.vercel
+.env*
