@@ -551,16 +551,17 @@ model StockMovement {
 }
 
 model Profile {
-  id        String   @id @db.Uuid
-  email     String
-  firstName String?  @map("first_name")
-  lastName  String?  @map("last_name")
-  fullName  String?  @map("full_name")
-  role      String   @default("cashier")
-  status    String   @default("active")
-  avatarUrl String?  @map("avatar_url")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id          String   @id @db.Uuid
+  email       String
+  firstName   String?  @map("first_name")
+  lastName    String?  @map("last_name")
+  fullName    String?  @map("full_name")
+  role        String   @default("cashier")
+  status      String   @default("active")
+  permissions String[] @default([])
+  avatarUrl   String?  @map("avatar_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@index([role])
   @@index([status])

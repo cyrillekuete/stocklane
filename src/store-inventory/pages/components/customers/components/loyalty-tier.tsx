@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Slider, SliderThumb } from "@/components/ui/slider"
 import { Bolt, FolderSymlink, Radar, TrendingUp } from "lucide-react"
 import { toAbsoluteUrl } from "@/lib/helpers"
+import { useT } from '@/i18n/use-t'
 import { Separator } from "@/components/ui/separator" 
 
 const tiers = [
@@ -50,6 +51,7 @@ const stats = [
 ]
 
 export function LoyaltyTier({ points }: { points?: number }) {
+  const t = useT();
   const derivedIndex = tiers.reduce((index, tier, current) => ((points ?? 0) >= tier.points ? current : index), 0)
   const [currentTierIndex, setCurrentTierIndex] = useState(derivedIndex)
   useEffect(() => {
@@ -67,7 +69,7 @@ export function LoyaltyTier({ points }: { points?: number }) {
   return (
     <Card className="bg-accent/50 rounded-md shadow-none h-full"> 
       <CardContent className="p-0 h-full flex flex-col">
-        <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">Loyalty Tier</h3>
+        <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">{t('Loyalty Tier')}</h3>
         <div className="flex flex-col justify-between bg-background rounded-md m-1 mt-0 border border-input py-5 px-3.5 h-full">
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -83,12 +85,12 @@ export function LoyaltyTier({ points }: { points?: number }) {
                   </div>
                 </div>
                 <div className="flex items-end gap-1.5">
-                  <h3 className="text-2xl font-semibold text-foreground leading-6">{currentTier.name}</h3>
-                  <span className="text-xs text-muted-foreground font-normal">Level {currentTierIndex + 1}</span>
+                  <h3 className="text-2xl font-semibold text-foreground leading-6">{t(currentTier.name)}</h3>
+                  <span className="text-xs text-muted-foreground font-normal">{t('Level {n}', { n: currentTierIndex + 1 })}</span>
                 </div>
               </div> 
               <Button variant="outline" size="sm">
-                Review
+                {t('Review')}
               </Button>
             </div>
 
@@ -115,7 +117,7 @@ export function LoyaltyTier({ points }: { points?: number }) {
               <div className="flex justify-between text-sm">
                 {tiers.map((tier, index) => (
                   <span key={tier.name} className={`${index === currentTierIndex ? "font-medium" : "text-muted-foreground"}`}>
-                    {tier.name}
+                    {t(tier.name)}
                   </span>
                 ))}
               </div>
@@ -132,13 +134,13 @@ export function LoyaltyTier({ points }: { points?: number }) {
                     </Card>
                     
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-medium text-foreground text-2sm">{stat.title}</span>
-                      <span className="text-xs text-muted-foreground font-normal">{stat.subtitle}</span>
+                      <span className="font-medium text-foreground text-2sm">{t(stat.title)}</span>
+                      <span className="text-xs text-muted-foreground font-normal">{t(stat.subtitle)}</span>
                     </div>
                   </div>
                   <div className="text-sm font-medium text-foreground">
                     {index === 0 && stat.getValue(currentPoints)}
-                    {index === 1 && stat.getValue(currentPoints, nextGoal)}
+                    {index === 1 && `${currentPoints.toLocaleString()}/${nextGoal ? nextGoal.toLocaleString() : t('Max')}`}
                     {index === 2 && stat.getValue(currentPoints, nextGoal)}
                   </div>
                 </div>

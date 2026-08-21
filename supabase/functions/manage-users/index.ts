@@ -11,6 +11,23 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+  admin: [
+    "dashboard",
+    "inventory",
+    "warehouses",
+    "pos",
+    "products",
+    "categories",
+    "orders",
+    "customers",
+    "settings",
+    "users",
+  ],
+  cashier: ["dashboard", "pos", "orders", "customers"],
+  store_keeper: ["dashboard", "inventory", "warehouses", "products", "categories"],
+};
+
 type Body = {
   action: "create" | "set_password" | "delete";
   email?: string;
@@ -68,12 +85,13 @@ Deno.serve(async (req) => {
       const first = body.first_name ?? "";
       const last = body.last_name ?? "";
       const fullname = `${first} ${last}`.trim();
+      const permissions = ROLE_PERMISSIONS[userRole] ?? ROLE_PERMISSIONS.cashier;
 
       const { data, error } = await admin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
-        app_metadata: { role: userRole },
+        app_metadata: { role: userRole, permissions },
         user_metadata: {
           first_name: first,
           last_name: last,
@@ -90,10 +108,11 @@ Deno.serve(async (req) => {
         full_name: fullname || email.split("@")[0],
         role: userRole,
         status: "active",
+        permissions,
         updated_at: new Date().toISOString(),
       });
 
-      return json({ user: { id: data.user.id, email, role: userRole } });
+      return json({ user: { id: data.user.id, email, role: userRole, permissions } });
     }
 
     if (body.action === "set_password") {

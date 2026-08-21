@@ -1,5 +1,8 @@
+import { useT } from '@/i18n/use-t';
+
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const t = useT();
 
   return (
     <footer className="footer">
@@ -23,7 +26,7 @@ export function Footer() {
               rel="noreferrer"
               className="hover:text-primary"
             >
-              Docs
+              {t('Docs')}
             </a>
             <a
               href="https://devs.keenthemes.com"
@@ -31,7 +34,7 @@ export function Footer() {
               rel="noreferrer"
               className="hover:text-primary"
             >
-              Support
+              {t('Support')}
             </a>
           </nav>
         </div>

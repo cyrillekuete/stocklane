@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import type { AuthModel, UserModel, UserStatus } from '@/auth/lib/models';
-import { normalizeRole, type AppRole } from '@/auth/lib/roles';
+import { normalizeRole, resolveUserPermissions, type AppRole } from '@/auth/lib/roles';
 
 function requireClient() {
   if (!supabase) {
@@ -17,6 +17,7 @@ function mapProfileRow(
     full_name?: string | null;
     role?: string | null;
     status?: string | null;
+    permissions?: unknown;
     avatar_url?: string | null;
   } | null,
 ): UserModel {
@@ -59,6 +60,7 @@ function mapProfileRow(
     language: 'en',
     role,
     status,
+    permissions: resolveUserPermissions(role, profile?.permissions ?? appMeta.permissions),
     is_admin: role === 'admin',
   };
 }
@@ -153,7 +155,7 @@ export const SupabaseAdapter = {
 
     const { data: profile } = await client
       .from('inventory_profiles')
-      .select('first_name, last_name, full_name, role, status, avatar_url')
+      .select('first_name, last_name, full_name, role, status, permissions, avatar_url')
       .eq('id', data.user.id)
       .maybeSingle();
 

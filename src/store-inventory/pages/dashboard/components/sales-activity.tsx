@@ -24,24 +24,26 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useT } from '@/i18n/use-t';
 import { formatMoney } from '@/store-inventory/lib/format';
 
 export function SalesActivity() {
+  const t = useT();
   const performance = [
     {
-      label: 'Deals Closed',
+      label: t('Deals Closed'),
       value: 27,
       trend: 12,
       trendDir: 'up',
     },
     {
-      label: 'Revenue',
+      label: t('Revenue'),
       value: formatMoney(182400),
       trend: 6,
       trendDir: 'up',
     },
     {
-      label: 'Conversion',
+      label: t('Conversion'),
       value: '72%',
       trend: 3,
       trendDir: 'down',
@@ -50,20 +52,20 @@ export function SalesActivity() {
   const pipelineProgress = 76;
   const activity = [
     {
-      text: 'Closed deal with FinSight Inc.',
-      date: 'Today',
+      text: t('Closed deal with FinSight Inc.'),
+      date: t('Today'),
       state: 'secondary',
       color: 'text-green-500',
     },
     {
-      text: '3 new leads added to Pipeline.',
-      date: 'Yesterday',
+      text: t('3 new leads added to Pipeline.'),
+      date: t('Yesterday'),
       state: 'secondary',
       color: 'text-green-500',
     },
     {
-      text: 'Follow-up scheduled.',
-      date: '2 days ago',
+      text: t('Follow-up scheduled.'),
+      date: t('2 days ago'),
       state: 'destructive',
       color: 'text-destructive',
     },
@@ -73,7 +75,7 @@ export function SalesActivity() {
     <Card className="h-full">
       <CardHeader>
         <CardTitle>
-          <span>Staff Performance</span>
+          <span>{t('Staff Performance')}</span>
         </CardTitle>
         <CardToolbar>
           <DropdownMenu>
@@ -85,21 +87,21 @@ export function SalesActivity() {
             <DropdownMenuContent align="end" side="bottom">
               <DropdownMenuItem>
                 <Settings className="mr-2 h-4 w-4" />
-                Settings
+                {t('Settings')}
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <TriangleAlert className="mr-2 h-4 w-4" /> Add Alert
+                <TriangleAlert className="mr-2 h-4 w-4" /> {t('Add Alert')}
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Pin className="mr-2 h-4 w-4" /> Pin to Dashboard
+                <Pin className="mr-2 h-4 w-4" /> {t('Pin to Dashboard')}
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Share2 className="mr-2 h-4 w-4" /> Share
+                <Share2 className="mr-2 h-4 w-4" /> {t('Share')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive">
                 <Trash className="mr-2 h-4 w-4" />
-                Remove
+                {t('Remove')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -108,7 +110,7 @@ export function SalesActivity() {
       <CardContent className="space-y-5">
         {/* Q3 Performance */}
         <div>
-          <div className="font-medium text-sm mb-2.5 text-muted-foreground">Q3 Performance</div>
+          <div className="font-medium text-sm mb-2.5 text-muted-foreground">{t('Q3 Performance')}</div>
           <div className="grid grid-cols-3 gap-2">
             {performance.map((item) => (
               <div className="flex flex-col items-start justify-start" key={item.label}>
@@ -135,7 +137,7 @@ export function SalesActivity() {
         {/* Pipeline Progress */}
         <div>
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-sm font-medium text-foreground">Pipeline Progress</span>
+            <span className="text-sm font-medium text-foreground">{t('Pipeline Progress')}</span>
             <span className="text-xs font-semibold text-foreground">{pipelineProgress}%</span>
           </div>
           <Progress value={pipelineProgress} className="bg-muted" indicatorClassName="bg-blue-500" />
@@ -145,7 +147,7 @@ export function SalesActivity() {
 
         {/* Recent Activity */}
         <div>
-          <div className="font-medium text-sm text-foreground mb-2.5">Recent Activity</div>
+          <div className="font-medium text-sm text-foreground mb-2.5">{t('Recent Activity')}</div>
           <ul className="space-y-2">
             {activity.map((a, i) => (
               <li key={i} className="flex items-center justify-between gap-2.5 text-sm">

@@ -12,6 +12,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { useT } from '@/i18n/use-t';
 import { allOrderListMockData } from '@/store-inventory/data/orders';
 import { useOrders } from '@/store-inventory/hooks/use-inventory';
 import { parseOrderDate } from '@/store-inventory/lib/format';
@@ -30,6 +31,7 @@ function inDateRange(value: string, range?: DateRange) {
 }
 
 export function OrderListProducts() {
+  const t = useT();
   const { data, isLoading, isError } = useOrders();
   const orders = isSupabaseConfigured ? (data ?? []) : (data ?? allOrderListMockData);
   const today = new Date();
@@ -58,9 +60,12 @@ export function OrderListProducts() {
     <div className="container-fluid space-y-5 lg:space-y-9">
       <div className="flex items-center flex-wrap gap-2 justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-bold text-foreground">Order List - Products</h1>
+          <h1 className="text-xl font-bold text-foreground">{t('Order List - Products')}</h1>
           <span className="text-sm text-muted-foreground">
-            {summary.total} orders found. {summary.withItems} include line items.
+            {t('{total} orders found. {withItems} include line items.', {
+              total: summary.total,
+              withItems: summary.withItems,
+            })}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -87,7 +92,7 @@ export function OrderListProducts() {
                     format(dateRange.from, 'MMM dd, yyyy')
                   )
                 ) : (
-                  <span>All dates</span>
+                  <span>{t('All dates')}</span>
                 )}
                 <ChevronDown className="size-4 ml-1" />
               </Button>
@@ -120,7 +125,7 @@ export function OrderListProducts() {
                     }, 100);
                   }}
                 >
-                  Reset
+                  {t('Reset')}
                 </Button>
                 <div className="flex items-center gap-1.5">
                   <Button
@@ -134,7 +139,7 @@ export function OrderListProducts() {
                       }, 100);
                     }}
                   >
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                   <Button
                     onClick={() => {
@@ -146,7 +151,7 @@ export function OrderListProducts() {
                       }, 100);
                     }}
                   >
-                    Apply
+                    {t('Apply')}
                   </Button>
                 </div>
               </div>
@@ -154,7 +159,7 @@ export function OrderListProducts() {
           </Popover>
           <Button variant="mono" onClick={() => setIsCreateOpen(true)}>
             <PlusIcon />
-            New Order
+            {t('New Order')}
           </Button>
         </div>
       </div>

@@ -11,8 +11,16 @@ import {
 } from '@tanstack/react-table';
 import { EllipsisVertical, Plus, Search, Shield, X } from 'lucide-react';
 import { useAuth } from '@/auth';
-import { APP_ROLES, ROLE_LABELS, type AppRole } from '@/auth/lib/roles';
+import {
+  APP_PERMISSIONS,
+  APP_ROLES,
+  PERMISSION_LABELS,
+  ROLE_LABELS,
+  permissionsMatchRole,
+  type AppRole,
+} from '@/auth/lib/roles';
 import type { UserStatus } from '@/auth/lib/models';
+import { useT } from '@/i18n/use-t';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -60,6 +68,14 @@ import {
   useUpdateStaffUser,
 } from '@/store-inventory/hooks/use-users';
 import type { StaffUserRow } from '@/store-inventory/services/users';
+import { UserPermissionsDialog } from './user-permissions-dialog';
+
+function statusLabel(status: UserStatus) {
+  if (status === 'active') return 'Active';
+  if (status === 'invited') return 'Invited';
+  if (status === 'inactive') return 'Inactive';
+  return status;
+}
 
 function statusVariant(status: UserStatus) {
   if (status === 'active') return 'success' as const;
@@ -74,6 +90,7 @@ function roleVariant(role: AppRole) {
 }
 
 export function UsersPage() {
+  const t = useT();
   const { user: currentUser, isAdmin } = useAuth();
   const { data = [], isLoading } = useStaffUsers();
   const createUser = useCreateStaffUser();
@@ -92,6 +109,7 @@ export function UsersPage() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<StaffUserRow | null>(null);
   const [passwordUser, setPasswordUser] = useState<StaffUserRow | null>(null);
+  const [permissionsUser, setPermissionsUser] = useState<StaffUserRow | null>(null);
 
   const [form, setForm] = useState({
     email: '',
@@ -118,10 +136,15 @@ export function UsersPage() {
         row.fullName.toLowerCase().includes(q) ||
         row.firstName.toLowerCase().includes(q) ||
         row.lastName.toLowerCase().includes(q) ||
-        ROLE_LABELS[row.role].toLowerCase().includes(q)
+        ROLE_LABELS[row.role].toLowerCase().includes(q) ||
+        t(ROLE_LABELS[row.role]).toLowerCase().includes(q) ||
+        row.permissions.some((permission) =>
+          PERMISSION_LABELS[permission].toLowerCase().includes(q) ||
+          t(PERMISSION_LABELS[permission]).toLowerCase().includes(q),
+        )
       );
     });
-  }, [data, query, roleFilter]);
+  }, [data, query, roleFilter, t]);
 
   const columns = useMemo<ColumnDef<StaffUserRow>[]>(
     () => [
@@ -144,17 +167,42 @@ export function UsersPage() {
         header: ({ column }) => <DataGridColumnHeader title="Role" column={column} />,
         cell: ({ row }) => (
           <Badge variant={roleVariant(row.original.role)} appearance="light">
-            {ROLE_LABELS[row.original.role]}
+            {t(ROLE_LABELS[row.original.role])}
           </Badge>
         ),
         size: 140,
+      },
+      {
+        id: 'permissions',
+        header: ({ column }) => <DataGridColumnHeader title="Permissions" column={column} />,
+        cell: ({ row }) => {
+          const custom = !permissionsMatchRole(row.original.role, row.original.permissions);
+          return (
+            <button
+              type="button"
+              className="flex flex-col items-start gap-0.5 text-left"
+              onClick={() => setPermissionsUser(row.original)}
+            >
+              <span className="text-sm text-foreground">
+                {t('{count}/{total} modules', {
+                  count: row.original.permissions.length,
+                  total: APP_PERMISSIONS.length,
+                })}
+              </span>
+              <Badge variant={custom ? 'warning' : 'secondary'} appearance="light">
+                {custom ? t('Custom') : t('Role default')}
+              </Badge>
+            </button>
+          );
+        },
+        size: 160,
       },
       {
         accessorKey: 'status',
         header: ({ column }) => <DataGridColumnHeader title="Status" column={column} />,
         cell: ({ row }) => (
           <Badge variant={statusVariant(row.original.status)} appearance="light">
-            {row.original.status}
+            {t(statusLabel(row.original.status))}
           </Badge>
         ),
         size: 120,
@@ -165,7 +213,9 @@ export function UsersPage() {
         cell: ({ row }) => (
           <span className="text-sm text-muted-foreground">
             {row.original.createdAt
-              ? new Date(row.original.createdAt).toLocaleDateString()
+              ? new Date(row.original.createdAt).toLocaleDateString(
+                  document.documentElement.lang || 'en',
+                )
               : '—'}
           </span>
         ),
@@ -196,23 +246,30 @@ export function UsersPage() {
                     });
                   }}
                 >
-                  Edit details
+                  {t('Edit details')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPermissionsUser(item)}>
+                  {t('Manage permissions')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setPasswordUser(item)}>
-                  Reset password
+                  {t('Reset password')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   disabled={isSelf}
                   onClick={() => {
                     if (isSelf) return;
-                    if (window.confirm(`Delete ${item.email}? This cannot be undone.`)) {
+                    if (
+                      window.confirm(
+                        t('Delete {email}? This cannot be undone.', { email: item.email }),
+                      )
+                    ) {
                       deleteUser.mutate(item.id);
                     }
                   }}
                   className="text-destructive"
                 >
-                  Delete user
+                  {t('Delete user')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -221,7 +278,7 @@ export function UsersPage() {
         size: 60,
       },
     ],
-    [currentUser?.id, deleteUser],
+    [currentUser?.id, deleteUser, t],
   );
 
   const table = useReactTable({
@@ -241,10 +298,10 @@ export function UsersPage() {
       <div className="container-fluid">
         <Card>
           <CardHeader>
-            <CardHeading>User Management</CardHeading>
+            <CardHeading>{t('User Management')}</CardHeading>
           </CardHeader>
           <div className="p-6 text-sm text-muted-foreground">
-            Only Admins can manage staff users.
+            {t('Only Admins can manage staff users.')}
           </div>
         </Card>
       </div>
@@ -264,14 +321,14 @@ export function UsersPage() {
             <CardHeader>
               <CardHeading className="flex items-center gap-2">
                 <Shield className="size-4" />
-                Users
+                {t('Users')}
               </CardHeading>
               <CardToolbar>
                 <div className="flex flex-wrap items-center gap-2.5">
                   <div className="relative">
                     <Search className="absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                      placeholder="Search users"
+                      placeholder={t('Search users')}
                       value={query}
                       onChange={(e) => setQuery(e.target.value)}
                       className="ps-9 w-56"
@@ -290,13 +347,13 @@ export function UsersPage() {
                   </div>
                   <Select value={roleFilter} onValueChange={setRoleFilter}>
                     <SelectTrigger className="w-40">
-                      <SelectValue placeholder="Role" />
+                      <SelectValue placeholder={t('Role')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All roles</SelectItem>
+                      <SelectItem value="all">{t('All roles')}</SelectItem>
                       {APP_ROLES.map((role) => (
                         <SelectItem key={role} value={role}>
-                          {ROLE_LABELS[role]}
+                          {t(ROLE_LABELS[role])}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -314,7 +371,7 @@ export function UsersPage() {
                     }}
                   >
                     <Plus />
-                    Add user
+                    {t('Add user')}
                   </Button>
                 </div>
               </CardToolbar>
@@ -335,22 +392,22 @@ export function UsersPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add staff user</DialogTitle>
+            <DialogTitle>{t('Add staff user')}</DialogTitle>
             <DialogDescription>
-              Creates a Supabase Auth user with one of the three store roles.
+              {t('Creates a Supabase Auth user with one of the three store roles.')}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 py-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>First name</Label>
+                <Label>{t('First name')}</Label>
                 <Input
                   value={form.firstName}
                   onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Last name</Label>
+                <Label>{t('Last name')}</Label>
                 <Input
                   value={form.lastName}
                   onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
@@ -358,7 +415,7 @@ export function UsersPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Email</Label>
+              <Label>{t('Email')}</Label>
               <Input
                 type="email"
                 value={form.email}
@@ -366,7 +423,7 @@ export function UsersPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Temporary password</Label>
+              <Label>{t('Temporary password')}</Label>
               <Input
                 type="password"
                 value={form.password}
@@ -374,7 +431,7 @@ export function UsersPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Role</Label>
+              <Label>{t('Role')}</Label>
               <Select
                 value={form.role}
                 onValueChange={(value) => setForm((f) => ({ ...f, role: value as AppRole }))}
@@ -385,7 +442,7 @@ export function UsersPage() {
                 <SelectContent>
                   {APP_ROLES.map((role) => (
                     <SelectItem key={role} value={role}>
-                      {ROLE_LABELS[role]}
+                      {t(ROLE_LABELS[role])}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -394,7 +451,7 @@ export function UsersPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCreateOpen(false)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               disabled={createUser.isPending}
@@ -411,7 +468,7 @@ export function UsersPage() {
                 );
               }}
             >
-              Create user
+              {t('Create user')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -420,20 +477,23 @@ export function UsersPage() {
       <Dialog open={Boolean(editUser)} onOpenChange={(open) => !open && setEditUser(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit user</DialogTitle>
-            <DialogDescription>{editUser?.email}</DialogDescription>
+            <DialogTitle>{t('Edit user')}</DialogTitle>
+            <DialogDescription>
+              {editUser?.email}.{' '}
+              {t("Changing the role resets module permissions to that role's defaults.")}
+            </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3 py-2">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>First name</Label>
+                <Label>{t('First name')}</Label>
                 <Input
                   value={editForm.firstName}
                   onChange={(e) => setEditForm((f) => ({ ...f, firstName: e.target.value }))}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Last name</Label>
+                <Label>{t('Last name')}</Label>
                 <Input
                   value={editForm.lastName}
                   onChange={(e) => setEditForm((f) => ({ ...f, lastName: e.target.value }))}
@@ -441,7 +501,7 @@ export function UsersPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Role</Label>
+              <Label>{t('Role')}</Label>
               <Select
                 value={editForm.role}
                 onValueChange={(value) => setEditForm((f) => ({ ...f, role: value as AppRole }))}
@@ -452,14 +512,14 @@ export function UsersPage() {
                 <SelectContent>
                   {APP_ROLES.map((role) => (
                     <SelectItem key={role} value={role}>
-                      {ROLE_LABELS[role]}
+                      {t(ROLE_LABELS[role])}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Status</Label>
+              <Label>{t('Status')}</Label>
               <Select
                 value={editForm.status}
                 onValueChange={(value) =>
@@ -470,16 +530,16 @@ export function UsersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="invited">Invited</SelectItem>
+                  <SelectItem value="active">{t('Active')}</SelectItem>
+                  <SelectItem value="inactive">{t('Inactive')}</SelectItem>
+                  <SelectItem value="invited">{t('Invited')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditUser(null)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               disabled={!editUser || updateUser.isPending}
@@ -497,7 +557,7 @@ export function UsersPage() {
                 );
               }}
             >
-              Save
+              {t('Save')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -509,11 +569,11 @@ export function UsersPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Reset password</DialogTitle>
+            <DialogTitle>{t('Reset password')}</DialogTitle>
             <DialogDescription>{passwordUser?.email}</DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5 py-2">
-            <Label>New password</Label>
+            <Label>{t('New password')}</Label>
             <Input
               type="password"
               value={newPassword}
@@ -522,7 +582,7 @@ export function UsersPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPasswordUser(null)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               disabled={!passwordUser || setPassword.isPending}
@@ -539,11 +599,15 @@ export function UsersPage() {
                 );
               }}
             >
-              Update password
+              {t('Update password')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <UserPermissionsDialog
+        user={permissionsUser}
+        onClose={() => setPermissionsUser(null)}
+      />
     </>
   );
 }

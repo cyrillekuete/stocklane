@@ -1,3 +1,6 @@
+import { formatDistanceToNow } from 'date-fns';
+import { intlLocale } from '@/i18n/date-locale';
+
 export const throttle = (
   func: (...args: unknown[]) => void,
   limit: number,
@@ -76,28 +79,15 @@ export function toAbsoluteUrl(pathname: string): string {
 }
 
 export function timeAgo(date: Date | string): string {
-  const now = new Date();
   const inputDate = typeof date === 'string' ? new Date(date) : date;
-  const diff = Math.floor((now.getTime() - inputDate.getTime()) / 1000);
-
-  if (diff < 60) return 'just now';
-  if (diff < 3600)
-    return `${Math.floor(diff / 60)} minute${Math.floor(diff / 60) > 1 ? 's' : ''} ago`;
-  if (diff < 86400)
-    return `${Math.floor(diff / 3600)} hour${Math.floor(diff / 3600) > 1 ? 's' : ''} ago`;
-  if (diff < 604800)
-    return `${Math.floor(diff / 86400)} day${Math.floor(diff / 86400) > 1 ? 's' : ''} ago`;
-  if (diff < 2592000)
-    return `${Math.floor(diff / 604800)} week${Math.floor(diff / 604800) > 1 ? 's' : ''} ago`;
-  if (diff < 31536000)
-    return `${Math.floor(diff / 2592000)} month${Math.floor(diff / 2592000) > 1 ? 's' : ''} ago`;
-
-  return `${Math.floor(diff / 31536000)} year${Math.floor(diff / 31536000) > 1 ? 's' : ''} ago`;
+  return formatDistanceToNow(inputDate, { addSuffix: true });
 }
 
 export function formatDate(input: Date | string | number): string {
   const date = new Date(input);
-  return date.toLocaleDateString('en-US', {
+  const locale =
+    typeof document !== 'undefined' ? intlLocale(document.documentElement.lang) : 'en-US';
+  return date.toLocaleDateString(locale, {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -106,12 +96,14 @@ export function formatDate(input: Date | string | number): string {
 
 export function formatDateTime(input: Date | string | number): string {
   const date = new Date(input);
-  return date.toLocaleString('en-US', {
+  const locale =
+    typeof document !== 'undefined' ? intlLocale(document.documentElement.lang) : 'en-US';
+  return date.toLocaleString(locale, {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
     hour: 'numeric',
     minute: 'numeric',
-    hour12: true,
+    hour12: locale.startsWith('en'),
   });
 }

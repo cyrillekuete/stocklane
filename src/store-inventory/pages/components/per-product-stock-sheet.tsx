@@ -27,6 +27,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
+import { useT } from '@/i18n/use-t';
 import { useUpdateStockLevel } from '@/store-inventory/hooks/use-inventory';
 import { useActiveWarehouses } from '@/store-inventory/hooks/use-warehouses';
 
@@ -71,6 +72,7 @@ export function PerProductStockSheet({
   onOpenChange,
   data,
 }: PerProductStockSheetProps) {
+  const t = useT();
   const { data: warehouses } = useActiveWarehouses();
   const updateStockLevel = useUpdateStockLevel();
   const defaultWarehouse = warehouses?.find((row) => row.isDefault) ?? warehouses?.[0];
@@ -101,7 +103,7 @@ export function PerProductStockSheet({
 
   const handleSave = async () => {
     if (!data?.id) {
-      toast.error('Select a product first');
+      toast.error(t('Select a product first'));
       return;
     }
     const qty = Number(stockQty);
@@ -109,19 +111,19 @@ export function PerProductStockSheet({
     const reorder = Number(reorderQty);
     const lead = Number(leadTimeDays);
     if (!Number.isFinite(qty) || qty < 0) {
-      toast.error('Stock quantity cannot be negative');
+      toast.error(t('Stock quantity cannot be negative'));
       return;
     }
     if (data.rsvd > 0 && qty < data.rsvd) {
-      toast.error(`Quantity cannot be below reserved amount (${data.rsvd})`);
+      toast.error(t('Quantity cannot be below reserved amount ({rsvd})', { rsvd: data.rsvd }));
       return;
     }
     if (!Number.isFinite(thresholdQty) || thresholdQty < 0) {
-      toast.error('Threshold cannot be negative');
+      toast.error(t('Threshold cannot be negative'));
       return;
     }
     if (!warehouseId) {
-      toast.error('Select a warehouse before editing quantity');
+      toast.error(t('Select a warehouse before editing quantity'));
       return;
     }
     setSaving(true);
@@ -138,10 +140,10 @@ export function PerProductStockSheet({
           auto_reorder: autoReorder,
         },
       });
-      toast.success('Stock settings saved');
+      toast.success(t('Stock settings saved'));
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to save stock settings');
+      toast.error(error instanceof Error ? t(error.message) : t('Unable to save stock settings'));
     } finally {
       setSaving(false);
     }
@@ -151,7 +153,7 @@ export function PerProductStockSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="gap-0 lg:w-[960px] sm:max-w-none inset-5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
-          <SheetTitle className="font-medium">Per Product Stock</SheetTitle>
+          <SheetTitle className="font-medium">{t('Per Product Stock')}</SheetTitle>
         </SheetHeader>
 
         <SheetBody className="p-0 grow px-1.5">
@@ -164,29 +166,29 @@ export function PerProductStockSheet({
                 <div className="flex flex-col gap-2.5 py-5">
                   <div className="flex flex-col gap-2 mb-1.5">
                     <span className="lg:text-[22px] font-semibold text-foreground">
-                      {data?.productInfo?.title || 'Product Title'}
+                      {data?.productInfo?.title || t('Product Title')}
                     </span>
 
                     <div className="flex items-center flex-wrap gap-1.5 text-2sm">
-                      <span className="font-normal text-muted-foreground">SKU</span>
+                      <span className="font-normal text-muted-foreground">{t('SKU')}</span>
                       <span className="font-medium text-foreground/80">
                         {data?.productInfo?.label || 'SKU'}
                       </span>
                       <BadgeDot className="bg-muted-foreground/60 size-1 mx-1" />
-                      <span className="font-normal text-muted-foreground">Created</span>
+                      <span className="font-normal text-muted-foreground">{t('Created')}</span>
                       <span className="font-medium text-foreground/80">{data?.created || '—'}</span>
                       <BadgeDot className="bg-muted-foreground/60 size-1 mx-1" />
-                      <span className="font-normal text-muted-foreground">Last Updated</span>
+                      <span className="font-normal text-muted-foreground">{t('Last Updated')}</span>
                       <span className="font-medium text-foreground/80">{data?.updated || '—'}</span>
                     </div>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-2.5">
                     <div className="flex flex-col gap-2.5 grow">
-                      <Label className="text-xs">Warehouse</Label>
+                      <Label className="text-xs">{t('Warehouse')}</Label>
                       <Select value={warehouseId} onValueChange={setWarehouseId} indicatorPosition="right">
                         <SelectTrigger>
-                          <SelectValue placeholder="Select warehouse" />
+                          <SelectValue placeholder={t('Select warehouse')} />
                         </SelectTrigger>
                         <SelectContent>
                           {(warehouses ?? []).map((warehouse) => (
@@ -198,7 +200,7 @@ export function PerProductStockSheet({
                       </Select>
                     </div>
                     <div className="flex flex-col gap-2.5 grow">
-                      <Label className="text-xs">Current Stock</Label>
+                      <Label className="text-xs">{t('Current Stock')}</Label>
                       <Input
                         type="number"
                         min={0}
@@ -208,7 +210,10 @@ export function PerProductStockSheet({
                       />
                       {(data?.rsvd ?? 0) > 0 && (
                         <span className="text-xs text-muted-foreground">
-                          Reserved: {data?.rsvd}. Available: {Math.max((data?.stock ?? 0) - (data?.rsvd ?? 0), 0)}.
+                          {t('Reserved: {rsvd}. Available: {available}.', {
+                            rsvd: data?.rsvd ?? 0,
+                            available: Math.max((data?.stock ?? 0) - (data?.rsvd ?? 0), 0),
+                          })}
                         </span>
                       )}
                     </div>
@@ -217,10 +222,10 @@ export function PerProductStockSheet({
 
                 <Card className="rounded-md mb-5">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Inventory Rules</CardTitle>
+                    <CardTitle className="text-2sm">{t('Inventory Rules')}</CardTitle>
                     <div className="flex items-center gap-2.5">
                       <Label htmlFor="auto-update" className="text-xs">
-                        Auto Reorder
+                        {t('Auto Reorder')}
                       </Label>
                       <Switch
                         id="auto-update"
@@ -234,7 +239,7 @@ export function PerProductStockSheet({
                   <CardContent>
                     <div className="grid md:grid-cols-2 lg:gap-5 gap-2 lg:mb-7 mb-5">
                       <div className="flex flex-col gap-2.5">
-                        <Label className="text-xs">Threshold Qty</Label>
+                        <Label className="text-xs">{t('Threshold Qty')}</Label>
                         <Input
                           type="number"
                           min={0}
@@ -243,11 +248,11 @@ export function PerProductStockSheet({
                         />
                       </div>
                       <div className="flex flex-col gap-2.5">
-                        <Label className="text-xs">Reserved</Label>
+                        <Label className="text-xs">{t('Reserved')}</Label>
                         <Input type="number" value={String(data?.rsvd ?? 0)} disabled />
                       </div>
                       <div className="flex flex-col gap-2.5">
-                        <Label className="text-xs">Reorder Qty</Label>
+                        <Label className="text-xs">{t('Reorder Qty')}</Label>
                         <Input
                           type="number"
                           min={0}
@@ -257,7 +262,7 @@ export function PerProductStockSheet({
                       </div>
 
                       <div className="flex flex-col gap-2.5">
-                        <Label className="text-xs">Lead Time</Label>
+                        <Label className="text-xs">{t('Lead Time')}</Label>
                         <InputWrapper>
                           <Input
                             type="number"
@@ -265,23 +270,23 @@ export function PerProductStockSheet({
                             value={leadTimeDays}
                             onChange={(e) => setLeadTimeDays(e.target.value)}
                           />
-                          <span className="text-2sm font-normal text-muted-foreground">days</span>
+                          <span className="text-2sm font-normal text-muted-foreground">{t('days')}</span>
                         </InputWrapper>
                       </div>
                     </div>
 
                     <div className="flex items-center flex-wrap lg:gap-10 gap-5">
                       {[
-                        { label: 'Status', value: (data?.stock ?? 0) > 0 ? 'In Stock' : 'Out of Stock' },
-                        { label: 'Delta', value: data?.delta?.label || '0' },
-                        { label: 'Trend', value: data?.trend?.label || 'Steady' },
-                        { label: 'Last Moved', value: data?.lastMoved || '—' },
-                        { label: 'Updated By', value: data?.handler || '—' },
+                        { label: t('Status'), value: (data?.stock ?? 0) > 0 ? t('In Stock') : t('Out of Stock'), isStatus: true },
+                        { label: t('Delta'), value: data?.delta?.label || '0' },
+                        { label: t('Trend'), value: data?.trend?.label ? t(data.trend.label) : t('Steady') },
+                        { label: t('Last Moved'), value: data?.lastMoved || '—' },
+                        { label: t('Updated By'), value: data?.handler || '—' },
                       ].map((item) => (
                         <div key={item.label} className="flex flex-col gap-1.5">
                           <span className="text-2sm font-normal text-secondary-foreground">{item.label}</span>
                           <span className="text-2sm font-medium text-foreground shrink-0">
-                            {item.label === 'Status' ? (
+                            {item.isStatus ? (
                               <Badge
                                 variant={(data?.stock ?? 0) > 0 ? 'success' : 'destructive'}
                                 appearance="light"
@@ -303,20 +308,20 @@ export function PerProductStockSheet({
               <div className="w-full shrink-0 lg:w-[320px] py-5 lg:ps-5">
                 <div className="mb-3">
                   <Card className="flex items-center justify-center rounded-md bg-accent/50 h-[200px] shadow-none shrink-0">
-                    <img src={resolvedImage} className="cursor-pointer h-[200px] object-contain" alt="image" />
+                    <img src={resolvedImage} className="cursor-pointer h-[200px] object-contain" alt={t('image')} />
                   </Card>
                 </div>
 
                 <h3 className="text-foreground text-md font-semibold mb-1">
-                  {data?.productInfo?.title || 'Product Title'}
+                  {data?.productInfo?.title || t('Product Title')}
                 </h3>
 
                 <div className="flex flex-col gap-3.5 mt-4.5">
                   {[
-                    { label: 'SKU', info: data?.productInfo?.label || '—' },
-                    { label: 'Category', info: data?.category || '—' },
-                    { label: 'Price', info: data?.price || formatMoney(0) },
-                    { label: 'Stock value', info: data?.sum || formatMoney(0) },
+                    { label: t('SKU'), info: data?.productInfo?.label || '—' },
+                    { label: t('Category'), info: data?.category || '—' },
+                    { label: t('Price'), info: data?.price || formatMoney(0) },
+                    { label: t('Stock value'), info: data?.sum || formatMoney(0) },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center lg:gap-6">
                       <span className="basis-1/4 text-secondary-foreground text-2sm font-normal">
@@ -337,10 +342,10 @@ export function PerProductStockSheet({
           <div />
           <div className="flex items-center gap-2.5">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button variant="mono" onClick={handleSave} disabled={saving || !data?.id}>
-              {saving ? 'Saving…' : 'Save'}
+              {saving ? t('Saving…') : t('Save')}
             </Button>
           </div>
         </SheetFooter>

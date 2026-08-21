@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
+import { useT } from '@/i18n/use-t';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -219,6 +220,7 @@ function Alert({
   children,
   ...props
 }: AlertProps) {
+  const t = useT();
   return (
     <div
       data-slot="alert"
@@ -236,7 +238,7 @@ function Alert({
           variant="inverse"
           mode="icon"
           onClick={onClose}
-          aria-label="Dismiss"
+          aria-label={t('Dismiss')}
           data-slot="alert-close"
           className={cn('group shrink-0 size-4')}
         >

@@ -1,6 +1,7 @@
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import {
   invalidateKeys,
   patchListById,
@@ -54,11 +55,12 @@ const posSaleCacheKeys = [
 ];
 
 export function useCompletePosSale() {
+  const t = useT();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: CompletePosSaleInput) => completePosSale(input),
     onError: (error) => {
-      toast.error(formatPosError(error));
+      toast.error(t(formatPosError(error)));
     },
     onSuccess: (sale) => {
       if (sale) {
@@ -72,6 +74,7 @@ export function useCompletePosSale() {
 }
 
 export function useVoidPosSale() {
+  const t = useT();
   const queryClient = useQueryClient();
   const keys = posSaleCacheKeys;
   return useMutation({
@@ -87,7 +90,7 @@ export function useVoidPosSale() {
     },
     onError: (error, _vars, context) => {
       if (context?.previous) restoreQueries(queryClient, context.previous as QuerySnapshot);
-      toast.error(formatPosError(error));
+      toast.error(t(formatPosError(error)));
     },
     onSettled: (_data, _error, vars) => {
       void invalidateKeys(queryClient, ...keys, inventoryKeys.posSale(vars.saleId));

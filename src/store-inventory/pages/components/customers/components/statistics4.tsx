@@ -1,6 +1,7 @@
 'use client';
 
 import { Card, CardContent } from '@/components/ui/card';
+import { useT } from '@/i18n/use-t';
 
 export function Statistics4({
   items = [
@@ -12,6 +13,7 @@ export function Statistics4({
 }: {
   items?: { total: string; label: string }[];
 }) {
+  const t = useT();
   return (
     <Card className="rounded-md mb-5 bg-accent/70 p-1">
       <CardContent className="rounded-md p-0 bg-background border border-border">
@@ -19,7 +21,7 @@ export function Statistics4({
           {items.map((item, index) => (
             <div key={`${item.label}-${index}`} className={`flex flex-col px-4 py-3 ${index > 0 ? 'sm:border-s border-border' : ''}`}>
               <span className="text-2xl font-semibold text-foreground">{item.total}</span>
-              <span className="text-xs font-normal text-secondary-foreground/70">{item.label}</span>
+              <span className="text-xs font-normal text-secondary-foreground/70">{t(item.label)}</span>
             </div>
           ))}
         </div>

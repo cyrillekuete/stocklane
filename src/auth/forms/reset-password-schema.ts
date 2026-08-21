@@ -1,30 +1,30 @@
 import { z } from 'zod';
 
-export const getResetRequestSchema = () => {
+export const getResetRequestSchema = (t: (id: string) => string = (id) => id) => {
   return z.object({
     email: z
       .string()
-      .email({ message: 'Please enter a valid email address.' })
-      .min(1, { message: 'Email is required.' }),
+      .email({ message: t('Please enter a valid email address.') })
+      .min(1, { message: t('Email is required.') }),
   });
 };
 
-export const getNewPasswordSchema = () => {
+export const getNewPasswordSchema = (t: (id: string) => string = (id) => id) => {
   return z
     .object({
       password: z
         .string()
-        .min(6, { message: 'Password must be at least 6 characters.' })
+        .min(6, { message: t('Password must be at least 6 characters.') })
         .regex(/[A-Z]/, {
-          message: 'Password must contain at least one uppercase letter.',
+          message: t('Password must contain at least one uppercase letter.'),
         })
         .regex(/[0-9]/, {
-          message: 'Password must contain at least one number.',
+          message: t('Password must contain at least one number.'),
         }),
-      confirmPassword: z.string().min(1, { message: 'Please confirm your password.' }),
+      confirmPassword: z.string().min(1, { message: t('Please confirm your password.') }),
     })
     .refine((data) => data.password === data.confirmPassword, {
-      message: "Passwords don't match",
+      message: t("Passwords don't match"),
       path: ['confirmPassword'],
     });
 };

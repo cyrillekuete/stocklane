@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/stepper';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { toAbsoluteUrl } from '@/lib/helpers';
+import { useT } from '@/i18n/use-t';
 import {
   allOrderListMockData,
   buildOrderDetail,
@@ -59,6 +60,7 @@ export function TrackShippingSheet({
   orderId,
   order,
 }: TrackShippingSheetProps) {
+  const t = useT();
   const { data: remoteOrder } = useOrder(isSupabaseConfigured ? orderId : undefined);
   const { data: remoteEvents } = useOrderTracking(isSupabaseConfigured ? orderId : undefined);
   const cancelOrderMutation = useCancelOrder();
@@ -80,11 +82,11 @@ export function TrackShippingSheet({
       { id: detail.id, reason: 'Canceled from tracking' },
       {
         onSuccess: () => {
-          toast.success('Order canceled');
+          toast.success(t('Order canceled'));
           onOpenChange(false);
         },
         onError: (error) => {
-          toast.error(error instanceof Error ? error.message : 'Unable to cancel order');
+          toast.error(error instanceof Error ? t(error.message) : t('Unable to cancel order'));
         },
       },
     );
@@ -94,7 +96,7 @@ export function TrackShippingSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:w-[720px] sm:max-w-none inset-3.5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
-          <SheetTitle className="font-medium">Track Shipping</SheetTitle>
+          <SheetTitle className="font-medium">{t('Track Shipping')}</SheetTitle>
         </SheetHeader>
         <SheetBody className="p-0 lg:pt-2">
           <ScrollArea className="h-[calc(100dvh-11.75rem)] px-5 me-1">
@@ -105,22 +107,22 @@ export function TrackShippingSheet({
                     {detail.shipmentNumber}
                   </h3>
                   <Badge size="sm" variant={detail.deliveryStatus.variant as 'success'} appearance="light">
-                    {detail.deliveryStatus.label}
+                    {t(detail.deliveryStatus.label)}
                   </Badge>
                 </div>
                 <div className="flex items-center flex-wrap gap-1.5 text-2sm">
-                  <span className="font-normal text-muted-foreground">Placed</span>
+                  <span className="font-normal text-muted-foreground">{t('Placed')}</span>
                   <span className="font-medium text-foreground/80">{detail.date}</span>
                   <BadgeDot className="bg-muted-foreground/60 size-1 mx-1" />
-                  <span className="font-normal text-muted-foreground">Order ID</span>
+                  <span className="font-normal text-muted-foreground">{t('Order ID')}</span>
                   <Link to="#" className="font-medium text-foreground underline">
                     {detail.order}
                   </Link>
                 </div>
               </div>
               <div className="flex items-center gap-2.5">
-                <Button variant="ghost" onClick={handleCancel}>Cancel Order</Button>
-                <Button variant="outline">Notify Customer</Button>
+                <Button variant="ghost" onClick={handleCancel}>{t('Cancel Order')}</Button>
+                <Button variant="outline">{t('Notify Customer')}</Button>
               </div>
             </div>
 
@@ -183,7 +185,7 @@ export function TrackShippingSheet({
                                 )}
                               </div>
                               <StepperTitle className="font-medium text-secondary-foreground/80 text-2sm">
-                                {step.title}
+                                {t(step.title)}
                               </StepperTitle>
                             </div>
                           </StepperTrigger>
@@ -197,15 +199,15 @@ export function TrackShippingSheet({
 
             <Card className="rounded-md mb-5">
               <CardHeader className="min-h-[34px] bg-accent/50">
-                <CardTitle className="text-2sm">Shipping Data</CardTitle>
+                <CardTitle className="text-2sm">{t('Shipping Data')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid sm:grid-cols-4 gap-5">
                   {[
-                    { label: 'Total Time', value: detail.totalTime },
-                    { label: 'Dep. Time', value: detail.departureTime },
-                    { label: 'Exp. Arrival', value: detail.expectedArrival },
-                    { label: 'Tracking No.', value: detail.trackingNumber },
+                    { label: t('Total Time'), value: detail.totalTime },
+                    { label: t('Dep. Time'), value: detail.departureTime },
+                    { label: t('Exp. Arrival'), value: detail.expectedArrival },
+                    { label: t('Tracking No.'), value: detail.trackingNumber },
                   ].map((item) => (
                     <div key={item.label} className="flex flex-col gap-1.5">
                       <span className="text-2sm font-normal text-muted-foreground">{item.label}</span>
@@ -218,7 +220,7 @@ export function TrackShippingSheet({
 
             <Card className="rounded-md">
               <CardHeader className="min-h-[34px] bg-accent/50">
-                <CardTitle className="text-2sm">Shipping Log</CardTitle>
+                <CardTitle className="text-2sm">{t('Shipping Log')}</CardTitle>
               </CardHeader>
               <CardContent>
                 {events.map((item, index) => (
@@ -234,10 +236,10 @@ export function TrackShippingSheet({
                     </div>
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-2sm font-medium text-foreground">{item.title}</span>
+                        <span className="text-2sm font-medium text-foreground">{t(item.title)}</span>
                         <span className="text-xs text-muted-foreground font-normal">{item.date}</span>
                       </div>
-                      <span className="text-xs font-normal text-muted-foreground">{item.description}</span>
+                      <span className="text-xs font-normal text-muted-foreground">{t(item.description)}</span>
                       {item.location && (
                         <div className="flex items-center gap-1 mt-1">
                           <MapPin className="size-3.5 text-muted-foreground" />
@@ -253,7 +255,7 @@ export function TrackShippingSheet({
         </SheetBody>
         <SheetFooter className="flex items-center not-only-of-type:justify-between border-t py-4 px-5 border-border">
           <Button className="w-full" variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            {t('Close')}
           </Button>
         </SheetFooter>
       </SheetContent>

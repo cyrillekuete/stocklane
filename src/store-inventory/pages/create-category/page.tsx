@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { PlusIcon } from 'lucide-react';
+import { useT } from '@/i18n/use-t';
 import { Button } from '@/components/ui/button';
 import { CategoryFormSheet } from '../components/category-form-sheet';
 import { CategoryListTable } from '../tables/category-list';
 import { useCategories } from '@/store-inventory/hooks/use-inventory';
 
 export function CreateCategoryPage() {
+  const t = useT();
   const [isSheetOpen, setIsSheetOpen] = useState(true);
   const { data } = useCategories();
 
@@ -15,14 +17,14 @@ export function CreateCategoryPage() {
     <div className="container-fluid space-y-5 lg:space-y-9">
       <div className="flex items-center flex-wrap gap-2.5 justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-bold text-foreground">Create Category</h1>
+          <h1 className="text-xl font-bold text-foreground">{t('Create Category')}</h1>
           <span className="text-sm text-muted-foreground">
-            Add new categories to organize your products
+            {t('Add new categories to organize your products')}
           </span>
         </div>
         <Button variant="mono" onClick={() => setIsSheetOpen(true)}>
           <PlusIcon />
-          Add Category
+          {t('Add Category')}
         </Button>
       </div>
 

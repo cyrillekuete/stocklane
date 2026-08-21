@@ -1,5 +1,10 @@
 import { supabase } from '@/lib/supabase';
-import type { AppRole } from '@/auth/lib/roles';
+import {
+  normalizeRole,
+  resolveUserPermissions,
+  type AppPermission,
+  type AppRole,
+} from '@/auth/lib/roles';
 import type { UserStatus } from '@/auth/lib/models';
 
 export type StaffUserRow = {
@@ -10,6 +15,7 @@ export type StaffUserRow = {
   fullName: string;
   role: AppRole;
   status: UserStatus;
+  permissions: AppPermission[];
   avatarUrl: string | null;
   createdAt: string;
   updatedAt: string;
@@ -23,20 +29,30 @@ export type CreateStaffUserInput = {
   lastName?: string;
 };
 
+export type UpdateStaffUserInput = {
+  role?: AppRole;
+  status?: UserStatus;
+  firstName?: string;
+  lastName?: string;
+  permissions?: AppPermission[];
+};
+
 function requireClient() {
   if (!supabase) throw new Error('Supabase is not configured');
   return supabase;
 }
 
 function mapRow(row: Record<string, unknown>): StaffUserRow {
+  const role = (normalizeRole(row.role) ?? 'cashier') as AppRole;
   return {
     id: String(row.id),
     email: String(row.email ?? ''),
     firstName: String(row.first_name ?? ''),
     lastName: String(row.last_name ?? ''),
     fullName: String(row.full_name ?? ''),
-    role: row.role as AppRole,
+    role,
     status: row.status as UserStatus,
+    permissions: resolveUserPermissions(role, row.permissions),
     avatarUrl: (row.avatar_url as string | null) ?? null,
     createdAt: String(row.created_at ?? ''),
     updatedAt: String(row.updated_at ?? ''),
@@ -53,15 +69,7 @@ export async function fetchStaffUsers(): Promise<StaffUserRow[]> {
   return (data ?? []).map((row) => mapRow(row as Record<string, unknown>));
 }
 
-export async function updateStaffUser(
-  id: string,
-  input: {
-    role?: AppRole;
-    status?: UserStatus;
-    firstName?: string;
-    lastName?: string;
-  },
-): Promise<StaffUserRow> {
+export async function updateStaffUser(id: string, input: UpdateStaffUserInput): Promise<StaffUserRow> {
   const client = requireClient();
   const { data, error } = await client.rpc('inventory_admin_update_user', {
     p_user_id: id,
@@ -69,6 +77,7 @@ export async function updateStaffUser(
     p_status: input.status ?? null,
     p_first_name: input.firstName ?? null,
     p_last_name: input.lastName ?? null,
+    p_permissions: input.permissions ?? null,
   });
   if (error) throw new Error(error.message);
   return mapRow(data as Record<string, unknown>);

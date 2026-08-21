@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { useT } from '@/i18n/use-t';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,6 +27,7 @@ export function PosReceiptDialog({
   storeName: string;
   currency: string;
 }) {
+  const t = useT();
   if (!sale) return null;
 
   const warehouseGroups = groupSaleItemsByWarehouse(sale);
@@ -39,7 +41,7 @@ export function PosReceiptDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md print:max-w-none print:shadow-none print:border-0">
         <DialogHeader className="print:hidden">
-          <DialogTitle>Sale {sale.saleNumber}</DialogTitle>
+          <DialogTitle>{t('Sale {saleNumber}', { saleNumber: sale.saleNumber })}</DialogTitle>
         </DialogHeader>
         <DialogBody>
           <div id="pos-receipt" className="space-y-4 text-sm">
@@ -50,16 +52,16 @@ export function PosReceiptDialog({
             </div>
             <div className="border-y border-dashed py-3 space-y-1">
               <div className="flex justify-between">
-                <span>Sale</span>
+                <span>{t('Sale')}</span>
                 <span className="font-medium">{sale.saleNumber}</span>
               </div>
               <div className="flex justify-between">
-                <span>Customer</span>
+                <span>{t('Customer')}</span>
                 <span>{sale.customerName}</span>
               </div>
               <div className="flex justify-between">
-                <span>Payment</span>
-                <span>{formatPaymentMethod(sale.paymentMethod)}</span>
+                <span>{t('Payment')}</span>
+                <span>{t(formatPaymentMethod(sale.paymentMethod))}</span>
               </div>
             </div>
             <div className="space-y-4">
@@ -86,56 +88,58 @@ export function PosReceiptDialog({
             </div>
             <div className="border-t border-dashed pt-3 space-y-1">
               <div className="flex justify-between">
-                <span>Subtotal</span>
+                <span>{t('Subtotal')}</span>
                 <span>{formatMoney(sale.subtotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Discount{sale.discountAmount > 0 ? ' (cart)' : ''}</span>
+                <span>{sale.discountAmount > 0 ? t('Discount (cart)') : t('Discount')}</span>
                 <span>-{formatMoney(sale.discountAmount)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Tax</span>
+                <span>{t('Tax')}</span>
                 <span>{formatMoney(sale.taxAmount)}</span>
               </div>
               <div className="flex justify-between text-base font-semibold">
-                <span>Total ({currency})</span>
+                <span>{t('Total ({currency})', { currency })}</span>
                 <span>{formatMoney(sale.total)}</span>
               </div>
               {sale.paymentMethod === 'cash' && (
                 <>
                   <div className="flex justify-between">
-                    <span>Tendered</span>
+                    <span>{t('Tendered')}</span>
                     <span>{formatMoney(sale.amountTendered)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Change</span>
+                    <span>{t('Change due')}</span>
                     <span>{formatMoney(sale.changeDue)}</span>
                   </div>
                 </>
               )}
               {sale.paymentMethod === 'account' && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Paid from account</span>
+                  <span>{t('Paid from account')}</span>
                   <span>{formatMoney(sale.total)}</span>
                 </div>
               )}
               {sale.paymentMethod === 'credit' && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Bought on credit</span>
+                  <span>{t('Bought on credit')}</span>
                   <span>{formatMoney(sale.total)}</span>
                 </div>
               )}
             </div>
-            {sale.notes && <p className="text-muted-foreground">Note: {sale.notes}</p>}
-            <p className="text-center text-xs text-muted-foreground">Thank you for your purchase</p>
+            {sale.notes && (
+              <p className="text-muted-foreground">{t('Note: {notes}', { notes: sale.notes })}</p>
+            )}
+            <p className="text-center text-xs text-muted-foreground">{t('Thank you for your purchase')}</p>
           </div>
         </DialogBody>
         <DialogFooter className="print:hidden">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
+            {t('Close')}
           </Button>
           <Button variant="mono" onClick={handlePrint}>
-            Print receipt
+            {t('Print receipt')}
           </Button>
         </DialogFooter>
       </DialogContent>

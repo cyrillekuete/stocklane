@@ -5,6 +5,7 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
 import { Dialog as SheetPrimitive } from 'radix-ui';
 import { cn } from '@/lib/utils';
+import { useT } from '@/i18n/use-t';
 
 function Sheet({ ...props }: React.ComponentProps<typeof SheetPrimitive.Root>) {
   return <SheetPrimitive.Root data-slot="sheet" {...props} />;
@@ -78,6 +79,7 @@ function SheetContent({
   children,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & SheetContentProps) {
+  const t = useT();
   return (
     <SheetPortal>
       {overlay && <SheetOverlay />}
@@ -92,7 +94,7 @@ function SheetContent({
             className="cursor-pointer absolute end-5 top-4 rounded-sm opacity-60 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary"
           >
             <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t('Close')}</span>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Content>

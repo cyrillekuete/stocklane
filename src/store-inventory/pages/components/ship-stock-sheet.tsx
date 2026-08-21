@@ -21,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useT } from '@/i18n/use-t';
 import { useCreateOutboundShipment, useProducts } from '@/store-inventory/hooks/use-inventory';
 import { useActiveWarehouses } from '@/store-inventory/hooks/use-warehouses';
 
@@ -31,6 +32,7 @@ export function ShipStockSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   const { data: products } = useProducts();
   const { data: warehouses } = useActiveWarehouses();
   const createOutbound = useCreateOutboundShipment();
@@ -45,7 +47,7 @@ export function ShipStockSheet({
   const handleSave = async () => {
     const quantity = Number(qty);
     if (!productId || !selectedWarehouse || !Number.isFinite(quantity) || quantity < 1) {
-      toast.error('Product, warehouse, and quantity are required');
+      toast.error(t('Product, warehouse, and quantity are required'));
       return;
     }
     try {
@@ -57,13 +59,13 @@ export function ShipStockSheet({
         expectedDelivery: format(new Date(), 'd MMM, yyyy'),
         status: 'Allocated',
       });
-      toast.success('Stock shipped from warehouse');
+      toast.success(t('Stock shipped from warehouse'));
       setProductId('');
       setQty('1');
       setOrderRef('');
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to ship stock');
+      toast.error(error instanceof Error ? t(error.message) : t('Unable to ship stock'));
     }
   };
 
@@ -71,14 +73,14 @@ export function ShipStockSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:w-[420px] inset-5 start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b border-border p-5">
-          <SheetTitle>Ship Stock</SheetTitle>
+          <SheetTitle>{t('Ship Stock')}</SheetTitle>
         </SheetHeader>
         <SheetBody className="p-5 space-y-4">
           <div className="space-y-2">
-            <Label>Product</Label>
+            <Label>{t('Product')}</Label>
             <Select value={productId} onValueChange={setProductId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select product" />
+                <SelectValue placeholder={t('Select product')} />
               </SelectTrigger>
               <SelectContent>
                 {(products ?? []).map((product) => (
@@ -90,10 +92,10 @@ export function ShipStockSheet({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Warehouse</Label>
+            <Label>{t('Warehouse')}</Label>
             <Select value={selectedWarehouse} onValueChange={setWarehouseId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select warehouse" />
+                <SelectValue placeholder={t('Select warehouse')} />
               </SelectTrigger>
               <SelectContent>
                 {(warehouses ?? []).map((warehouse) => (
@@ -105,7 +107,7 @@ export function ShipStockSheet({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Quantity</Label>
+            <Label>{t('Quantity')}</Label>
             <Input
               type="number"
               min={1}
@@ -114,17 +116,17 @@ export function ShipStockSheet({
             />
           </div>
           <div className="space-y-2">
-            <Label>Order reference</Label>
+            <Label>{t('Order reference')}</Label>
             <Input
               value={orderRef}
               onChange={(event) => setOrderRef(event.target.value)}
-              placeholder="Optional"
+              placeholder={t('Optional')}
             />
           </div>
         </SheetBody>
         <SheetFooter className="border-t border-border p-5">
           <Button variant="mono" onClick={handleSave} disabled={createOutbound.isPending}>
-            Ship Stock
+            {t('Ship Stock')}
           </Button>
         </SheetFooter>
       </SheetContent>

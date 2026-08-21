@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { ShoppingCart, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router';
+import { useT } from '@/i18n/use-t';
 import { formatMoney, parseMoney } from '@/store-inventory/lib/format';
 import type { OrderListRow } from '@/store-inventory/types';
 
@@ -17,13 +18,14 @@ export function RecentOrders({
   orders?: OrderListRow[];
   average?: number;
 }) {
+  const t = useT();
   const recent = orders.slice(0, 3);
   const total = recent.reduce((sum, order) => sum + parseMoney(order.total), 0);
 
   return (
     <Card className="bg-accent/70 rounded-md shadow-none">
       <CardContent className="p-0 flex flex-col h-full">
-        <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">Recent Orders</h3>
+        <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">{t('Recent Orders')}</h3>
         <div className="bg-background rounded-md m-1 mt-0 border border-input py-5 px-3.5 flex flex-col justify-between h-full">
           <div className="space-y-6 mb-6">
             <div className="flex items-center gap-2.5">
@@ -41,7 +43,7 @@ export function RecentOrders({
                 <TrendingUp className="w-3 h-3 mr-1" />
                 {average ? Math.min(99, Math.round((total / Math.max(average, 1)) * 10) / 10) : 0}%
               </Badge>
-              <span className="text-xs font-normal text-secondary-foreground/70">vs AOV</span>
+              <span className="text-xs font-normal text-secondary-foreground/70">{t('vs AOV')}</span>
             </div>
             <div className="flex items-center gap-1">
               {recent.length ? (
@@ -52,7 +54,7 @@ export function RecentOrders({
                   </div>
                 ))
               ) : (
-                <span className="text-sm text-muted-foreground">No recent orders</span>
+                <span className="text-sm text-muted-foreground">{t('No recent orders')}</span>
               )}
             </div>
           </div>
@@ -65,7 +67,7 @@ export function RecentOrders({
                       {order.order}
                     </Link>
                     <span className="text-xs text-muted-foreground">
-                      {order.date} · {order.category || 'Order'}
+                      {order.date} · {order.category || t('Order')}
                     </span>
                   </div>
                   <Button variant="outline" size="sm">

@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react';
 import { PlusIcon } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useT } from '@/i18n/use-t';
 import { CategoryListTable } from '../tables/category-list';
 import { useCategories } from '@/store-inventory/hooks/use-inventory';
 
 export function CategoryList() {
+  const t = useT();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
   const { data } = useCategories();
@@ -28,17 +30,19 @@ export function CategoryList() {
     <div className="container-fluid space-y-5 lg:space-y-9">
       <div className="flex items-center justify-between">
         <div className="flex flex-col">
-          <h3 className="text-xl font-semibold text-foreground">Categories</h3>
+          <h3 className="text-xl font-semibold text-foreground">{t('Categories')}</h3>
           <span className="text-sm text-muted-foreground">
             {total === 0
-              ? 'Organize products with categories.'
-              : `${total} ${total === 1 ? 'category' : 'categories'} found. ${activePct}% are active.`}
+              ? t('Organize products with categories.')
+              : total === 1
+                ? t('{count} category found. {pct}% are active.', { count: total, pct: activePct })
+                : t('{count} categories found. {pct}% are active.', { count: total, pct: activePct })}
           </span>
         </div>
 
         <Button variant="mono" onClick={() => setIsCreateCategoryOpen(true)}>
           <PlusIcon />
-          Add Category
+          {t('Add Category')}
         </Button>
       </div>
       <CategoryListTable

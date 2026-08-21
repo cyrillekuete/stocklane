@@ -12,6 +12,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { useT } from '@/i18n/use-t';
 import { allOrderListMockData } from '@/store-inventory/data/orders';
 import { useOrders } from '@/store-inventory/hooks/use-inventory';
 import { parseOrderDate } from '@/store-inventory/lib/format';
@@ -30,6 +31,7 @@ function inDateRange(value: string, range?: DateRange) {
 }
 
 export function OrderList() {
+  const t = useT();
   const { data, isLoading, isError } = useOrders();
   const orders = isSupabaseConfigured ? (data ?? []) : (data ?? allOrderListMockData);
   const today = new Date();
@@ -89,9 +91,12 @@ export function OrderList() {
     <div className="container-fluid space-y-5 lg:space-y-9">
       <div className="flex items-center flex-wrap gap-2 justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-bold text-foreground">Order List</h1>
+          <h1 className="text-xl font-bold text-foreground">{t('Order List')}</h1>
           <span className="text-sm text-muted-foreground">
-            {summary.total} orders found. {summary.attention} orders need your attention.
+            {t('{total} orders found. {attention} orders need your attention.', {
+              total: summary.total,
+              attention: summary.attention,
+            })}
           </span>
         </div>
         <div className="flex items-center gap-3">
@@ -118,7 +123,7 @@ export function OrderList() {
                     format(dateRange.from, 'MMM dd, yyyy')
                   )
                 ) : (
-                  <span>All dates</span>
+                  <span>{t('All dates')}</span>
                 )}
                 <ChevronDown className="size-4 ml-1" />
               </Button>
@@ -139,17 +144,17 @@ export function OrderList() {
                 numberOfMonths={2}
               />
               <div className="flex items-center justify-between border-t border-border p-3">
-                <Button variant="outline" onClick={handleDateRangeReset}>Reset</Button>
+                <Button variant="outline" onClick={handleDateRangeReset}>{t('Reset')}</Button>
                 <div className="flex items-center gap-1.5">
-                  <Button variant="outline" onClick={handleDateRangeCancel}>Cancel</Button>
-                  <Button onClick={handleDateRangeApply}>Apply</Button>
+                  <Button variant="outline" onClick={handleDateRangeCancel}>{t('Cancel')}</Button>
+                  <Button onClick={handleDateRangeApply}>{t('Apply')}</Button>
                 </div>
               </div>
             </PopoverContent>
           </Popover>
           <Button variant="mono" onClick={() => setIsCreateOpen(true)}>
             <PlusIcon />
-            New Order
+            {t('New Order')}
           </Button>
         </div>
       </div>

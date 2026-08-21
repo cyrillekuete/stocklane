@@ -13,6 +13,7 @@ import {
   Settings2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useT } from '@/i18n/use-t';
 import { Button } from '@/components/ui/button';
 import { useDataGrid } from '@/components/ui/data-grid';
 import {
@@ -48,6 +49,8 @@ function DataGridColumnHeader<TData, TValue>({
   visibility = false,
 }: DataGridColumnHeaderProps<TData, TValue>) {
   const { isLoading, table, props, recordCount } = useDataGrid();
+  const t = useT();
+  const headerTitle = title ? t(title) : '';
 
   const moveColumn = (direction: 'left' | 'right') => {
     const currentOrder = [...table.getState().columnOrder]; // Get current column order
@@ -89,7 +92,7 @@ function DataGridColumnHeader<TData, TValue>({
         )}
       >
         {icon && icon}
-        {title}
+        {headerTitle}
       </div>
     );
   };
@@ -115,7 +118,7 @@ function DataGridColumnHeader<TData, TValue>({
         }}
       >
         {icon && icon}
-        {title}
+        {headerTitle}
 
         {column.getCanSort() &&
           (column.getIsSorted() === 'desc' ? (
@@ -137,8 +140,8 @@ function DataGridColumnHeader<TData, TValue>({
         variant="ghost"
         className="-me-1 size-7 rounded-md"
         onClick={() => column.pin(false)}
-        aria-label={`Unpin ${title} column`}
-        title={`Unpin ${title} column`}
+        aria-label={t('Unpin {title} column', { title: headerTitle })}
+        title={t('Unpin {title} column', { title: headerTitle })}
       >
         <PinOff className="size-3.5! opacity-50!" aria-hidden="true" />
       </Button>
@@ -171,7 +174,7 @@ function DataGridColumnHeader<TData, TValue>({
                   disabled={!column.getCanSort()}
                 >
                   <ArrowUp className="size-3.5!" />
-                  <span className="grow">Asc</span>
+                  <span className="grow">{t('Asc')}</span>
                   {column.getIsSorted() === 'asc' && (
                     <Check className="size-4 opacity-100! text-primary" />
                   )}
@@ -187,7 +190,7 @@ function DataGridColumnHeader<TData, TValue>({
                   disabled={!column.getCanSort()}
                 >
                   <ArrowDown className="size-3.5!" />
-                  <span className="grow">Desc</span>
+                  <span className="grow">{t('Desc')}</span>
                   {column.getIsSorted() === 'desc' && (
                     <Check className="size-4 opacity-100! text-primary" />
                   )}
@@ -208,7 +211,7 @@ function DataGridColumnHeader<TData, TValue>({
                   }
                 >
                   <ArrowLeftToLine className="size-3.5!" aria-hidden="true" />
-                  <span className="grow">Pin to left</span>
+                  <span className="grow">{t('Pin to left')}</span>
                   {column.getIsPinned() === 'left' && (
                     <Check className="size-4 opacity-100! text-primary" />
                   )}
@@ -221,7 +224,7 @@ function DataGridColumnHeader<TData, TValue>({
                   }
                 >
                   <ArrowRightToLine className="size-3.5!" aria-hidden="true" />
-                  <span className="grow">Pin to right</span>
+                  <span className="grow">{t('Pin to right')}</span>
                   {column.getIsPinned() === 'right' && (
                     <Check className="size-4 opacity-100! text-primary" />
                   )}
@@ -237,14 +240,14 @@ function DataGridColumnHeader<TData, TValue>({
                   disabled={!canMove('left') || column.getIsPinned() !== false}
                 >
                   <ArrowLeft className="size-3.5!" aria-hidden="true" />
-                  <span>Move to Left</span>
+                  <span>{t('Move to Left')}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => moveColumn('right')}
                   disabled={!canMove('right') || column.getIsPinned() !== false}
                 >
                   <ArrowRight className="size-3.5!" aria-hidden="true" />
-                  <span>Move to Right</span>
+                  <span>{t('Move to Right')}</span>
                 </DropdownMenuItem>
               </>
             )}
@@ -259,7 +262,7 @@ function DataGridColumnHeader<TData, TValue>({
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>
                   <Settings2 className="size-3.5!" />
-                  <span>Columns</span>
+                  <span>{t('Columns')}</span>
                 </DropdownMenuSubTrigger>
                 <DropdownMenuPortal>
                   <DropdownMenuSubContent>
@@ -281,7 +284,9 @@ function DataGridColumnHeader<TData, TValue>({
                             }
                             className="capitalize"
                           >
-                            {col.columnDef.meta?.headerTitle || col.id}
+                            {col.columnDef.meta?.headerTitle
+                              ? t(String(col.columnDef.meta.headerTitle))
+                              : t(col.id)}
                           </DropdownMenuCheckboxItem>
                         );
                       })}

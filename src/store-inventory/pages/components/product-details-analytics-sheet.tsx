@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { SquarePen, TrendingUp } from 'lucide-react';
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { formatMoney, parseMoney, parseQty } from '@/store-inventory/lib/format';
 import { useCurrentStock, useProductVariants } from '@/store-inventory/hooks/use-inventory';
@@ -58,6 +59,7 @@ export function ProductDetailsAnalyticsSheet({
   onManageVariants?: () => void;
   onDelete?: () => void;
 }) {
+  const t = useT();
   const { data: variants = [], isLoading: variantsLoading } = useProductVariants(
     open ? product?.id : undefined,
   );
@@ -95,7 +97,7 @@ export function ProductDetailsAnalyticsSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="gap-0 lg:w-[1080px] sm:max-w-none inset-5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
-          <SheetTitle tabIndex={0} className="focus:outline-none font-medium">Product Details & Analytics</SheetTitle>
+          <SheetTitle tabIndex={0} className="focus:outline-none font-medium">{t('Product Details & Analytics')}</SheetTitle>
         </SheetHeader>
 
         <SheetBody className="p-0 grow">
@@ -103,33 +105,33 @@ export function ProductDetailsAnalyticsSheet({
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2.5">
                 <span className="lg:text-[22px] font-semibold text-foreground leading-none">
-                  {product?.productInfo.title ?? 'Select a product'}
+                  {product?.productInfo.title ?? t('Select a product')}
                 </span>
                 {product && (
                   <Badge size="sm" variant={statusVariant} appearance="light">
-                    {product.status.label}
+                    {t(product.status.label)}
                   </Badge>
                 )}
               </div>
               <div className="flex items-center flex-wrap gap-1.5 text-2sm">
-                <span className="font-normal text-muted-foreground">SKU</span>
+                <span className="font-normal text-muted-foreground">{t('SKU')}</span>
                 <span className="font-medium text-foreground/80">
                   {product?.productInfo.label ?? '—'}
                 </span>
                 <BadgeDot className="bg-muted-foreground/60 size-1 mx-1" />
-                <span className="font-normal text-muted-foreground">Created</span>
+                <span className="font-normal text-muted-foreground">{t('Created')}</span>
                 <span className="font-medium text-foreground/80">{product?.created ?? '—'}</span>
                 <BadgeDot className="bg-muted-foreground/60 size-1 mx-1" />
-                <span className="font-normal text-muted-foreground">Last Updated</span>
+                <span className="font-normal text-muted-foreground">{t('Last Updated')}</span>
                 <span className="font-medium text-foreground/80">{product?.updated ?? '—'}</span>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
               <Button variant="outline" onClick={onDelete} disabled={!product}>
-                Remove
+                {t('Remove')}
               </Button>
               <Button variant="mono" onClick={onEdit} disabled={!product}>
-                Edit Product
+                {t('Edit Product')}
               </Button>
             </div>
           </div>
@@ -141,23 +143,23 @@ export function ProductDetailsAnalyticsSheet({
               <div className="grow lg:border-e border-border lg:pe-5 space-y-5 py-5">
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Inventory</CardTitle>
+                    <CardTitle className="text-2sm">{t('Inventory')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start flex-wrap lg:gap-10 gap-5">
                       {[
-                        { label: 'Status', value: product?.status.label ?? '—' },
-                        { label: 'In Stock', value: String(onHandTotal) },
-                        { label: 'Variants', value: String(variants.length) },
-                        { label: 'Price', value: product?.price ?? formatMoney(0) },
-                        { label: 'Category', value: product?.category || 'Uncategorized' },
+                        { label: t('Status'), value: product?.status.label ? t(product.status.label) : '—' },
+                        { label: t('In Stock'), value: String(onHandTotal) },
+                        { label: t('Variants'), value: String(variants.length) },
+                        { label: t('Price'), value: product?.price ?? formatMoney(0) },
+                        { label: t('Category'), value: product?.category ? product.category : t('Uncategorized') },
                       ].map((item) => (
                         <div key={item.label} className="flex flex-col gap-1.5">
                           <span className="text-2sm font-normal text-secondary-foreground">
                             {item.label}
                           </span>
                           <span className="text-2sm font-medium text-foreground">
-                            {item.label === 'Status' ? (
+                            {item.label === t('Status') ? (
                               <Badge variant={statusVariant} appearance="light">
                                 {item.value}
                               </Badge>
@@ -173,12 +175,12 @@ export function ProductDetailsAnalyticsSheet({
 
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Trends</CardTitle>
+                    <CardTitle className="text-2sm">{t('Trends')}</CardTitle>
                   </CardHeader>
                   <CardContent className="grid grid-cols-2 gap-5 lg:gap-7.5 pt-4 pb-5">
                     <div className="space-y-1">
                       <div className="text-2sm font-normal text-secondary-foreground">
-                        Price by variant
+                        {t('Price by variant')}
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-lg font-semibold text-foreground">
@@ -186,7 +188,7 @@ export function ProductDetailsAnalyticsSheet({
                         </span>
                         <Badge size="xs" variant="success" appearance="light">
                           <TrendingUp />
-                          sample
+                          {t('sample')}
                         </Badge>
                       </div>
                       <div className="relative">
@@ -231,13 +233,13 @@ export function ProductDetailsAnalyticsSheet({
 
                     <div className="space-y-1">
                       <div className="text-2sm font-normal text-secondary-foreground">
-                        On-hand by variant
+                        {t('On-hand by variant')}
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-lg font-semibold text-foreground">{onHandTotal}</span>
                         <Badge size="xs" variant="success" appearance="light">
                           <TrendingUp />
-                          units
+                          {t('units')}
                         </Badge>
                       </div>
                       <div className="relative">
@@ -284,10 +286,10 @@ export function ProductDetailsAnalyticsSheet({
 
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Variants</CardTitle>
+                    <CardTitle className="text-2sm">{t('Variants')}</CardTitle>
                     <CardToolbar>
                       <Button mode="link" className="text-primary" onClick={onManageVariants} disabled={!product}>
-                        Manage Variants
+                        {t('Manage Variants')}
                       </Button>
                     </CardToolbar>
                   </CardHeader>
@@ -296,11 +298,11 @@ export function ProductDetailsAnalyticsSheet({
                     <Table className="overflow-x-auto">
                       <TableHeader>
                         <TableRow className="text-secondary-foreground font-normal text-2sm">
-                          <TableHead className="w-[100px] h-8.5 border-e border-border ps-5">Size</TableHead>
-                          <TableHead className="w-[100px] h-8.5 border-e border-border">Color</TableHead>
-                          <TableHead className="w-[100px] h-8.5 border-e border-border">Price</TableHead>
-                          <TableHead className="w-[100px] h-8.5 border-e border-border">Available</TableHead>
-                          <TableHead className="w-[100px] h-8.5 border-e border-border">On Hand</TableHead>
+                          <TableHead className="w-[100px] h-8.5 border-e border-border ps-5">{t('Size')}</TableHead>
+                          <TableHead className="w-[100px] h-8.5 border-e border-border">{t('Color')}</TableHead>
+                          <TableHead className="w-[100px] h-8.5 border-e border-border">{t('Price')}</TableHead>
+                          <TableHead className="w-[100px] h-8.5 border-e border-border">{t('Available')}</TableHead>
+                          <TableHead className="w-[100px] h-8.5 border-e border-border">{t('On Hand')}</TableHead>
                           <TableHead className="w-[50px] h-8.5"></TableHead>
                         </TableRow>
                       </TableHeader>
@@ -308,13 +310,13 @@ export function ProductDetailsAnalyticsSheet({
                         {variantsLoading ? (
                           <TableRow>
                             <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
-                              Loading variants...
+                              {t('Loading variants...')}
                             </TableCell>
                           </TableRow>
                         ) : variants.length === 0 ? (
                           <TableRow>
                             <TableCell colSpan={6} className="py-6 text-center text-muted-foreground">
-                              No variants yet
+                              {t('No variants yet')}
                             </TableCell>
                           </TableRow>
                         ) : (
@@ -326,11 +328,11 @@ export function ProductDetailsAnalyticsSheet({
                               <TableCell className="py-1 border-e border-border ps-5">
                                 EU {variant.size}
                               </TableCell>
-                              <TableCell className="py-1 border-e border-border">{variant.color}</TableCell>
+                              <TableCell className="py-1 border-e border-border">{t(variant.color)}</TableCell>
                               <TableCell className="py-1 border-e border-border">
                                 {formatMoney(variant.price)}
                               </TableCell>
-                              <TableCell className="py-1 border-e border-border">{variant.available}</TableCell>
+                              <TableCell className="py-1 border-e border-border">{t(variant.available)}</TableCell>
                               <TableCell className="py-1 border-e border-border">{variant.onHand}</TableCell>
                               <TableCell className="text-center py-1">
                                 <Button variant="ghost" mode="icon" size="sm" onClick={onEdit}>
@@ -357,36 +359,36 @@ export function ProductDetailsAnalyticsSheet({
                   </Card>
                 </div>
                 <p className="text-2sm font-normal text-secondary-foreground leading-5 mb-5">
-                  {product?.description || product?.productInfo.tooltip || 'No description yet.'}
+                  {product?.description || product?.productInfo.tooltip || t('No description yet.')}
                 </p>
 
                 <div className="space-y-3">
                   <div className="flex items-center lg:gap-13 gap-5">
-                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">Category</div>
+                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">{t('Category')}</div>
                     <div className="text-2sm text-secondary-foreground font-medium">
-                      {product?.category || 'Uncategorized'}
+                      {product?.category || t('Uncategorized')}
                     </div>
                   </div>
                   <div className="flex items-center lg:gap-13 gap-5">
-                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">Barcode</div>
+                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">{t('Barcode')}</div>
                     <div className="text-2sm text-secondary-foreground font-medium">
                       {product?.barcode || '—'}
                     </div>
                   </div>
                   <div className="flex items-center lg:gap-13 gap-5">
-                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">Colors</div>
+                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">{t('Colors')}</div>
                     <div className="text-2sm text-secondary-foreground font-medium">
-                      {uniqueColors.length ? uniqueColors.join(', ') : '—'}
+                      {uniqueColors.length ? uniqueColors.map((color) => t(color)).join(', ') : '—'}
                     </div>
                   </div>
                   <div className="flex items-center lg:gap-13 gap-5">
-                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">Sizes</div>
+                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">{t('Sizes')}</div>
                     <div className="text-2sm text-secondary-foreground font-medium">
                       {uniqueSizes.length ? uniqueSizes.join(', ') : '—'}
                     </div>
                   </div>
                   <div className="flex items-center lg:gap-13 gap-5">
-                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">Tags</div>
+                    <div className="text-2sm text-secondary-foreground font-normal min-w-[60px]">{t('Tags')}</div>
                     <div className="flex flex-wrap gap-1.5">
                       {(product?.tags ?? []).length ? (
                         product?.tags?.map((tag) => (
@@ -407,10 +409,10 @@ export function ProductDetailsAnalyticsSheet({
 
         <SheetFooter className="flex-row border-t pb-4 p-5 border-border gap-2.5 lg:gap-0">
           <Button variant="outline" onClick={onDelete} disabled={!product}>
-            Remove
+            {t('Remove')}
           </Button>
           <Button variant="mono" onClick={onEdit} disabled={!product}>
-            Edit Product
+            {t('Edit Product')}
           </Button>
         </SheetFooter>
       </SheetContent>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Plus, Upload, ChevronDown, BarChart3, User, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { Button } from '@/components/ui/button';
 import { CustomerListDisplaySheet, CustomerListTable } from '../tables/customer-list';
 import { useCustomers, useDeleteCustomers } from '@/store-inventory/hooks/use-inventory';
@@ -21,6 +22,7 @@ import {
 const EMPTY_CUSTOMERS: CustomerListRow[] = [];
 
 export function CustomerList() {
+  const t = useT();
   const [displaySheet, setDisplaySheet] = useState<CustomerListDisplaySheet | undefined>(undefined);
   const [shouldOpenSheet, setShouldOpenSheet] = useState(false);
   const [selectedRows, setSelectedRows] = useState<CustomerListRow[]>([]);
@@ -43,7 +45,7 @@ export function CustomerList() {
 
   const handleViewProfile = () => {
     if (!selectedRows[0]) {
-      toast.error('Select a customer to view their profile');
+      toast.error(t('Select a customer to view their profile'));
       return;
     }
     setProfileId(selectedRows[0].id);
@@ -53,10 +55,19 @@ export function CustomerList() {
   const handleExport = () => {
     const rows = selectedRows.length ? selectedRows : customers;
     if (!rows.length) {
-      toast.error('No customers to export');
+      toast.error(t('No customers to export'));
       return;
     }
-    const header = ['User ID', 'Name', 'Email', 'Country', 'Orders', 'Total Spent', 'Avg Spent', 'Status'];
+    const header = [
+      t('User ID'),
+      t('Name'),
+      t('Email'),
+      t('Country'),
+      t('Orders'),
+      t('Total Spent'),
+      t('Avg Spent'),
+      t('Status'),
+    ];
     const lines = rows.map((customer) =>
       [
         customer.user,
@@ -78,19 +89,19 @@ export function CustomerList() {
     link.download = 'customers.csv';
     link.click();
     URL.revokeObjectURL(url);
-    toast.success(`Exported ${rows.length} customers`);
+    toast.success(t('Exported {count} customers', { count: rows.length }));
   };
 
   const handleDeleteSelected = () => {
     if (!selectedRows.length) {
-      toast.error('Select customers to archive');
+      toast.error(t('Select customers to archive'));
       return;
     }
     deleteCustomers.mutate(
       selectedRows.map((customer) => customer.id),
       {
-        onSuccess: () => toast.success(`Archived ${selectedRows.length} customers`),
-        onError: (error) => toast.error(mapCustomerError(error).message),
+        onSuccess: () => toast.success(t('Archived {count} customers', { count: selectedRows.length })),
+        onError: (error) => toast.error(t(mapCustomerError(error).message)),
       },
     );
   };
@@ -99,42 +110,44 @@ export function CustomerList() {
     <div className="container-fluid space-y-5 lg:space-y-9">
       <div className="flex items-center flex-wrap gap-2 justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-bold text-foreground">Customer List</h1>
+          <h1 className="text-xl font-bold text-foreground">{t('Customer List')}</h1>
           <span className="text-sm text-muted-foreground">
-            {summary.total} {summary.total === 1 ? 'customer' : 'customers'} found. {summary.activePct}% are active
+            {summary.total === 1
+              ? t('{count} customer found. {pct}% are active', { count: summary.total, pct: summary.activePct })
+              : t('{count} customers found. {pct}% are active', { count: summary.total, pct: summary.activePct })}
           </span>
         </div>
 
         <div className="flex items-center gap-3">
           <Button variant="outline" className="gap-2 shrink-0" onClick={handleExport}>
             <Upload className="h-4 w-4" />
-            Export
+            {t('Export')}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="w-[130px] justify-between">
-                More Actions
+                {t('More Actions')}
                 <ChevronDown className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleViewProfile}>
                 <BarChart3 />
-                Customer Tracking
+                {t('Customer Tracking')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleViewProfile}>
                 <User />
-                View Customer Profile
+                {t('View Customer Profile')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={handleDeleteSelected}>
                 <Trash2 />
-                Archive Selected
+                {t('Archive Selected')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button variant="mono" onClick={() => openSheet('createCustomer')}>
-            <Plus /> New
+            <Plus /> {t('New')}
           </Button>
         </div>
       </div>

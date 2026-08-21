@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Eye, Search, Undo2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +49,7 @@ import {
 import { PosReceiptDialog } from '../components/pos-receipt-dialog';
 
 export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
+  const t = useT();
   const data = mockData ?? [];
   const voidSale = useVoidPosSale();
   const settings = useStoreSettings();
@@ -109,7 +111,7 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
         id: 'paymentMethod',
         accessorFn: (row) => row.paymentMethod,
         header: ({ column }) => <DataGridColumnHeader title="Payment" column={column} />,
-        cell: ({ row }) => formatPaymentMethod(row.original.paymentMethod),
+        cell: ({ row }) => t(formatPaymentMethod(row.original.paymentMethod)),
         size: 150,
       },
       {
@@ -121,7 +123,7 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
             variant={(row.original.status === 'completed' ? 'success' : 'destructive') as BadgeProps['variant']}
             appearance="light"
           >
-            {row.original.status}
+            {t(row.original.status)}
           </Badge>
         ),
         size: 100,
@@ -154,8 +156,8 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
                   disabled={!canVoid || voidSale.isPending}
                   title={
                     canVoid
-                      ? 'Void sale'
-                      : `Sales older than ${POS_VOID_MAX_AGE_DAYS} days cannot be voided`
+                      ? t('Void sale')
+                      : t('Sales older than {days} days cannot be voided', { days: POS_VOID_MAX_AGE_DAYS })
                   }
                   onClick={() => {
                     setVoidTarget(sale);
@@ -171,7 +173,7 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
         size: 90,
       },
     ],
-    [voidSale.isPending],
+    [voidSale.isPending, t],
   );
 
   const table = useReactTable({
@@ -192,11 +194,11 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
       { saleId: voidTarget.id, reason: reason || undefined },
       {
         onSuccess: () => {
-          toast.success('Sale voided and stock restored');
+          toast.success(t('Sale voided and stock restored'));
           setVoidTarget(null);
           setVoidReason('');
         },
-        onError: (error) => toast.error(formatPosError(error)),
+        onError: (error) => toast.error(t(formatPosError(error))),
       },
     );
   };
@@ -210,7 +212,7 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
               <div className="w-full max-w-[240px]">
                 <InputWrapper>
                   <Search />
-                  <Input placeholder="Search sales..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                  <Input placeholder={t('Search sales...')} value={search} onChange={(e) => setSearch(e.target.value)} />
                 </InputWrapper>
               </div>
             </CardHeading>
@@ -230,7 +232,7 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
         open={receiptOpen}
         onOpenChange={setReceiptOpen}
         sale={selected}
-        storeName={settings.data?.storeName ?? 'Store'}
+        storeName={settings.data?.storeName ?? t('Store')}
         currency={settings.data?.currency ?? APP_CURRENCY}
       />
       <AlertDialog
@@ -244,28 +246,33 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Void sale {voidTarget?.saleNumber}?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('Void sale {saleNumber}?', { saleNumber: voidTarget?.saleNumber ?? '' })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This restores warehouse stock
               {voidTarget && (voidTarget.paymentMethod === 'account' || voidTarget.paymentMethod === 'credit')
-                ? ' and reverses the customer account charge'
-                : ''}
-              . Total {voidTarget ? formatMoney(voidTarget.total) : ''}. Voids are limited to{' '}
-              {POS_VOID_MAX_AGE_DAYS} days.
+                ? t(
+                    'This restores warehouse stock and reverses the customer account charge. Total {total}. Voids are limited to {days} days.',
+                    { total: formatMoney(voidTarget.total), days: POS_VOID_MAX_AGE_DAYS },
+                  )
+                : t('This restores warehouse stock. Total {total}. Voids are limited to {days} days.', {
+                    total: voidTarget ? formatMoney(voidTarget.total) : '',
+                    days: POS_VOID_MAX_AGE_DAYS,
+                  })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2 px-1">
-            <Label htmlFor="void-reason">Reason (optional)</Label>
+            <Label htmlFor="void-reason">{t('Reason (optional)')}</Label>
             <Textarea
               id="void-reason"
               value={voidReason}
               onChange={(e) => setVoidReason(e.target.value)}
               rows={2}
-              placeholder="Wrong items, customer cancelled, …"
+              placeholder={t('Wrong items, customer cancelled, …')}
             />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={voidSale.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={voidSale.isPending}>{t('Cancel')}</AlertDialogCancel>
             <AlertDialogAction
               variant="destructive"
               onClick={(event) => {
@@ -274,7 +281,7 @@ export function PosSalesTable({ mockData }: { mockData?: PosSaleRow[] }) {
               }}
               disabled={voidSale.isPending}
             >
-              Void sale
+              {t('Void sale')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Check, LoaderCircleIcon, MoveLeft } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
+import { useT } from '@/i18n/use-t';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,13 +22,14 @@ import {
 } from '../forms/reset-password-schema';
 
 export function ResetPasswordPage() {
+  const t = useT();
   const { requestPasswordReset } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [successEmail, setSuccessEmail] = useState<string | null>(null);
 
   const form = useForm<ResetRequestSchemaType>({
-    resolver: zodResolver(getResetRequestSchema()),
+    resolver: zodResolver(getResetRequestSchema(t)),
     defaultValues: { email: '' },
   });
 
@@ -36,9 +38,7 @@ export function ResetPasswordPage() {
       setIsProcessing(true);
       setError(null);
       await requestPasswordReset(values.email);
-      setSuccessMessage(
-        `Password reset link sent to ${values.email}. Check your inbox and spam folder.`,
-      );
+      setSuccessEmail(values.email);
       form.reset();
     } catch (err) {
       setError(
@@ -56,9 +56,9 @@ export function ResetPasswordPage() {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <div className="text-center space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight">Reset Password</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{t('Reset Password')}</h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email to receive a password reset link
+              {t('Enter your email to receive a password reset link')}
             </p>
           </div>
 
@@ -67,16 +67,20 @@ export function ResetPasswordPage() {
               <AlertIcon>
                 <AlertCircle className="h-4 w-4" />
               </AlertIcon>
-              <AlertTitle>{error}</AlertTitle>
+              <AlertTitle>{t(error)}</AlertTitle>
             </Alert>
           )}
 
-          {successMessage && (
+          {successEmail && (
             <Alert>
               <AlertIcon>
                 <Check className="h-4 w-4" />
               </AlertIcon>
-              <AlertTitle>{successMessage}</AlertTitle>
+              <AlertTitle>
+                {t('Password reset link sent to {email}. Check your inbox and spam folder.', {
+                  email: successEmail,
+                })}
+              </AlertTitle>
             </Alert>
           )}
 
@@ -85,9 +89,9 @@ export function ResetPasswordPage() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email</FormLabel>
+                <FormLabel>{t('Email')}</FormLabel>
                 <FormControl>
-                  <Input placeholder="Your email" autoComplete="email" {...field} />
+                  <Input placeholder={t('Your email')} autoComplete="email" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -97,10 +101,10 @@ export function ResetPasswordPage() {
           <Button type="submit" className="w-full" disabled={isProcessing}>
             {isProcessing ? (
               <span className="flex items-center gap-2">
-                <LoaderCircleIcon className="h-4 w-4 animate-spin" /> Sending...
+                <LoaderCircleIcon className="h-4 w-4 animate-spin" /> {t('Sending...')}
               </span>
             ) : (
-              'Send Reset Link'
+              t('Send Reset Link')
             )}
           </Button>
 
@@ -110,7 +114,7 @@ export function ResetPasswordPage() {
               className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary"
             >
               <MoveLeft className="size-4" />
-              Back to Sign In
+              {t('Back to Sign In')}
             </Link>
           </div>
         </form>

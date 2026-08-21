@@ -26,6 +26,7 @@ import {
 import { DateRange } from 'react-day-picker';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
@@ -142,6 +143,7 @@ interface MappedStockData {
 const mockData: IData[] = inboundStockMockData;
 
 const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
+  const t = useT();
   const data = propsMockData || mockData;
   const deleteInbound = useDeleteInboundShipment();
   const [pagination, setPagination] = useState<PaginationState>({
@@ -379,7 +381,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
   }: IColumnFilterProps<TData, TValue>) => {
     return (
       <Input
-        placeholder="Filter..."
+        placeholder={t('Filter...')}
         value={(column.getFilterValue() as string) ?? ''}
         onChange={(event) => column.setFilterValue(event.target.value)}
         variant="sm"
@@ -449,7 +451,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
               )}
 
               <span className="text-xs text-muted-foreground uppercase">
-                sku:{' '}
+                {t('sku:')}{' '}
                 <span className="text-xs font-medium text-secondary-foreground">
                   {productInfo.label}
                 </span>
@@ -519,7 +521,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
           const variant = status.variant as keyof BadgeProps['variant'];
           return (
             <Badge variant={variant} appearance="light">
-              {status.label}
+              {t(status.label)}
             </Badge>
           );
         },
@@ -558,7 +560,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
                   `/media/brand-logos/${info.row.original.supplier.logo}`,
                 )}
                 className="h-6 rounded-full"
-                alt="image"
+                alt={t('image')}
               />
               <span className="leading-none text-secondary-foreground">
                 {info.row.original.supplier.name}
@@ -611,7 +613,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
                 variant="outline"
                 onClick={() => handleShowClick(info.row.original)}
               >
-                Show
+                {t('Show')}
               </Button>
             </div>
           </>
@@ -630,20 +632,20 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('Actions')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Settings />
-                Settings
+                {t('Settings')}
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Pencil />
-                Edit
+                {t('Edit')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={() => deleteInbound.mutate(row.original.id)}>
                 <Trash />
-                Delete
+                {t('Delete')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -651,7 +653,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
         size: 60,
       },
     ],
-    [],
+    [t, deleteInbound],
   );
 
   useEffect(() => {
@@ -659,18 +661,18 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
 
     if (selectedRowIds.length > 0) {
       toast.custom(
-        (t) => (
+        (toastId) => (
           <Alert
             variant="mono"
             icon="success"
             close={true}
-            onClose={() => toast.dismiss(t)}
+            onClose={() => toast.dismiss(toastId)}
           >
             <AlertIcon>
               <Info />
             </AlertIcon>
             <AlertTitle>
-              Selected row IDs: {selectedRowIds.join(', ')}
+              {t('Selected row IDs: {ids}', { ids: selectedRowIds.join(', ') })}
             </AlertTitle>
           </Alert>
         ),
@@ -679,7 +681,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
         },
       );
     }
-  }, [rowSelection]);
+  }, [rowSelection, t]);
 
   const table = useReactTable({
     data: filteredData,
@@ -717,7 +719,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
                 <InputWrapper>
                   <Search />
                   <Input
-                    placeholder="Search..."
+                    placeholder={t('Search...')}
                     ref={inputRef}
                     value={inputValue}
                     onChange={(e) => {
@@ -765,7 +767,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
                         format(dateRange.from, 'MMM dd, yyyy')
                       )
                     ) : (
-                      <span>Pick date range</span>
+                      <span>{t('Pick date range')}</span>
                     )}
                     <ChevronDown className="size-4 ml-1" />
                   </Button>
@@ -782,13 +784,13 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
                   />
                   <div className="flex items-center justify-between border-t border-border p-3">
                     <Button variant="outline" onClick={handleDateRangeReset}>
-                      Reset
+                      {t('Reset')}
                     </Button>
                     <div className="flex items-center gap-1.5">
                       <Button variant="outline" onClick={handleDateRangeCancel}>
-                        Cancel
+                        {t('Cancel')}
                       </Button>
-                      <Button onClick={handleDateRangeApply}>Apply</Button>
+                      <Button onClick={handleDateRangeApply}>{t('Apply')}</Button>
                     </div>
                   </div>
                 </PopoverContent>
@@ -798,7 +800,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="relative">
-                    Status
+                    {t('Status')}
                     {selectedStatuses.length > 0 && (
                       <Badge variant="outline" size="sm">
                         {selectedStatuses.length}
@@ -809,9 +811,9 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
                 </PopoverTrigger>
                 <PopoverContent className="w-56 p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search status..." />
+                    <CommandInput placeholder={t('Search status...')} />
                     <CommandList>
-                      <CommandEmpty>No status found.</CommandEmpty>
+                      <CommandEmpty>{t('No status found.')}</CommandEmpty>
                       <CommandGroup>
                         {Array.from(
                           new Set(data.map((row) => row.status?.label)),
@@ -853,7 +855,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
                                 className="grow flex items-center justify-between font-normal gap-1.5"
                               >
                                 <Badge variant={variant} appearance="light">
-                                  {status}
+                                  {t(status)}
                                 </Badge>
                                 <span className="text-muted-foreground font-semibold me-2.5">
                                   {count}
@@ -872,7 +874,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="relative">
-                    Supplier
+                    {t('Supplier')}
                     {selectedSuppliers.length > 0 && (
                       <Badge variant="outline" size="sm">
                         {selectedSuppliers.length}
@@ -883,9 +885,9 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
                 </PopoverTrigger>
                 <PopoverContent className="w-56 p-0" align="start">
                   <Command>
-                    <CommandInput placeholder="Search supplier..." />
+                    <CommandInput placeholder={t('Search supplier...')} />
                     <CommandList>
-                      <CommandEmpty>No supplier found.</CommandEmpty>
+                      <CommandEmpty>{t('No supplier found.')}</CommandEmpty>
                       <CommandGroup>
                         {Array.from(
                           new Set(data.map((row) => row.supplier)),
@@ -942,7 +944,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
               </Popover>
             </CardHeading>
             <CardToolbar>
-              <Button variant="mono">Stock Planner</Button>
+              <Button variant="mono">{t('Stock Planner')}</Button>
             </CardToolbar>
           </CardHeader>
           <CardTable>

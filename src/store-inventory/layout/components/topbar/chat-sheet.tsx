@@ -9,6 +9,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { cn } from '@/lib/utils';
 import {
@@ -51,6 +52,7 @@ interface Message {
 }
 
 export function ChatSheet({ trigger }: { trigger: ReactNode }) {
+  const t = useT();
   const [emailInput, setEmailInput] = useState('');
 
   const messages: Message[] = [
@@ -107,7 +109,7 @@ export function ChatSheet({ trigger }: { trigger: ReactNode }) {
       <SheetContent className="p-0 gap-0 sm:w-[450px] sm:max-w-none inset-5 start-auto h-auto rounded-lg p-0 sm:max-w-none [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader>
           <div className="flex items-center justify-between p-3 border-b border-border">
-            <SheetTitle>Chat</SheetTitle>
+            <SheetTitle>{t('Chat')}</SheetTitle>
           </div>
           <div className="border-b border-border p-3 shadow-xs">
             <div className="flex items-center justify-between gap-2">
@@ -124,10 +126,10 @@ export function ChatSheet({ trigger }: { trigger: ReactNode }) {
                     to="#"
                     className="text-sm font-semibold text-mono hover:text-blue-600"
                   >
-                    HR Team
+                    {t('HR Team')}
                   </Link>
                   <span className="text-xs italic text-muted-foreground block">
-                    Jessy is typing...
+                    {t('Jessy is typing...')}
                   </span>
                 </div>
               </div>
@@ -157,30 +159,30 @@ export function ChatSheet({ trigger }: { trigger: ReactNode }) {
                   >
                     <DropdownMenuItem asChild>
                       <Link to="/account/members/teams">
-                        <Users /> Invite Users
+                        <Users /> {t('Invite Users')}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSub>
                       <DropdownMenuSubTrigger>
                         <Settings2 />
-                        <span>Team Settings</span>
+                        <span>{t('Team Settings')}</span>
                       </DropdownMenuSubTrigger>
                       <DropdownMenuPortal>
                         <DropdownMenuSubContent className="w-44">
                           <DropdownMenuItem asChild>
                             <Link to="/account/members/import-members">
                               <Shield />
-                              Find Members
+                              {t('Find Members')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link to="/account/members/import-members">
-                              <Calendar /> Meetings
+                              <Calendar /> {t('Meetings')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link to="/account/members/import-members">
-                              <Shield /> Group Settings
+                              <Shield /> {t('Group Settings')}
                             </Link>
                           </DropdownMenuItem>
                         </DropdownMenuSubContent>
@@ -188,7 +190,7 @@ export function ChatSheet({ trigger }: { trigger: ReactNode }) {
                     </DropdownMenuSub>
                     <DropdownMenuItem asChild>
                       <Link to="/account/security/privacy-settings">
-                        <Shield /> Group Settings
+                        <Shield /> {t('Group Settings')}
                       </Link>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -207,7 +209,7 @@ export function ChatSheet({ trigger }: { trigger: ReactNode }) {
                 <div className="flex flex-col gap-1">
                   <div
                     className="bg-primary text-primary-foreground text-sm font-medium p-3 rounded-lg shadow-xs"
-                    dangerouslySetInnerHTML={{ __html: message.text }}
+                    dangerouslySetInnerHTML={{ __html: t(message.text) }}
                   />
                   <div className="flex items-center justify-end gap-1">
                     <span className="text-xs text-secondary-foreground">
@@ -245,7 +247,7 @@ export function ChatSheet({ trigger }: { trigger: ReactNode }) {
                 <div className="flex flex-col gap-1">
                   <div
                     className="bg-accent/50 text-secondary-foreground text-sm font-medium p-3 rounded-lg shadow-xs"
-                    dangerouslySetInnerHTML={{ __html: message.text }}
+                    dangerouslySetInnerHTML={{ __html: t(message.text) }}
                   />
                   <span className="text-xs text-muted-foreground">
                     {message.time}
@@ -277,19 +279,19 @@ export function ChatSheet({ trigger }: { trigger: ReactNode }) {
                     Jane Perez
                   </Link>
                   <span className="text-muted-foreground">
-                    wants to join chat
+                    {t('wants to join chat')}
                   </span>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  1 day ago • Design Team
+                  {t('1 day ago • Design Team')}
                 </span>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="outline">
-                  Decline
+                  {t('Decline')}
                 </Button>
                 <Button size="sm" variant="mono">
-                  Accept
+                  {t('Accept')}
                 </Button>
               </div>
             </div>
@@ -304,7 +306,7 @@ export function ChatSheet({ trigger }: { trigger: ReactNode }) {
               type="text"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
-              placeholder="Write a message..."
+              placeholder={t('Write a message...')}
               className="w-full ps-12 pe-24 py-4 h-auto"
             />
             <div className="absolute end-7 top-1/2 -translate-y-1/2 flex gap-2">
@@ -312,7 +314,7 @@ export function ChatSheet({ trigger }: { trigger: ReactNode }) {
                 <Upload className="size-4!" />
               </Button>
               <Button size="sm" variant="mono">
-                Send
+                {t('Send')}
               </Button>
             </div>
           </div>

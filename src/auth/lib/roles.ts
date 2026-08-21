@@ -9,43 +9,72 @@ export const ROLE_LABELS: Record<AppRole, string> = {
 };
 
 /** Feature areas used for menu filtering and route guards. */
-export type AppPermission =
-  | 'dashboard'
-  | 'inventory'
-  | 'warehouses'
-  | 'pos'
-  | 'products'
-  | 'categories'
-  | 'orders'
-  | 'customers'
-  | 'settings'
-  | 'users';
+export const APP_PERMISSIONS = [
+  'dashboard',
+  'inventory',
+  'warehouses',
+  'pos',
+  'products',
+  'categories',
+  'orders',
+  'customers',
+  'settings',
+  'users',
+] as const;
 
-const ROLE_PERMISSIONS: Record<AppRole, ReadonlySet<AppPermission>> = {
-  admin: new Set([
-    'dashboard',
-    'inventory',
-    'warehouses',
-    'pos',
-    'products',
-    'categories',
-    'orders',
-    'customers',
-    'settings',
-    'users',
-  ]),
-  cashier: new Set(['dashboard', 'pos', 'orders', 'customers']),
-  store_keeper: new Set([
-    'dashboard',
-    'inventory',
-    'warehouses',
-    'products',
-    'categories',
-  ]),
+export type AppPermission = (typeof APP_PERMISSIONS)[number];
+
+export const PERMISSION_LABELS: Record<AppPermission, string> = {
+  dashboard: 'Dashboard',
+  inventory: 'Inventory',
+  warehouses: 'Warehouses',
+  pos: 'Point of Sale',
+  products: 'Products',
+  categories: 'Categories',
+  orders: 'Orders',
+  customers: 'Customers',
+  settings: 'Settings',
+  users: 'User Management',
+};
+
+export const PERMISSION_DESCRIPTIONS: Record<AppPermission, string> = {
+  dashboard: 'Store overview and dashboard pages',
+  inventory: 'Stock levels, inbound, outbound, and shipping',
+  warehouses: 'Warehouse list and locations',
+  pos: 'Register and sale history',
+  products: 'Product catalog, variants, and editing',
+  categories: 'Category list and organization',
+  orders: 'Orders, details, and tracking',
+  customers: 'Customer list and profiles',
+  settings: 'Store settings',
+  users: 'Create and manage staff users (admins only)',
+};
+
+export const PERMISSION_HOME: Record<AppPermission, string> = {
+  dashboard: '/store-inventory/dashboard',
+  inventory: '/store-inventory/all-stock',
+  warehouses: '/store-inventory/warehouses',
+  pos: '/store-inventory/pos',
+  products: '/store-inventory/product-list',
+  categories: '/store-inventory/category-list',
+  orders: '/store-inventory/order-list',
+  customers: '/store-inventory/customer-list',
+  settings: '/store-inventory/settings-modal',
+  users: '/store-inventory/users',
+};
+
+const ROLE_PERMISSIONS: Record<AppRole, readonly AppPermission[]> = {
+  admin: APP_PERMISSIONS,
+  cashier: ['dashboard', 'pos', 'orders', 'customers'],
+  store_keeper: ['dashboard', 'inventory', 'warehouses', 'products', 'categories'],
 };
 
 export function isAppRole(value: unknown): value is AppRole {
   return typeof value === 'string' && (APP_ROLES as readonly string[]).includes(value);
+}
+
+export function isAppPermission(value: unknown): value is AppPermission {
+  return typeof value === 'string' && (APP_PERMISSIONS as readonly string[]).includes(value);
 }
 
 export function normalizeRole(value: unknown): AppRole | null {
@@ -56,13 +85,52 @@ export function normalizeRole(value: unknown): AppRole | null {
   return isAppRole(lowered) ? lowered : null;
 }
 
-export function roleHasPermission(role: AppRole | null | undefined, permission: AppPermission): boolean {
-  if (!role) return false;
-  return ROLE_PERMISSIONS[role].has(permission);
-}
-
 export function permissionsForRole(role: AppRole): AppPermission[] {
   return [...ROLE_PERMISSIONS[role]];
+}
+
+export function normalizePermissions(value: unknown): AppPermission[] {
+  if (!Array.isArray(value)) return [];
+  return [...new Set(value.filter(isAppPermission))];
+}
+
+/** Resolve effective permissions. Admins always have the full set. */
+export function resolveUserPermissions(
+  role: AppRole | null | undefined,
+  stored?: unknown,
+): AppPermission[] {
+  if (role === 'admin') return permissionsForRole('admin');
+  if (stored === undefined || stored === null) {
+    return role ? permissionsForRole(role) : [];
+  }
+  return normalizePermissions(stored);
+}
+
+export function hasAppPermission(
+  role: AppRole | null | undefined,
+  stored: unknown,
+  permission: AppPermission,
+): boolean {
+  return resolveUserPermissions(role, stored).includes(permission);
+}
+
+export function roleHasPermission(role: AppRole | null | undefined, permission: AppPermission): boolean {
+  if (!role) return false;
+  return ROLE_PERMISSIONS[role].includes(permission);
+}
+
+export function permissionsMatchRole(role: AppRole, permissions: readonly AppPermission[]): boolean {
+  const defaults = ROLE_PERMISSIONS[role];
+  if (defaults.length !== permissions.length) return false;
+  const set = new Set(permissions);
+  return defaults.every((item) => set.has(item));
+}
+
+export function firstAllowedPath(permissions: readonly AppPermission[]): string | null {
+  for (const permission of APP_PERMISSIONS) {
+    if (permissions.includes(permission)) return PERMISSION_HOME[permission];
+  }
+  return null;
 }
 
 /** Map store-inventory path prefixes to permissions. */

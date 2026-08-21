@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { toAbsoluteUrl } from '@/lib/helpers';
+import { useT } from '@/i18n/use-t';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,7 @@ const mockCatalog: PosCatalogProduct[] = warehouseListMockData.flatMap((warehous
 ).filter((row) => row.qty > 0);
 
 export function PosRegister() {
+  const t = useT();
   const [warehouseId, setWarehouseId] = useState<string | null>(null);
   const catalogQuery = usePosCatalog();
   const customersQuery = useCustomers();
@@ -144,7 +146,7 @@ export function PosRegister() {
 
       if (priceChanged && Date.now() - priceDriftToastAtRef.current > 4000) {
         priceDriftToastAtRef.current = Date.now();
-        toast.message('Cart prices updated to match the catalog');
+        toast.message(t('Cart prices updated to match the catalog'));
       }
       return changed || next.length !== current.length ? next : current;
     });
@@ -161,7 +163,7 @@ export function PosRegister() {
 
   const addToCart = (product: PosCatalogProduct) => {
     if (!product.warehouseId) {
-      toast.error('Select a warehouse first');
+      toast.error(t('Select a warehouse first'));
       return;
     }
     setCart((current) => {
@@ -170,7 +172,7 @@ export function PosRegister() {
       );
       if (existing) {
         if (existing.quantity >= product.qty) {
-          toast.error('Not enough stock in this warehouse');
+          toast.error(t('Not enough stock in this warehouse'));
           return current;
         }
         return current.map((line) =>
@@ -245,23 +247,25 @@ export function PosRegister() {
 
   const handleComplete = async () => {
     if (!cart.length) {
-      toast.error('Add at least one item');
+      toast.error(t('Add at least one item'));
       return;
     }
     if (cashUnderpaid) {
-      toast.error('Amount tendered is less than the total');
+      toast.error(t('Amount tendered is less than the total'));
       return;
     }
     if (missingCustomer) {
       toast.error(
-        paymentMethod === 'account'
-          ? 'Select a customer to pay from their account'
-          : 'Select a customer for credit sales',
+        t(
+          paymentMethod === 'account'
+            ? 'Select a customer to pay from their account'
+            : 'Select a customer for credit sales',
+        ),
       );
       return;
     }
     if (insufficientAccount) {
-      toast.error('Not enough account balance for this sale');
+      toast.error(t('Not enough account balance for this sale'));
       return;
     }
 
@@ -297,13 +301,13 @@ export function PosRegister() {
           return qty == null || line.quantity > qty;
         });
         if (unavailable) {
-          toast.error('Cart items are not available in their source warehouses');
+          toast.error(t('Cart items are not available in their source warehouses'));
           return;
         }
       } else {
         const unavailable = cart.some((line) => line.quantity > line.available);
         if (unavailable) {
-          toast.error('Cart items are not available in their source warehouses');
+          toast.error(t('Cart items are not available in their source warehouses'));
           return;
         }
       }
@@ -384,7 +388,7 @@ export function PosRegister() {
           })),
         };
       }
-      toast.success(`Sale ${saleNumber} completed`);
+      toast.success(t('Sale {saleNumber} completed', { saleNumber }));
       checkoutSaleIdRef.current = null;
       setReceipt(sale);
       setReceiptOpen(true);
@@ -394,7 +398,7 @@ export function PosRegister() {
       setNotes('');
       setCustomerId('walk-in');
     } catch (error) {
-      toast.error(formatPosError(error));
+      toast.error(t(formatPosError(error)));
     }
   };
 
@@ -402,13 +406,15 @@ export function PosRegister() {
     <div className="container-fluid space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-xl font-semibold text-foreground">Point of Sale</h3>
-          <p className="text-sm text-muted-foreground">Sell inventory from one or more warehouses in a single sale.</p>
+          <h3 className="text-xl font-semibold text-foreground">{t('Point of Sale')}</h3>
+          <p className="text-sm text-muted-foreground">
+            {t('Sell inventory from one or more warehouses in a single sale.')}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <WarehouseSelect allowAll value={warehouseId} onValueChange={handleWarehouseChange} />
           <Button variant="outline" asChild>
-            <Link to="/store-inventory/pos/sales">Sale history</Link>
+            <Link to="/store-inventory/pos/sales">{t('Sale history')}</Link>
           </Button>
         </div>
       </div>
@@ -418,7 +424,7 @@ export function PosRegister() {
           <AlertIcon>
             <Info />
           </AlertIcon>
-          <AlertTitle>Activate a warehouse before selling stock.</AlertTitle>
+          <AlertTitle>{t('Activate a warehouse before selling stock.')}</AlertTitle>
         </Alert>
       ) : null}
 
@@ -429,7 +435,7 @@ export function PosRegister() {
               <InputWrapper className="flex-1">
                 <Search />
                 <Input
-                  placeholder="Search name, SKU, or barcode"
+                  placeholder={t('Search name, SKU, or barcode')}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={handleSearchKey}
@@ -460,14 +466,14 @@ export function PosRegister() {
                     </div>
                     <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
                       <span>{product.sku}</span>
-                      <span>{product.qty} in stock</span>
+                      <span>{t('{qty} in stock', { qty: product.qty })}</span>
                     </div>
                     <div className="mt-1 text-sm font-semibold">{formatMoney(product.price)}</div>
                   </button>
                 ))}
                 {!filteredCatalog.length && (
                   <div className="col-span-full py-10 text-center text-sm text-muted-foreground">
-                    No sellable stock{warehouseId ? ' in this warehouse' : ''}.
+                    {warehouseId ? t('No sellable stock in this warehouse.') : t('No sellable stock.')}
                   </div>
                 )}
               </div>
@@ -479,7 +485,7 @@ export function PosRegister() {
           <CardHeader className="py-3.5">
             <CardTitle className="flex items-center gap-2 text-base">
               <ShoppingCart className="size-4" />
-              Cart
+              {t('Cart')}
               <Badge variant="outline">{cart.length}</Badge>
             </CardTitle>
           </CardHeader>
@@ -508,18 +514,18 @@ export function PosRegister() {
                     </div>
                   </div>
                 ))}
-                {!cart.length && <p className="py-8 text-center text-sm text-muted-foreground">Cart is empty</p>}
+                {!cart.length && <p className="py-8 text-center text-sm text-muted-foreground">{t('Cart is empty')}</p>}
               </div>
             </ScrollArea>
 
             <div className="space-y-2">
-              <Label>Customer</Label>
+              <Label>{t('Customer')}</Label>
               <Select value={customerId} onValueChange={setCustomerId}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="walk-in">Walk-in</SelectItem>
+                  <SelectItem value="walk-in">{t('Walk-in')}</SelectItem>
                   {customers.map((row) => (
                     <SelectItem key={row.id} value={row.id}>
                       {row.customerInfo.title} · {formatMoney(row.accountBalance ?? 0)}
@@ -531,7 +537,7 @@ export function PosRegister() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Discount %</Label>
+                <Label>{t('Discount %')}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -544,7 +550,7 @@ export function PosRegister() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Payment</Label>
+                <Label>{t('Payment')}</Label>
                 <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PosPaymentMethod)}>
                   <SelectTrigger>
                     <SelectValue />
@@ -552,7 +558,7 @@ export function PosRegister() {
                   <SelectContent>
                     {POS_PAYMENT_METHODS.map((method) => (
                       <SelectItem key={method.value} value={method.value}>
-                        {method.label}
+                        {t(method.label)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -562,86 +568,90 @@ export function PosRegister() {
 
             {paymentMethod === 'cash' && (
               <div className="space-y-2">
-                <Label>Amount tendered</Label>
+                <Label>{t('Amount tendered')}</Label>
                 <Input value={tendered} onChange={(e) => setTendered(e.target.value)} placeholder={String(totals.total)} />
               </div>
             )}
 
             {missingCustomer && (
               <p className="text-xs text-destructive">
-                Select a customer to {paymentMethod === 'account' ? 'pay from their account' : 'sell on credit'}.
+                {t(
+                  paymentMethod === 'account'
+                    ? 'Select a customer to pay from their account.'
+                    : 'Select a customer to sell on credit.',
+                )}
               </p>
             )}
 
             {chargesCustomerAccount && customerId !== 'walk-in' && (
               <div className="space-y-1 rounded-md bg-accent/50 p-3 text-sm">
                 <div className="flex justify-between">
-                  <span>Account balance</span>
+                  <span>{t('Account balance')}</span>
                   <span className={customerBalance < 0 ? 'text-destructive' : undefined}>
                     {formatMoney(customerBalance)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span>After this sale</span>
+                  <span>{t('After this sale')}</span>
                   <span className={balanceAfterSale < 0 ? 'text-destructive font-medium' : 'font-medium'}>
                     {formatMoney(balanceAfterSale)}
                   </span>
                 </div>
                 {paymentMethod === 'account' && (
                   <p className="pt-1 text-xs text-muted-foreground">
-                    The sale total will be deducted from this customer&apos;s account.
+                    {t("The sale total will be deducted from this customer's account.")}
                   </p>
                 )}
                 {insufficientAccount && (
                   <p className="pt-1 text-xs text-destructive">
-                    Not enough account balance. Use Credit to sell now and collect later.
+                    {t('Not enough account balance. Use Credit to sell now and collect later.')}
                   </p>
                 )}
                 {paymentMethod === 'credit' && (
                   <p className="pt-1 text-xs text-muted-foreground">
-                    Recorded as bought on credit. The customer will pay later.
+                    {t('Recorded as bought on credit. The customer will pay later.')}
                   </p>
                 )}
                 {creditWouldGoNegative && (
                   <p className="pt-1 text-xs text-destructive">
-                    This sale will put the account in the red. The customer will owe the shop.
+                    {t('This sale will put the account in the red. The customer will owe the shop.')}
                   </p>
                 )}
               </div>
             )}
 
             <div className="space-y-2">
-              <Label>Notes</Label>
+              <Label>{t('Notes')}</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
             </div>
 
             <div className="space-y-1 rounded-md bg-accent/50 p-3 text-sm">
               <div className="flex justify-between">
-                <span>Subtotal</span>
+                <span>{t('Subtotal')}</span>
                 <span>{formatMoney(totals.subtotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Discount</span>
+                <span>{t('Discount')}</span>
                 <span>-{formatMoney(totals.discountAmount)}</span>
               </div>
               <div className="flex justify-between">
-                <span>Tax ({taxPercent}%)</span>
+                <span>{t('Tax ({percent}%)', { percent: taxPercent })}</span>
                 <span>{formatMoney(totals.taxAmount)}</span>
               </div>
               <div className="flex justify-between font-semibold">
-                <span>Total</span>
+                <span>{t('Total')}</span>
                 <span>{formatMoney(totals.total)}</span>
               </div>
               {paymentMethod === 'cash' && (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Change</span>
+                  <span>{t('Change')}</span>
                   <span>{formatMoney(changeDue)}</span>
                 </div>
               )}
             </div>
 
             <Button className="w-full" variant="mono" onClick={handleComplete} disabled={!canComplete}>
-              Complete sale
+              {t('Complete sale')}
             </Button>
           </CardContent>
         </Card>
@@ -651,7 +661,7 @@ export function PosRegister() {
         open={receiptOpen}
         onOpenChange={setReceiptOpen}
         sale={receipt}
-        storeName={settings?.storeName ?? 'Store'}
+        storeName={settings?.storeName ?? t('Store')}
         currency={settings?.currency ?? APP_CURRENCY}
       />
     </div>

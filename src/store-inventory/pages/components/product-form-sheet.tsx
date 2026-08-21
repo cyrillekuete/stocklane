@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CircleX } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { APP_CURRENCY, parseMoney } from '@/store-inventory/lib/format';
 import {
   useActiveCategories,
@@ -69,6 +70,7 @@ function ProductFormTagInput({
   onTagsChange: (tags: string[]) => void;
 }) {
   const [inputValue, setInputValue] = useState('');
+  const t = useT();
 
   const addTag = (tag: string) => {
     const next = tag.trim();
@@ -88,9 +90,9 @@ function ProductFormTagInput({
   return (
     <div>
       <div className="flex flex-col gap-2.5 mb-2.5">
-        <Label className="text-xs leading-3">Tags</Label>
+        <Label className="text-xs leading-3">{t('Tags')}</Label>
         <Input
-          placeholder="Add tags (press Enter or comma)"
+          placeholder={t('Add tags (press Enter or comma)')}
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -128,6 +130,7 @@ export function ProductFormSheet({
 }) {
   const isNewMode = mode === 'new';
   const isEditMode = mode === 'edit';
+  const t = useT();
   const { data: allCategories } = useCategories();
   const { data: activeCategories } = useActiveCategories();
   const { data: brands } = useBrands();
@@ -193,33 +196,33 @@ export function ProductFormSheet({
 
   const handleSave = async () => {
     if (!name.trim() || !sku.trim()) {
-      toast.error('Product name and SKU are required');
+      toast.error(t('Product name and SKU are required'));
       return;
     }
     const parsedPrice = parseMoney(price);
     if (parsedPrice < 0) {
-      toast.error('Price cannot be negative');
+      toast.error(t('Price cannot be negative'));
       return;
     }
     const seenVariants = new Set<string>();
     for (const variant of variants) {
       const key = `${variant.size}::${variant.color}`.toLowerCase();
       if (seenVariants.has(key)) {
-        toast.error(`Duplicate variant: ${variant.size} / ${variant.color}`);
+        toast.error(t('Duplicate variant: {size} / {color}', { size: variant.size, color: variant.color }));
         return;
       }
       seenVariants.add(key);
       if (parseMoney(variant.price) < 0) {
-        toast.error('Variant price cannot be negative');
+        toast.error(t('Variant price cannot be negative'));
         return;
       }
     }
     if (isNewMode && !warehouseId) {
-      toast.error('Select a warehouse to add this product to');
+      toast.error(t('Select a warehouse to add this product to'));
       return;
     }
     if (isNewMode && !(warehouses ?? []).length) {
-      toast.error('Activate a warehouse first');
+      toast.error(t('Activate a warehouse first'));
       return;
     }
     setSaving(true);
@@ -239,7 +242,7 @@ export function ProductFormSheet({
     try {
       if (isEditMode) {
         if (!product?.id) {
-          toast.error('Select a product to edit');
+          toast.error(t('Select a product to edit'));
           return;
         }
         await updateProduct.mutateAsync({ id: product.id, input: payload });
@@ -251,12 +254,12 @@ export function ProductFormSheet({
           variants,
         });
       }
-      toast.success(isNewMode ? 'Product created' : 'Product saved');
+      toast.success(isNewMode ? t('Product created') : t('Product saved'));
       onOpenChange(false);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to save product';
+      const message = error instanceof Error ? error.message : t('Unable to save product');
       if (message.toLowerCase().includes('duplicate') || message.toLowerCase().includes('unique')) {
-        toast.error('SKU or barcode already exists on another active product');
+        toast.error(t('SKU or barcode already exists on another active product'));
       } else {
         toast.error(message);
       }
@@ -269,32 +272,32 @@ export function ProductFormSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="gap-0 lg:w-[1080px] sm:max-w-none inset-5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
-          <SheetTitle className="font-medium">{isNewMode ? 'Create New Product' : 'Edit Product'}</SheetTitle>
+          <SheetTitle className="font-medium">{isNewMode ? t('Create New Product') : t('Edit Product')}</SheetTitle>
         </SheetHeader>
 
         <SheetBody className="p-0 grow">
           <div className="flex justify-between gap-2 flex-wrap border-b border-border p-5">
             <Select value={status} onValueChange={setStatus} indicatorPosition="right">
               <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder={isNewMode ? 'Select Status' : 'Published'} />
+                <SelectValue placeholder={isNewMode ? t('Select Status') : t('Published')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
-                <SelectItem value="archived">Archived</SelectItem>
+                <SelectItem value="draft">{t('Draft')}</SelectItem>
+                <SelectItem value="published">{t('Published')}</SelectItem>
+                <SelectItem value="archived">{t('Archived')}</SelectItem>
               </SelectContent>
             </Select>
 
             <div className="flex items-center gap-2.5 text-xs text-gray-800 font-medium">
-              Read about
+              {t('Read about')}
               <Link to="#" className="text-primary">
-                How to Create Product
+                {t('How to Create Product')}
               </Link>
               <Button variant="outline" className="text-dark" onClick={() => onOpenChange(false)}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button variant="mono" onClick={handleSave} disabled={saving}>
-                {isNewMode ? 'Create' : 'Save'}
+                {isNewMode ? t('Create') : t('Save')}
               </Button>
             </div>
           </div>
@@ -307,11 +310,11 @@ export function ProductFormSheet({
               <div className="grow lg:border-e border-border lg:pe-5 space-y-5 py-5">
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[38px] bg-accent/50">
-                    <CardTitle className="text-2sm">Basic Info</CardTitle>
+                    <CardTitle className="text-2sm">{t('Basic Info')}</CardTitle>
                     <CardToolbar>
                       <div className="flex items-center space-x-2">
                         <Label htmlFor="product-featured" className="text-xs">
-                          Featured
+                          {t('Featured')}
                         </Label>
                         <Switch
                           size="sm"
@@ -324,21 +327,21 @@ export function ProductFormSheet({
                   </CardHeader>
                   <CardContent className="pt-4">
                     <div className="flex flex-col gap-2 mb-3">
-                      <Label className="text-xs">Product Name</Label>
-                      <Input placeholder="Product Name" value={name} onChange={(e) => setName(e.target.value)} />
+                      <Label className="text-xs">{t('Product Name')}</Label>
+                      <Input placeholder={t('Product Name')} value={name} onChange={(e) => setName(e.target.value)} />
                     </div>
                     <div className="grid grid-cols-2 gap-5 mb-2.5">
                       <div className="flex flex-col gap-2">
-                        <Label className="text-xs">SKU</Label>
-                        <Input placeholder="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
+                        <Label className="text-xs">{t('SKU')}</Label>
+                        <Input placeholder={t('SKU')} value={sku} onChange={(e) => setSku(e.target.value)} />
                       </div>
                       <div className="flex flex-col gap-2">
-                        <Label className="text-xs">Barcode</Label>
-                        <Input placeholder="Barcode" value={barcode} onChange={(e) => setBarcode(e.target.value)} />
+                        <Label className="text-xs">{t('Barcode')}</Label>
+                        <Input placeholder={t('Barcode')} value={barcode} onChange={(e) => setBarcode(e.target.value)} />
                       </div>
                     </div>
                     <div className="flex flex-col gap-2 mb-2.5">
-                      <Label className="text-xs">Price</Label>
+                      <Label className="text-xs">{t('Price')}</Label>
                       <InputWrapper>
                         <Input
                           type="number"
@@ -351,10 +354,10 @@ export function ProductFormSheet({
                       </InputWrapper>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <Label className="text-xs">Product Description</Label>
+                      <Label className="text-xs">{t('Product Description')}</Label>
                       <Textarea
                         className="min-h-[100px]"
-                        placeholder="Product Description"
+                        placeholder={t('Product Description')}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                       />
@@ -364,26 +367,26 @@ export function ProductFormSheet({
 
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[38px] bg-accent/50">
-                    <CardTitle className="text-2sm">Category & Brand</CardTitle>
+                    <CardTitle className="text-2sm">{t('Category & Brand')}</CardTitle>
                   </CardHeader>
 
                   <CardContent className="pt-4 space-y-3">
                     <div className="flex flex-col gap-2">
-                      <Label className="text-xs">Product Category</Label>
+                      <Label className="text-xs">{t('Product Category')}</Label>
                       <Select
                         value={categoryId}
                         onValueChange={setCategoryId}
                         indicatorPosition="right"
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select Category" />
+                          <SelectValue placeholder={t('Select Category')} />
                         </SelectTrigger>
                         <SelectContent>
                           {categoryOptions.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.productInfo.title}
                               {category.status.label.toLowerCase() !== 'active'
-                                ? ` (${category.status.label})`
+                                ? ` (${t(category.status.label)})`
                                 : ''}
                             </SelectItem>
                           ))}
@@ -392,14 +395,14 @@ export function ProductFormSheet({
                     </div>
 
                     <div className="flex flex-col gap-2">
-                      <Label className="text-xs">Product Brand</Label>
+                      <Label className="text-xs">{t('Product Brand')}</Label>
                       <Select
                         value={brandId}
                         onValueChange={setBrandId}
                         indicatorPosition="right"
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select Brand" />
+                          <SelectValue placeholder={t('Select Brand')} />
                         </SelectTrigger>
                         <SelectContent>
                           {(brands ?? []).map((brand) => (
@@ -413,7 +416,7 @@ export function ProductFormSheet({
 
                     {isNewMode && (
                       <div className="flex flex-col gap-2">
-                        <Label className="text-xs">Warehouse</Label>
+                        <Label className="text-xs">{t('Warehouse')}</Label>
                         <Select
                           value={warehouseId}
                           onValueChange={setWarehouseId}
@@ -424,8 +427,8 @@ export function ProductFormSheet({
                             <SelectValue
                               placeholder={
                                 (warehouses ?? []).length
-                                  ? 'Select Warehouse'
-                                  : 'Activate a warehouse first'
+                                  ? t('Select Warehouse')
+                                  : t('Activate a warehouse first')
                               }
                             />
                           </SelectTrigger>
@@ -433,7 +436,7 @@ export function ProductFormSheet({
                             {(warehouses ?? []).map((warehouse) => (
                               <SelectItem key={warehouse.id} value={warehouse.id}>
                                 {warehouse.name} ({warehouse.code})
-                                {warehouse.isDefault ? ' · Default' : ''}
+                                {warehouse.isDefault ? ` · ${t('Default')}` : ''}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -460,21 +463,21 @@ export function ProductFormSheet({
         <SheetFooter className="flex-row border-t not-only-of-type:justify-between items-center p-5 border-border gap-2">
           <Select value={status} onValueChange={setStatus} indicatorPosition="right">
             <SelectTrigger className="w-[140px]">
-              <SelectValue placeholder={isNewMode ? 'Select Status' : 'Published'} />
+              <SelectValue placeholder={isNewMode ? t('Select Status') : t('Published')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="published">Published</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
+              <SelectItem value="draft">{t('Draft')}</SelectItem>
+              <SelectItem value="published">{t('Published')}</SelectItem>
+              <SelectItem value="archived">{t('Archived')}</SelectItem>
             </SelectContent>
           </Select>
 
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button variant="mono" onClick={handleSave} disabled={saving}>
-              {isNewMode ? 'Create' : 'Save'}
+              {isNewMode ? t('Create') : t('Save')}
             </Button>
           </div>
         </SheetFooter>

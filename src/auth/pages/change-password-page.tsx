@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Check, Eye, EyeOff, LoaderCircleIcon } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
+import { useT } from '@/i18n/use-t';
 import { supabase } from '@/lib/supabase';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -22,6 +23,7 @@ import {
 } from '../forms/reset-password-schema';
 
 export function ChangePasswordPage() {
+  const t = useT();
   const navigate = useNavigate();
   const { resetPassword } = useAuth();
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -45,7 +47,7 @@ export function ChangePasswordPage() {
   }, []);
 
   const form = useForm<NewPasswordSchemaType>({
-    resolver: zodResolver(getNewPasswordSchema()),
+    resolver: zodResolver(getNewPasswordSchema(t)),
     defaultValues: {
       password: '',
       confirmPassword: '',
@@ -70,11 +72,11 @@ export function ChangePasswordPage() {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold tracking-tight">Set New Password</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t('Set New Password')}</h1>
           <p className="text-sm text-muted-foreground">
             {tokenValid
-              ? 'Choose a strong password for your account.'
-              : 'Open this page from your password reset email link.'}
+              ? t('Choose a strong password for your account.')
+              : t('Open this page from your password reset email link.')}
           </p>
         </div>
 
@@ -83,7 +85,7 @@ export function ChangePasswordPage() {
             <AlertIcon>
               <AlertCircle className="h-4 w-4" />
             </AlertIcon>
-            <AlertTitle>{error}</AlertTitle>
+            <AlertTitle>{t(error)}</AlertTitle>
           </Alert>
         )}
 
@@ -92,7 +94,7 @@ export function ChangePasswordPage() {
             <AlertIcon>
               <Check className="h-4 w-4" />
             </AlertIcon>
-            <AlertTitle>{successMessage}</AlertTitle>
+            <AlertTitle>{t(successMessage)}</AlertTitle>
           </Alert>
         )}
 
@@ -101,7 +103,7 @@ export function ChangePasswordPage() {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>New password</FormLabel>
+              <FormLabel>{t('New password')}</FormLabel>
               <div className="relative">
                 <FormControl>
                   <Input
@@ -130,7 +132,7 @@ export function ChangePasswordPage() {
           name="confirmPassword"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Confirm password</FormLabel>
+              <FormLabel>{t('Confirm password')}</FormLabel>
               <div className="relative">
                 <FormControl>
                   <Input
@@ -157,16 +159,16 @@ export function ChangePasswordPage() {
         <Button type="submit" className="w-full" disabled={isProcessing}>
           {isProcessing ? (
             <span className="flex items-center gap-2">
-              <LoaderCircleIcon className="h-4 w-4 animate-spin" /> Saving...
+              <LoaderCircleIcon className="h-4 w-4 animate-spin" /> {t('Saving...')}
             </span>
           ) : (
-            'Update Password'
+            t('Update Password')
           )}
         </Button>
 
         <div className="text-center text-sm">
           <Link to="/auth/signin" className="font-semibold hover:text-primary">
-            Back to Sign In
+            {t('Back to Sign In')}
           </Link>
         </div>
       </form>

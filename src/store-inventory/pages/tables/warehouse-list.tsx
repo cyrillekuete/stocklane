@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useT } from '@/i18n/use-t';
 import {
   useActiveWarehouses,
   useDeleteWarehouse,
@@ -50,6 +51,7 @@ import {
 import { WarehouseFormSheet } from '../components/warehouse-form-sheet';
 
 export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[] }) {
+  const t = useT();
   const data = mockData ?? [];
   const deleteWarehouse = useDeleteWarehouse();
   const moveStock = useMoveWarehouseStock();
@@ -84,7 +86,7 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
       setDeleteSummary(
         blockers.messages.length
           ? blockers.messages
-          : [`Delete ${row.name}? This cannot be undone.`],
+          : [t('Delete {name}? This cannot be undone.', { name: row.name })],
       );
       const targets = (activeWarehouses ?? []).filter((item) => item.id !== row.id);
       if (blockers.hasStock && targets[0]) {
@@ -94,13 +96,13 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
       }
       setConfirmDeleteOpen(true);
     } catch (error) {
-      toast.error(mapWarehouseError(error).message);
+      toast.error(t(mapWarehouseError(error).message));
     }
   };
 
   const handleMoveStock = async () => {
     if (!deleteRow || !moveTargetId) {
-      toast.error('Select a destination warehouse');
+      toast.error(t('Select a destination warehouse'));
       return;
     }
     try {
@@ -108,15 +110,15 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
         fromWarehouseId: deleteRow.id,
         toWarehouseId: moveTargetId,
       });
-      toast.success(`Moved ${moved} units to the selected warehouse`);
+      toast.success(t('Moved {count} units to the selected warehouse', { count: moved }));
       const blockers = await getWarehouseDeleteBlockers(deleteRow.id);
       setDeleteSummary(
         blockers.messages.length
           ? blockers.messages
-          : [`Stock moved. You can delete ${deleteRow.name} now.`],
+          : [t('Stock moved. You can delete {name} now.', { name: deleteRow.name })],
       );
     } catch (error) {
-      toast.error(mapWarehouseError(error).message);
+      toast.error(t(mapWarehouseError(error).message));
     }
   };
 
@@ -126,11 +128,11 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
       const blockers = await getWarehouseDeleteBlockers(deleteRow.id);
       if (blockers.messages.length) {
         setDeleteSummary(blockers.messages);
-        toast.error(blockers.messages[0]);
+        toast.error(t(blockers.messages[0]));
         return;
       }
       await deleteWarehouse.mutateAsync(deleteRow.id);
-      toast.success('Warehouse deleted');
+      toast.success(t('Warehouse deleted'));
       setConfirmDeleteOpen(false);
       setDeleteRow(undefined);
     } catch (error) {
@@ -184,12 +186,12 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
             <Badge variant={row.original.status.variant as BadgeProps['variant']} appearance="light">
-              {row.original.status.label}
+              {t(row.original.status.label)}
             </Badge>
             {row.original.isDefault && (
               <Badge variant="info" appearance="light">
                 <Star className="size-3" />
-                Default
+                {t('Default')}
               </Badge>
             )}
           </div>
@@ -228,7 +230,7 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
         size: 80,
       },
     ],
-    [activeWarehouses],
+    [activeWarehouses, t],
   );
 
   const table = useReactTable({
@@ -257,7 +259,7 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
               <div className="w-full max-w-[240px]">
                 <InputWrapper>
                   <Search />
-                  <Input placeholder="Search warehouses..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                  <Input placeholder={t('Search warehouses...')} value={search} onChange={(e) => setSearch(e.target.value)} />
                 </InputWrapper>
               </div>
             </CardHeading>
@@ -278,18 +280,18 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
       <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete warehouse</AlertDialogTitle>
+            <AlertDialogTitle>{t('Delete warehouse')}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-sm text-muted-foreground">
                 {deleteSummary.map((message) => (
-                  <p key={message}>{message}</p>
+                  <p key={message}>{t(message)}</p>
                 ))}
                 {deleteRow && deleteRow.onHand > 0 && moveTargets.length > 0 ? (
                   <div className="space-y-2 pt-2">
-                    <Label>Move all stock to</Label>
+                    <Label>{t('Move all stock to')}</Label>
                     <Select value={moveTargetId} onValueChange={setMoveTargetId}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Destination warehouse" />
+                        <SelectValue placeholder={t('Destination warehouse')} />
                       </SelectTrigger>
                       <SelectContent>
                         {moveTargets.map((row) => (
@@ -300,7 +302,7 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
                       </SelectContent>
                     </Select>
                     <Button variant="outline" size="sm" onClick={handleMoveStock} disabled={pending || !moveTargetId}>
-                      Move all stock
+                      {t('Move all stock')}
                     </Button>
                   </div>
                 ) : null}
@@ -308,9 +310,9 @@ export function WarehouseListTable({ mockData }: { mockData?: WarehouseListRow[]
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={handleConfirmDelete} disabled={pending}>
-              Delete
+              {t('Delete')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

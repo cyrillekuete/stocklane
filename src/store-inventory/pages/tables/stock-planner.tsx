@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
@@ -119,6 +120,7 @@ interface StockPlannerProps {
 const mockData: IData[] = stockPlannerMockData;
 
 const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlannerProps) => {
+  const t = useT();
   const data = propsMockData || mockData;
   const updateStock = useUpdateStockLevel();
   const [pagination, setPagination] = useState<PaginationState>({
@@ -152,7 +154,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
   }: IColumnFilterProps<TData, TValue>) => {
     return (
       <Input
-        placeholder="Filter..."
+        placeholder={t('Filter...')}
         value={(column.getFilterValue() as string) ?? ''}
         onChange={(event) => column.setFilterValue(event.target.value)}
         variant="sm"
@@ -230,7 +232,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                     `/media/store/client/1200x1200/${row.productInfo.image}`,
                   )}
                   className="cursor-pointer h-[40px]"
-                  alt="image"
+                  alt={t('image')}
                 />
               </Card>
               <div className="flex flex-col gap-1">
@@ -263,7 +265,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                   </Link>
                 )}
                 <span className="text-xs text-muted-foreground uppercase">
-                  sku:{' '}
+                  {t('sku:')}{' '}
                   <span className="text-xs font-medium text-secondary-foreground">
                     {row.productInfo.label}
                   </span>
@@ -364,7 +366,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
               {info.row.original.flow}
             </span>
             <span className="text-xs font-normal text-secondary-foreground/60">
-              items/day
+              {t('items/day')}
             </span>
           </div>
         ),
@@ -383,7 +385,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
         cell: (info) => (
           <div className="flex flex-col">
             <span className="text-sm font-normal text-foreground">
-              {info.row.original.reorderIn.days} days
+              {t('{days} days', { days: info.row.original.reorderIn.days })}
             </span>
             <span className="text-xs font-normal text-secondary-foreground/60">
               {info.row.original.reorderIn.date}
@@ -408,7 +410,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Reorder Quantity</p>
+                <p>{t('Reorder Quantity')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -431,7 +433,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
         cell: (info) => (
           <div className="flex flex-col">
             <span className="text-sm font-normal text-foreground">
-              {info.row.original.leadTime.days} days
+              {t('{days} days', { days: info.row.original.leadTime.days })}
             </span>
             <span className="text-xs font-normal text-secondary-foreground">
               {info.row.original.leadTime.date}
@@ -456,7 +458,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                 </div>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Automatic Reorder</p>
+                <p>{t('Automatic Reorder')}</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -477,18 +479,18 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                 });
                 if (checked) {
                   toast.custom(
-                    (t) => (
+                    (toastId) => (
                       <Alert
                         variant="mono"
                         icon="success"
                         close={true}
-                        onClose={() => toast.dismiss(t)}
+                        onClose={() => toast.dismiss(toastId)}
                       >
                         <AlertIcon>
                           <Info />
                         </AlertIcon>
                         <AlertTitle>
-                          Auto-reorder enabled for this product.
+                          {t('Auto-reorder enabled for this product.')}
                         </AlertTitle>
                       </Alert>
                     ),
@@ -498,18 +500,18 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                   );
                 } else {
                   toast.custom(
-                    (t) => (
+                    (toastId) => (
                       <Alert
                         variant="mono"
                         icon="success"
                         close={true}
-                        onClose={() => toast.dismiss(t)}
+                        onClose={() => toast.dismiss(toastId)}
                       >
                         <AlertIcon>
                           <Info />
                         </AlertIcon>
                         <AlertTitle>
-                          Auto-reorder disabled for this product.
+                          {t('Auto-reorder disabled for this product.')}
                         </AlertTitle>
                       </Alert>
                     ),
@@ -541,20 +543,20 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="bottom">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('Actions')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Settings />
-                  Settings
+                  {t('Settings')}
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Pencil />
-                  Edit
+                  {t('Edit')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive">
                   <Trash />
-                  Delete
+                  {t('Delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -563,21 +565,21 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
         size: 60,
       },
     ],
-    [updateStock, warehouseId],
+    [updateStock, warehouseId, t],
   );
 
   useEffect(() => {
     const selectedRowIds = Object.keys(rowSelection);
     if (selectedRowIds.length > 0) {
-      toast(`Total ${selectedRowIds.length} are selected.`, {
-        description: `Selected row IDs: ${selectedRowIds.join(', ')}`,
+      toast(t('Total {count} are selected.', { count: selectedRowIds.length }), {
+        description: t('Selected row IDs: {ids}', { ids: selectedRowIds.join(', ') }),
         action: {
-          label: 'Undo',
+          label: t('Undo'),
           onClick: () => setRowSelection({}),
         },
       });
     }
-  }, [rowSelection]);
+  }, [rowSelection, t]);
 
   const table = useReactTable({
     data: filteredData,
@@ -628,7 +630,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
           <InputWrapper>
             <Search />
             <Input
-              placeholder="Search..."
+              placeholder={t('Search...')}
               ref={inputRef}
               value={inputValue}
               onChange={(e) => {
@@ -653,7 +655,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="relative">
-              Reorder In: 7 days
+              {t('Reorder In: 7 days')}
               {selectedUpdated.length > 0 && (
                 <Badge variant="outline" size="sm">
                   {selectedUpdated.length}
@@ -664,9 +666,9 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
           </PopoverTrigger>
           <PopoverContent className="w-56 p-0" align="start">
             <Command>
-              <CommandInput placeholder="Search Reorder In..." />
+              <CommandInput placeholder={t('Search Reorder In...')} />
               <CommandList>
-                <CommandEmpty>No Reorder In found.</CommandEmpty>
+                <CommandEmpty>{t('No Reorder In found.')}</CommandEmpty>
                 <CommandGroup>
                   {Array.from(new Set(data.map((row) => row.reorder))).map(
                     (reorder) => {
@@ -704,7 +706,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                           >
                             <div className="flex flex-col">
                               <span className="text-sm font-normal text-foreground">
-                                {reorderIn?.days} days
+                                {t('{days} days', { days: reorderIn?.days ?? 0 })}
                               </span>
                               <span className="text-xs font-normal text-secondary-foreground">
                                 {reorderIn?.date}
@@ -728,7 +730,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="relative">
-              Stock Level
+              {t('Stock Level')}
               {selectedStocks.length > 0 && (
                 <Badge variant="outline" size="sm">
                   {selectedStocks.length}
@@ -739,9 +741,9 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
           </PopoverTrigger>
           <PopoverContent className="w-56 p-0" align="start">
             <Command>
-              <CommandInput placeholder="Search stock levels..." />
+              <CommandInput placeholder={t('Search stock levels...')} />
               <CommandList>
-                <CommandEmpty>No stock levels found.</CommandEmpty>
+                <CommandEmpty>{t('No stock levels found.')}</CommandEmpty>
                 <CommandGroup>
                   {Array.from(
                     new Set(data.map((row) => row.stock.toString())),
@@ -792,6 +794,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
     setPagination,
     setInputValue,
     setSearchQuery,
+    t,
   ]);
 
   return (
@@ -818,7 +821,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                     setIsStockSheetOpen(true);
                   }}
                 >
-                  Reports
+                  {t('Reports')}
                 </Button>
               </CardToolbar>
             </CardHeader>

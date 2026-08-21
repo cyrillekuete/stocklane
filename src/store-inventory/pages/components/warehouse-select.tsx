@@ -1,3 +1,4 @@
+import { useT } from '@/i18n/use-t';
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ export function WarehouseSelect({
 }) {
   const filter = useWarehouseFilter();
   const { data: warehouses } = useActiveWarehouses();
+  const t = useT();
   const selected = value !== undefined ? value : filter.warehouseId;
   const handleChange = onValueChange ?? filter.setWarehouseId;
   const hasWarehouses = (warehouses ?? []).length > 0;
@@ -32,14 +34,14 @@ export function WarehouseSelect({
       disabled={!hasWarehouses && !allowAll}
     >
       <SelectTrigger className={className ?? 'w-[220px]'}>
-        <SelectValue placeholder={hasWarehouses ? 'Warehouse' : 'Activate a warehouse first'} />
+        <SelectValue placeholder={hasWarehouses ? t('Warehouse') : t('Activate a warehouse first')} />
       </SelectTrigger>
       <SelectContent>
-        {allowAll && <SelectItem value="all">All warehouses</SelectItem>}
+        {allowAll && <SelectItem value="all">{t('All warehouses')}</SelectItem>}
         {(warehouses ?? []).map((warehouse) => (
           <SelectItem key={warehouse.id} value={warehouse.id}>
             {warehouse.name} ({warehouse.code})
-            {warehouse.isDefault ? ' · Default' : ''}
+            {warehouse.isDefault ? ` · ${t('Default')}` : ''}
           </SelectItem>
         ))}
       </SelectContent>

@@ -12,6 +12,7 @@ import {
 } from '@tanstack/react-table';
 import { Eye, Info, Search, SquarePen, Trash, ChevronUp, Copy, Download, Link, Wallet, X, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { isRemoteAsset, formatMoney } from '@/store-inventory/lib/format';
@@ -110,9 +111,10 @@ const CustomerAvatar = ({
   statusColor?: VariantProps<typeof AvatarStatus>['variant'];
   verified?: boolean;
 }) => {
+  const t = useT();
   return (
     <Avatar>
-      <AvatarImage src={image} alt="Customer" />
+      <AvatarImage src={image} alt={t('Customer')} />
       <AvatarFallback>CH</AvatarFallback>
       {verified ? (
         <AvatarIndicator className="end-0.5 top-0.5">
@@ -155,6 +157,7 @@ export function CustomerListTable({
   onSheetClose,
   onSelectedRowsChange,
 }: CustomerListProps) {
+  const t = useT();
   const activeData = isSupabaseConfigured
     ? (propsMockData ?? EMPTY_CUSTOMERS)
     : (propsMockData || customerListMockData);
@@ -252,12 +255,12 @@ export function CustomerListTable({
     if (!customerToDelete) return;
     deleteCustomer.mutate(customerToDelete.id, {
       onSuccess: () => {
-        successToast(`Customer "${customerToDelete.customerInfo.title}" archived`);
+        successToast(t('Customer "{title}" archived', { title: customerToDelete.customerInfo.title }));
         setCustomerToDelete(null);
         setIsDeleteDialogOpen(false);
       },
       onError: (error) => {
-        toast.error(mapCustomerError(error).message);
+        toast.error(t(mapCustomerError(error).message));
       },
     });
   };
@@ -269,11 +272,11 @@ export function CustomerListTable({
       { ids, status },
       {
         onSuccess: () => {
-          successToast(`Status updated to ${status} for ${ids.length} customers`);
+          successToast(t('Status updated to {status} for {count} customers', { status: t(status), count: ids.length }));
           setRowSelection({});
         },
         onError: (error) => {
-          toast.error(mapCustomerError(error).message);
+          toast.error(t(mapCustomerError(error).message));
         },
       },
     );
@@ -283,11 +286,11 @@ export function CustomerListTable({
     if (!selectedRows.length) return;
     duplicateCustomers.mutate(selectedRows, {
       onSuccess: () => {
-        successToast(`Duplicated ${selectedRows.length} customers`);
+        successToast(t('Duplicated {count} customers', { count: selectedRows.length }));
         setRowSelection({});
       },
       onError: (error) => {
-        toast.error(mapCustomerError(error).message);
+        toast.error(t(mapCustomerError(error).message));
       },
     });
   };
@@ -317,7 +320,7 @@ export function CustomerListTable({
     link.download = 'customers.csv';
     link.click();
     URL.revokeObjectURL(url);
-    successToast(`Exported ${selectedRows.length} customers`);
+    successToast(t('Exported {count} customers', { count: selectedRows.length }));
   };
 
   const handleConfirmGroupDelete = () => {
@@ -325,12 +328,12 @@ export function CustomerListTable({
     if (!ids.length) return;
     deleteCustomers.mutate(ids, {
       onSuccess: () => {
-        successToast(`Archived ${ids.length} customers`);
+        successToast(t('Archived {count} customers', { count: ids.length }));
         setRowSelection({});
         setIsGroupDeleteDialogOpen(false);
       },
       onError: (error) => {
-        toast.error(mapCustomerError(error).message);
+        toast.error(t(mapCustomerError(error).message));
       },
     });
   };
@@ -338,7 +341,7 @@ export function CustomerListTable({
   const ColumnInputFilter = <TData, TValue>({ column }: IColumnFilterProps<TData, TValue>) => {
     return (
       <Input
-        placeholder="Filter..."
+        placeholder={t('Filter...')}
         value={(column.getFilterValue() as string) ?? ''}
         onChange={(event) => column.setFilterValue(event.target.value)}
         variant="sm"
@@ -435,7 +438,7 @@ export function CustomerListTable({
                 alt={location.name}
               />
               <span className="text-sm leading-none text-foreground font-normal">
-                {location.name}
+                {t(location.name)}
               </span>
             </div>
           );
@@ -495,7 +498,7 @@ export function CustomerListTable({
           const status = info.row.original.status;
           return (
             <Badge variant={status.variant as BadgeProps['variant']} appearance="light">
-              {status.label}
+              {t(status.label)}
             </Badge>
           );
         },
@@ -527,7 +530,7 @@ export function CustomerListTable({
                   size="sm"
                   mode="icon"
                   onClick={() => restore(customer.id)}
-                  title="Restore customer"
+                  title={t('Restore customer')}
                 >
                   <RotateCcw className="h-4 w-4" />
                 </Button>
@@ -536,7 +539,7 @@ export function CustomerListTable({
                   size="sm"
                   mode="icon"
                   onClick={() => setHardDeleteTarget(customer)}
-                  title="Delete permanently"
+                  title={t('Delete permanently')}
                 >
                   <Trash className="h-4 w-4" />
                 </Button>
@@ -550,7 +553,7 @@ export function CustomerListTable({
                 size="sm"
                 mode="icon"
                 onClick={() => handleOpenCustomerDetails(customer)}
-                title="View customer"
+                title={t('View customer')}
               >
                 <Eye className="h-4 w-4" />
               </Button>
@@ -559,7 +562,7 @@ export function CustomerListTable({
                 size="sm"
                 mode="icon"
                 onClick={() => handleOpenDeposit(customer)}
-                title="Deposit to account"
+                title={t('Deposit to account')}
                 disabled={customer.status.label.toLowerCase() !== 'active'}
               >
                 <Wallet className="h-4 w-4" />
@@ -569,7 +572,7 @@ export function CustomerListTable({
                 size="sm"
                 mode="icon"
                 onClick={() => handleOpenCustomerForm('edit', customer)}
-                title="Edit customer"
+                title={t('Edit customer')}
               >
                 <SquarePen className="h-4 w-4" />
               </Button>
@@ -581,7 +584,7 @@ export function CustomerListTable({
                   setCustomerToDelete(customer);
                   setIsDeleteDialogOpen(true);
                 }}
-                title="Archive customer"
+                title={t('Archive customer')}
               >
                 <Trash className="h-4 w-4" />
               </Button>
@@ -592,7 +595,7 @@ export function CustomerListTable({
         meta: { cellClassName: '' },
       },
     ],
-    [restore],
+    [restore, t],
   );
 
   const filteredData = useMemo(() => {
@@ -691,11 +694,11 @@ export function CustomerListTable({
   return (
     <div>
       {isError && (
-        <p className="text-sm text-destructive mb-3">Unable to load customers. Check your connection and try again.</p>
+        <p className="text-sm text-destructive mb-3">{t('Unable to load customers. Check your connection and try again.')}</p>
       )}
-      {isLoading && <p className="text-sm text-muted-foreground mb-3">Loading customers...</p>}
+      {isLoading && <p className="text-sm text-muted-foreground mb-3">{t('Loading customers...')}</p>}
       {!isLoading && !isError && activeData.length === 0 && deletedCustomers.length === 0 && (
-        <p className="text-sm text-muted-foreground mb-3">No customers yet. Create your first customer to get started.</p>
+        <p className="text-sm text-muted-foreground mb-3">{t('No customers yet. Create your first customer to get started.')}</p>
       )}
       <Card>
         <CardHeader className="py-3 flex-nowrap">
@@ -712,7 +715,7 @@ export function CustomerListTable({
                         activeTab === tab.id ? 'font-medium' : 'font-normal',
                       )}
                     >
-                      {tab.label}
+                      {t(tab.label)}
                       <Badge
                         variant={activeTab === tab.id ? 'primary' : 'outline'}
                         appearance="light"
@@ -729,7 +732,7 @@ export function CustomerListTable({
                   <InputWrapper>
                     <Search />
                     <Input
-                      placeholder="Search customers"
+                      placeholder={t('Search customers')}
                       ref={inputRef}
                       value={inputValue}
                       onChange={(e) => {
@@ -784,21 +787,21 @@ export function CustomerListTable({
           <div className="dark bg-zinc-950 text-white rounded-xl px-2 py-1 shadow-lg border">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium ps-3 pe-1">
-                {selectedRowsCount} of {totalRowsCount} selected
+                {t('{count} of {total} selected', { count: selectedRowsCount, total: totalRowsCount })}
               </span>
               <Separator className="h-10" orientation="vertical" />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="dark">
                     <Link className="h-4 w-4 mr-2" />
-                    Change status
+                    {t('Change status')}
                     <ChevronUp className="h-4 w-4 ml-2" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="center" className="dark">
                   {['Active', 'Inactive', 'Pending', 'Banned'].map((status) => (
                     <DropdownMenuItem key={status} onClick={() => handleGroupStatusChange(status)}>
-                      {status}
+                      {t(status)}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -806,17 +809,17 @@ export function CustomerListTable({
               <Separator className="h-8 bg-zinc-700" orientation="vertical" />
               <Button variant="ghost" size="sm" onClick={handleGroupDuplicate}>
                 <Copy className="h-4 w-4 mr-2" />
-                Duplicate
+                {t('Duplicate')}
               </Button>
               <Separator className="h-8 bg-zinc-700" orientation="vertical" />
               <Button variant="ghost" size="sm" onClick={handleGroupExport}>
                 <Download className="h-4 w-4 mr-2" />
-                Export
+                {t('Export')}
               </Button>
               <Separator className="h-8 bg-zinc-700" orientation="vertical" />
               <Button variant="ghost" size="sm" onClick={() => setIsGroupDeleteDialogOpen(true)}>
                 <Trash className="h-4 w-4 mr-2" />
-                Archive
+                {t('Archive')}
               </Button>
             </div>
           </div>
@@ -882,16 +885,15 @@ export function CustomerListTable({
       <AlertDialog open={isGroupDeleteDialogOpen} onOpenChange={setIsGroupDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Archive Customers</AlertDialogTitle>
+            <AlertDialogTitle>{t('Archive Customers')}</AlertDialogTitle>
             <AlertDialogDescription>
-              Archive <strong>{selectedRowsCount} customers</strong>? Customers with a non-zero
-              account balance will fail and need to be settled first.
+              {t('Archive {count} customers? Customers with a non-zero account balance will fail and need to be settled first.', { count: selectedRowsCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('Cancel')}</AlertDialogCancel>
             <AlertDialogAction variant="destructive" onClick={handleConfirmGroupDelete}>
-              Archive {selectedRowsCount} Customers
+              {t('Archive {count} Customers', { count: selectedRowsCount })}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

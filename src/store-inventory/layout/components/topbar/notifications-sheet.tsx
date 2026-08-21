@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import { Settings } from 'lucide-react';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import {
   Avatar,
@@ -44,13 +45,15 @@ const notifications = [
 ];
 
 export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
+  const t = useT();
+
   return (
     <Sheet>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent className="p-0 gap-0 sm:w-[440px] sm:max-w-none inset-5 start-auto h-auto rounded-lg [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="mb-0">
           <div className="flex items-center justify-between p-3 border-b border-border">
-            <SheetTitle>Notifications</SheetTitle>
+            <SheetTitle>{t('Notifications')}</SheetTitle>
             <Button variant="ghost" mode="icon" size="sm">
               <Settings className="size-4!" />
             </Button>
@@ -78,10 +81,10 @@ export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
                     <span className="font-semibold text-foreground">
                       {item.name}
                     </span>{' '}
-                    <span className="text-muted-foreground">{item.action}</span>
+                    <span className="text-muted-foreground">{t(item.action)}</span>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {item.time}
+                    {t(item.time)}
                   </span>
                 </div>
               </div>
@@ -89,8 +92,8 @@ export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
           </div>
         </SheetBody>
         <SheetFooter className="border-t border-border p-5 grid grid-cols-2 gap-2.5">
-          <Button variant="outline">Archive all</Button>
-          <Button variant="outline">Mark all as read</Button>
+          <Button variant="outline">{t('Archive all')}</Button>
+          <Button variant="outline">{t('Mark all as read')}</Button>
         </SheetFooter>
       </SheetContent>
     </Sheet>

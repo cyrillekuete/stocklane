@@ -1,6 +1,7 @@
 'use client';
 
 import { CalendarPlus, ShoppingBag, UserRound } from 'lucide-react';
+import { useT } from '@/i18n/use-t';
 import { TimelineItem } from './components/activity/timeline-item';
 import type { CustomerListRow, OrderListRow } from '@/store-inventory/types';
 
@@ -11,20 +12,21 @@ export function CustomerDetailsActivity({
   customer?: CustomerListRow;
   orders?: OrderListRow[];
 }) {
+  const t = useT();
   const events = [
     {
       icon: UserRound,
-      title: `${customer?.customerInfo.title || 'Customer'} joined the store`,
+      title: t('{name} joined the store', { name: customer?.customerInfo.title || t('Customer') }),
       time: customer?.joined || customer?.updated || '—',
     },
     {
       icon: CalendarPlus,
-      title: 'Profile last updated',
+      title: t('Profile last updated'),
       time: customer?.updated || '—',
     },
     ...orders.slice(0, 6).map((order) => ({
       icon: ShoppingBag,
-      title: `Placed order ${order.order} for ${order.total}`,
+      title: t('Placed order {order} for {total}', { order: order.order, total: order.total }),
       time: order.date,
     })),
   ];

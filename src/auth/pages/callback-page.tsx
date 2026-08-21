@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/auth/context/auth-context';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useT } from '@/i18n/use-t';
 import { supabase } from '@/lib/supabase';
 import { ScreenLoader } from '@/components/screen-loader';
 
 export function CallbackPage() {
+  const t = useT();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
@@ -54,9 +56,9 @@ export function CallbackPage() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
-        <h2 className="text-xl font-semibold text-destructive">Authentication Error</h2>
-        <p className="text-muted-foreground">{error}</p>
-        <p className="text-sm">Redirecting to sign-in page...</p>
+        <h2 className="text-xl font-semibold text-destructive">{t('Authentication Error')}</h2>
+        <p className="text-muted-foreground">{t(error)}</p>
+        <p className="text-sm">{t('Redirecting to sign-in page...')}</p>
       </div>
     );
   }

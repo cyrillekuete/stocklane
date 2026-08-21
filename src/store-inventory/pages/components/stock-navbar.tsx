@@ -1,10 +1,12 @@
 'use client';
 
 import { Link, useLocation } from 'react-router';
+import { useT } from '@/i18n/use-t';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WarehouseSelect } from './warehouse-select';
 
 export const StockNavbar = () => {
+  const t = useT();
   const location = useLocation();
   const pathname = location.pathname;
 
@@ -23,16 +25,16 @@ export const StockNavbar = () => {
         <Tabs value={getCurrentTab()} className="text-sm text-muted-foreground">
           <TabsList variant="line" className="border-0 gap-2.5">
             <TabsTrigger value="all-stock" asChild className="px-2.5 py-5">
-              <Link to="/store-inventory/all-stock">All Stock</Link>
+              <Link to="/store-inventory/all-stock">{t('All Stock')}</Link>
             </TabsTrigger>
             <TabsTrigger value="current-stock" asChild className="px-2.5 py-5">
-              <Link to="/store-inventory/current-stock">Current Stock</Link>
+              <Link to="/store-inventory/current-stock">{t('Current Stock')}</Link>
             </TabsTrigger>
             <TabsTrigger value="inbound-stock" asChild className="px-2.5 py-5">
-              <Link to="/store-inventory/inbound-stock">Inbound Stock</Link>
+              <Link to="/store-inventory/inbound-stock">{t('Inbound Stock')}</Link>
             </TabsTrigger>
             <TabsTrigger value="outbound-stock" asChild className="px-2.5 py-5">
-              <Link to="/store-inventory/outbound-stock">Outbound Stock</Link>
+              <Link to="/store-inventory/outbound-stock">{t('Outbound Stock')}</Link>
             </TabsTrigger>
           </TabsList>
         </Tabs>

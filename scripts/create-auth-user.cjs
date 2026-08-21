@@ -56,17 +56,35 @@ async function main() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const fullname = `${first_name} ${last_name}`.trim();
   const list = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
   if (list.error) throw list.error;
   const existing = list.data.users.find((u) => u.email?.toLowerCase() === email.toLowerCase());
+
+  const fullname = `${first_name} ${last_name}`.trim();
+  const permissionsByRole = {
+    admin: [
+      'dashboard',
+      'inventory',
+      'warehouses',
+      'pos',
+      'products',
+      'categories',
+      'orders',
+      'customers',
+      'settings',
+      'users',
+    ],
+    cashier: ['dashboard', 'pos', 'orders', 'customers'],
+    store_keeper: ['dashboard', 'inventory', 'warehouses', 'products', 'categories'],
+  };
+  const permissions = permissionsByRole[role] ?? permissionsByRole.cashier;
 
   let userId;
   if (existing) {
     const { data, error } = await admin.auth.admin.updateUserById(existing.id, {
       password,
       email_confirm: true,
-      app_metadata: { role },
+      app_metadata: { role, permissions },
       user_metadata: { first_name, last_name, fullname },
     });
     if (error) throw error;
@@ -77,7 +95,7 @@ async function main() {
       email,
       password,
       email_confirm: true,
-      app_metadata: { role },
+      app_metadata: { role, permissions },
       user_metadata: { first_name, last_name, fullname },
     });
     if (error) throw error;
@@ -93,10 +111,11 @@ async function main() {
     full_name: fullname || email.split('@')[0],
     role,
     status: 'active',
+    permissions,
     updated_at: new Date().toISOString(),
   });
   if (profileError) throw profileError;
-  console.log({ id: userId, email, role });
+  console.log({ id: userId, email, role, permissions });
 }
 
 main().catch((err) => {

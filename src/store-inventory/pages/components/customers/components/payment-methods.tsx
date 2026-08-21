@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from "@/lib/helpers";    
 import { defaultPaymentMethods } from '@/store-inventory/data/customer-profile';
 import type { CustomerPaymentMethod } from '@/store-inventory/types';
@@ -16,11 +17,12 @@ export function PaymentMethods({
   methods?: CustomerPaymentMethod[];
   customerName?: string;
 }) {
-  const paymentMethods = methods?.length ? methods : defaultPaymentMethods(customerName || 'Customer');
+  const t = useT();
+  const paymentMethods = methods?.length ? methods : defaultPaymentMethods(customerName || t('Customer'));
   return (
     <Card className="bg-accent/70 rounded-md shadow-none"> 
       <CardContent className="p-0"> 
-        <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">Payment Methods</h3>
+        <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">{t('Payment Methods')}</h3>
         <div className="bg-background rounded-md m-1 mt-0 border border-input py-1 px-3.5">
           {paymentMethods.map((method, index) => (
             <div key={index}>
@@ -42,7 +44,7 @@ export function PaymentMethods({
                       <Link to={"#"} className="font-medium text-foreground text-sm hover:text-primary">{method.name}</Link>
                       {method.isPrimary && (
                         <Badge className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                          Primary
+                          {t('Primary')}
                         </Badge>
                       )}
                     </div>
@@ -50,7 +52,7 @@ export function PaymentMethods({
                   </div>
                 </div>
                 <Button variant="outline" size="sm">
-                  Edit
+                  {t('Edit')}
                 </Button>
               </div>
               {index < paymentMethods.length - 1 && <Separator />}

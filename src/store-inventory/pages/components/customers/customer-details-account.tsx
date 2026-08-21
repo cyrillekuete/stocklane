@@ -1,6 +1,7 @@
 'use client';
 
 import { format } from 'date-fns';
+import { useT } from '@/i18n/use-t';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,6 +38,7 @@ function formatDate(value: string) {
 }
 
 export function CustomerDetailsAccount({ customer }: { customer?: CustomerListRow }) {
+  const t = useT();
   const { data = [], isLoading, isError } = useCustomerAccountTransactions(
     isSupabaseConfigured ? customer?.id : undefined,
   );
@@ -61,27 +63,27 @@ export function CustomerDetailsAccount({ customer }: { customer?: CustomerListRo
       />
       <Card>
         <CardHeader className="py-3">
-          <CardTitle className="text-base">Account activity</CardTitle>
+          <CardTitle className="text-base">{t('Account activity')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {isError && (
-            <p className="px-5 py-6 text-sm text-destructive">Unable to load account activity.</p>
+            <p className="px-5 py-6 text-sm text-destructive">{t('Unable to load account activity.')}</p>
           )}
-          {isLoading && <p className="px-5 py-6 text-sm text-muted-foreground">Loading account activity...</p>}
+          {isLoading && <p className="px-5 py-6 text-sm text-muted-foreground">{t('Loading account activity...')}</p>}
           {!isLoading && !isError && data.length === 0 && (
-            <p className="px-5 py-6 text-sm text-muted-foreground">No deposits or account charges yet.</p>
+            <p className="px-5 py-6 text-sm text-muted-foreground">{t('No deposits or account charges yet.')}</p>
           )}
           {data.length > 0 && (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="border-y border-border bg-muted/40 text-muted-foreground">
                   <tr>
-                    <th className="px-5 py-2.5 text-start font-medium">Date</th>
-                    <th className="px-5 py-2.5 text-start font-medium">Type</th>
-                    <th className="px-5 py-2.5 text-start font-medium">Method</th>
-                    <th className="px-5 py-2.5 text-start font-medium">Reference</th>
-                    <th className="px-5 py-2.5 text-end font-medium">Amount</th>
-                    <th className="px-5 py-2.5 text-end font-medium">Balance</th>
+                    <th className="px-5 py-2.5 text-start font-medium">{t('Date')}</th>
+                    <th className="px-5 py-2.5 text-start font-medium">{t('Type')}</th>
+                    <th className="px-5 py-2.5 text-start font-medium">{t('Method')}</th>
+                    <th className="px-5 py-2.5 text-start font-medium">{t('Reference')}</th>
+                    <th className="px-5 py-2.5 text-end font-medium">{t('Amount')}</th>
+                    <th className="px-5 py-2.5 text-end font-medium">{t('Balance')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -99,16 +101,17 @@ export function CustomerDetailsAccount({ customer }: { customer?: CustomerListRo
 }
 
 function TransactionRow({ row }: { row: CustomerAccountTransaction }) {
+  const t = useT();
   const reference = row.posSaleNumber || row.notes || '—';
   return (
     <tr className="border-b border-border last:border-0">
       <td className="px-5 py-3 whitespace-nowrap">{formatDate(row.createdAt)}</td>
       <td className="px-5 py-3">
         <Badge variant={typeVariant(row)} appearance="light">
-          {typeLabel(row)}
+          {t(typeLabel(row))}
         </Badge>
       </td>
-      <td className="px-5 py-3">{formatPaymentMethod(row.paymentMethod)}</td>
+      <td className="px-5 py-3">{t(formatPaymentMethod(row.paymentMethod))}</td>
       <td className="px-5 py-3">{reference}</td>
       <td
         className={cn(

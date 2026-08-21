@@ -9,12 +9,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Kbd } from '@/components/ui/kbd';
+import { useT } from '@/i18n/use-t';
 
 function SearchField({
   inputRef,
 }: {
   inputRef?: React.RefObject<HTMLInputElement | null>;
 }) {
+  const t = useT();
   return (
     <div className="relative">
       <Search className="size-4 text-muted-foreground absolute top-1/2 -translate-y-1/2 start-2" />
@@ -22,7 +24,7 @@ function SearchField({
         ref={inputRef}
         type="text"
         className="px-7"
-        placeholder="Search shop"
+        placeholder={t('Search shop')}
       />
       <Kbd
         className="absolute top-1/2 -translate-y-1/2 end-2 gap-1"
@@ -38,6 +40,7 @@ function SearchField({
 export function SearchShop() {
   const isMobile = useIsMobile();
   const inputRef = useRef<HTMLInputElement>(null);
+  const t = useT();
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -77,7 +80,7 @@ export function SearchShop() {
         ref={inputRef}
         type="text"
         className="px-7"
-        placeholder="Search shop"
+        placeholder={t('Search shop')}
       />
       <Kbd
         className="absolute top-1/2 -translate-y-1/2 end-2 gap-1"

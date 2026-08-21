@@ -3,6 +3,7 @@ import { BadgeDot } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useT } from '@/i18n/use-t';
 import { formatMoney } from '@/store-inventory/lib/format';
 import { useStockSummary } from '@/store-inventory/hooks/use-inventory';
 
@@ -21,6 +22,7 @@ type InventoryItems = Array<InventoryItem>;
 type InventoryProps = object;
 
 const Inventory = ({}: InventoryProps) => {
+  const t = useT();
   const { data: summary } = useStockSummary();
   const inStock = summary?.inStock ?? 0;
   const lowStock = summary?.lowStock ?? 0;
@@ -43,7 +45,7 @@ const Inventory = ({}: InventoryProps) => {
       <div key={index} className="flex items-center gap-1.5">
         <BadgeDot className={item.badgeColor} />
         <span className="text-sm font-normal text-secondary-foreground">
-          {item.label}
+          {t(item.label)}
         </span>
       </div>
     );
@@ -58,14 +60,14 @@ const Inventory = ({}: InventoryProps) => {
         <span className="text-foreground font-normal">{row.name}</span>
         <div className="flex items-center gap-3">
           <span className="text-foreground font-normal shrink-0">
-            Qty: {row.qty}
+            {t('Qty: {qty}', { qty: row.qty })}
           </span>
           <Separator className="bg-gray-300 h-3" orientation="vertical" />
           <Link
             to="/store-inventory/stock-planner"
             className="hover:text-primary hover:underline hover:underline-offset-2"
           >
-            Order
+            {t('Order')}
           </Link>
         </div>
       </div>
@@ -75,16 +77,16 @@ const Inventory = ({}: InventoryProps) => {
   return (
     <Card className="h-full">
       <CardHeader className="lg:px-7.5">
-        <CardTitle>Inventory</CardTitle>
+        <CardTitle>{t('Inventory')}</CardTitle>
         <Button mode="link" underline="solid" asChild>
-          <Link to="/store-inventory/current-stock">See All</Link>
+          <Link to="/store-inventory/current-stock">{t('See All')}</Link>
         </Button>
       </CardHeader>
       <CardContent className="flex flex-col justify-between gap-2 p-5 lg:p-7.5">
         <div>
           <div className="flex flex-col gap-0.5 mb-2">
             <span className="text-sm font-normal text-muted-foreground">
-              Total Asset Value
+              {t('Total Asset Value')}
             </span>
             <span className="text-3xl font-semibold text-foreground">
               {formatMoney(totalValue)}
@@ -112,10 +114,10 @@ const Inventory = ({}: InventoryProps) => {
 
           <div className="flex items-center justify-between mb-0.5">
             <span className="text-foreground font-medium text-sm">
-              Low stock
+              {t('Low stock')}
             </span>
             <Button mode="link" underline="solid" asChild>
-              <Link to="/store-inventory/stock-planner">See All</Link>
+              <Link to="/store-inventory/stock-planner">{t('See All')}</Link>
             </Button>
           </div>
         </div>
@@ -125,7 +127,7 @@ const Inventory = ({}: InventoryProps) => {
             rows.map((row, index) => renderRow(row, index))
           ) : (
             <div className="text-sm text-muted-foreground px-1 py-2">
-              No low-stock products right now.
+              {t('No low-stock products right now.')}
             </div>
           )}
         </div>

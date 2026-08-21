@@ -8,6 +8,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+import { useT } from '@/i18n/use-t';
+
 function DataGridColumnVisibility<TData>({
   table,
   trigger,
@@ -15,12 +17,13 @@ function DataGridColumnVisibility<TData>({
   table: Table<TData>;
   trigger: ReactNode;
 }) {
+  const t = useT();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[150px]">
         <DropdownMenuLabel className="font-medium">
-          Toggle Columns
+          {t('Toggle Columns')}
         </DropdownMenuLabel>
         {table
           .getAllColumns()
@@ -37,7 +40,9 @@ function DataGridColumnVisibility<TData>({
                 onSelect={(event) => event.preventDefault()}
                 onCheckedChange={(value) => column.toggleVisibility(!!value)}
               >
-                {column.columnDef.meta?.headerTitle || column.id}
+                {column.columnDef.meta?.headerTitle
+                  ? t(String(column.columnDef.meta.headerTitle))
+                  : t(column.id)}
               </DropdownMenuCheckboxItem>
             );
           })}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { X, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { isRemoteAsset } from '@/store-inventory/lib/format';
 import { mapCustomerError } from '@/store-inventory/lib/customer-errors';
@@ -154,6 +155,7 @@ function CustomerAvatarUpload({
   image: string | null;
   onChange: (value: string | null) => void;
 }) {
+  const t = useT();
   const preview = avatarPreview(image);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,7 +172,7 @@ function CustomerAvatarUpload({
         <div className="w-full h-[200px] bg-accent/50 border border-border rounded-lg flex items-center justify-center">
           {preview ? (
             <div className="relative flex items-center justify-center w-full h-full">
-              <img src={preview} alt="Customer Avatar" className="w-full h-full object-cover rounded-lg" />
+              <img src={preview} alt={t('Customer Avatar')} className="w-full h-full object-cover rounded-lg" />
               <Button
                 variant="outline"
                 size="icon"
@@ -182,7 +184,7 @@ function CustomerAvatarUpload({
               <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="customer-avatar-upload" />
               <label htmlFor="customer-avatar-upload" className="absolute bottom-3 right-3">
                 <Button size="sm" variant="outline" asChild>
-                  <span>Change</span>
+                  <span>{t('Change')}</span>
                 </Button>
               </label>
             </div>
@@ -192,7 +194,7 @@ function CustomerAvatarUpload({
               <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="customer-avatar-upload" />
               <label htmlFor="customer-avatar-upload" className="absolute bottom-3 right-3">
                 <Button size="sm" variant="outline" asChild>
-                  <span>Upload</span>
+                  <span>{t('Upload')}</span>
                 </Button>
               </label>
             </div>
@@ -215,6 +217,7 @@ function PhoneNumberInput({
   country: (typeof countries)[number];
   onCountryChange: (country: (typeof countries)[number]) => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
 
   const handlePhoneChange = (inputValue: string) => {
@@ -262,10 +265,10 @@ function PhoneNumberInput({
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0" align="start">
           <Command>
-            <CommandInput placeholder="Search country..." />
+            <CommandInput placeholder={t('Search country...')} />
             <CommandList>
               <ScrollArea className="h-[300px]">
-                <CommandEmpty>No country found.</CommandEmpty>
+                <CommandEmpty>{t('No country found.')}</CommandEmpty>
                 <CommandGroup>
                   {countries.map((item) => (
                     <CommandItem
@@ -278,7 +281,7 @@ function PhoneNumberInput({
                     >
                       <span className="flex items-center gap-1.5 leading-none">
                         <span className="text-sm">{item.flag}</span>
-                        <span className="text-sm text-foreground truncate">{item.name}</span>
+                        <span className="text-sm text-foreground truncate">{t(item.name)}</span>
                         <span className="text-sm text-muted-foreground">{item.dialCode}</span>
                       </span>
                       {country.code === item.code && <CommandCheck />}
@@ -292,7 +295,7 @@ function PhoneNumberInput({
       </Popover>
       <Input
         type="tel"
-        placeholder="Enter phone number"
+        placeholder={t('Enter phone number')}
         value={value}
         onChange={(e) => handlePhoneChange(e.target.value)}
         className="rounded-l-none flex-1"
@@ -314,6 +317,7 @@ export function CustomerFormSheet({
 }) {
   const createCustomer = useCreateCustomer();
   const updateCustomer = useUpdateCustomer();
+  const t = useT();
   const isNewMode = mode === 'new';
   const isPending = createCustomer.isPending || updateCustomer.isPending;
 
@@ -341,12 +345,12 @@ export function CustomerFormSheet({
 
   const handleSave = async () => {
     if (!fullName.trim()) {
-      toast.error('Customer name is required');
+      toast.error(t('Customer name is required'));
       return;
     }
     const trimmedEmail = email.trim();
     if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      toast.error('Enter a valid email address');
+      toast.error(t('Enter a valid email address'));
       return;
     }
     const nextStatus = status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Active';
@@ -369,10 +373,10 @@ export function CustomerFormSheet({
       } else {
         await createCustomer.mutateAsync(payload);
       }
-      toast.success(isNewMode ? 'Customer created' : 'Customer saved');
+      toast.success(isNewMode ? t('Customer created') : t('Customer saved'));
       onOpenChange(false);
     } catch (error) {
-      toast.error(mapCustomerError(error).message);
+      toast.error(t(mapCustomerError(error).message));
     }
   };
 
@@ -386,7 +390,7 @@ export function CustomerFormSheet({
         {/* Header */}
         <SheetHeader className="border-b py-3.5 px-5 border-border">
           <SheetTitle className="font-medium">
-            {isNewMode ? 'New Customer' : 'Edit Customer'}
+            {isNewMode ? t('New Customer') : t('Edit Customer')}
           </SheetTitle>
         </SheetHeader>
 
@@ -406,9 +410,9 @@ export function CustomerFormSheet({
               <div className="grow lg:border-s border-border space-y-5 py-5 lg:ps-5">
                 {/* Full Name */}
                 <div className="flex items-center gap-10">
-                  <Label className="text-xs font-medium w-24 shrink-0">Full Name</Label>
+                  <Label className="text-xs font-medium w-24 shrink-0">{t('Full Name')}</Label>
                   <Input
-                    placeholder="Full Name"
+                    placeholder={t('Full Name')}
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="flex-1"
@@ -417,9 +421,9 @@ export function CustomerFormSheet({
 
                 {/* Email */}
                 <div className="flex items-center gap-10">
-                  <Label className="text-xs font-medium w-24 shrink-0">Email</Label>
+                  <Label className="text-xs font-medium w-24 shrink-0">{t('Email')}</Label>
                   <Input
-                    placeholder="Email"
+                    placeholder={t('Email')}
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -429,7 +433,7 @@ export function CustomerFormSheet({
 
                 {/* Phone Number */}
                 <div className="flex items-center gap-10">
-                  <Label className="text-xs font-medium w-24 shrink-0">Phone Number</Label>
+                  <Label className="text-xs font-medium w-24 shrink-0">{t('Phone Number')}</Label>
                   <div className="flex-1">
                     <PhoneNumberInput
                       value={phoneNumber}
@@ -448,25 +452,25 @@ export function CustomerFormSheet({
 
                 {/* Status */}
                 <div className="flex items-center gap-10">
-                  <Label className="text-xs font-medium w-24 shrink-0">Status</Label>
+                  <Label className="text-xs font-medium w-24 shrink-0">{t('Status')}</Label>
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select Status" />
+                      <SelectValue placeholder={t('Select Status')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="banned">Banned</SelectItem>
+                      <SelectItem value="active">{t('Active')}</SelectItem>
+                      <SelectItem value="inactive">{t('Inactive')}</SelectItem>
+                      <SelectItem value="pending">{t('Pending')}</SelectItem>
+                      <SelectItem value="banned">{t('Banned')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {/* Company Name */}
                 <div className="flex items-center gap-10">
-                  <Label className="text-xs font-medium w-24 shrink-0">Company Name</Label>
+                  <Label className="text-xs font-medium w-24 shrink-0">{t('Company Name')}</Label>
                   <Input
-                    placeholder="Company Name"
+                    placeholder={t('Company Name')}
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     className="flex-1"
@@ -475,10 +479,10 @@ export function CustomerFormSheet({
 
                 {/* Time Zone */}
                 <div className="flex items-center gap-10">
-                  <Label className="text-xs font-medium w-24 shrink-0">Time Zone</Label>
+                  <Label className="text-xs font-medium w-24 shrink-0">{t('Time Zone')}</Label>
                   <Select value={timeZone} onValueChange={setTimeZone}>
                     <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select Time Zone" />
+                      <SelectValue placeholder={t('Select Time Zone')} />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="europe/amsterdam">Europe/Amsterdam</SelectItem>
@@ -513,13 +517,13 @@ export function CustomerFormSheet({
         {/* Footer */}
         <SheetFooter className="flex-row border-t pb-4 p-5 border-border gap-2.5 lg:gap-0">
           <Button variant="ghost" onClick={handleClose}>
-            Close
+            {t('Close')}
           </Button>
           <Button variant="outline" onClick={handleClose}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button variant="mono" onClick={handleSave} disabled={isPending}>
-            {isPending ? 'Saving...' : isNewMode ? 'Create' : 'Save'}
+            {isPending ? t('Saving...') : isNewMode ? t('Create') : t('Save')}
           </Button>
         </SheetFooter>
       </SheetContent>

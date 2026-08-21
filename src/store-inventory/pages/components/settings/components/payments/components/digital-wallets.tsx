@@ -3,9 +3,11 @@
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { toAbsoluteUrl } from "@/lib/helpers";
+import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "../../../settings-form-context";
 
 export function DigitalWallets() {
+  const t = useT();
   const { draft, updateDraft } = useSettingsForm();
 
   const wallets = [
@@ -58,7 +60,7 @@ export function DigitalWallets() {
               </Card>
               <div>
                 <h3 className="font-medium text-2sm text-foreground">{wallet.name}</h3>
-                <p className="text-xs text-muted-foreground font-normal">{wallet.description}</p>
+                <p className="text-xs text-muted-foreground font-normal">{t(wallet.description)}</p>
               </div>
             </div>
           </div>

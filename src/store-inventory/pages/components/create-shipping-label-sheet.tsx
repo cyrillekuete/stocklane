@@ -4,6 +4,7 @@ import React, { useId, useState } from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useT } from '@/i18n/use-t';
 import { BadgeDot } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -60,6 +61,7 @@ export function CreateShippingLabelSheet({
   open,
   onOpenChange,
 }: CreateShippingLabelSheetProps) {
+  const t = useT();
   const prices: Prices = {
     Subtotal: formatMoney(19),
     Discount: formatMoney(0),
@@ -98,7 +100,7 @@ export function CreateShippingLabelSheet({
       <SheetContent className="gap-0 lg:w-[940px] sm:max-w-none inset-5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
           <SheetTitle className="flex items-center gap-2.5">
-            Create Shipping Label
+            {t('Create Shipping Label')}
           </SheetTitle>
         </SheetHeader>
 
@@ -144,10 +146,10 @@ export function CreateShippingLabelSheet({
                       ].map((item) => (
                         <div key={item.label} className="flex flex-col gap-1.5">
                           <span className="text-2sm font-normal text-secondary-foreground">
-                            {item.label}
+                            {t(item.label)}
                           </span>
                           <span className="text-2sm font-medium text-foreground">
-                            {item.value}
+                            {item.label === 'Shipping Priority' ? t(item.value) : item.value}
                           </span>
                         </div>
                       ))}
@@ -158,7 +160,7 @@ export function CreateShippingLabelSheet({
                 {/* Team */}
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Team</CardTitle>
+                    <CardTitle className="text-2sm">{t('Team')}</CardTitle>
                   </CardHeader>
 
                   <CardContent>
@@ -184,7 +186,7 @@ export function CreateShippingLabelSheet({
                                 </Link>
                                 <div className="flex items-center gap-2.5">
                                   <span className="text-xs font-normal text-secondary-foreground">
-                                    SKU:{' '}
+                                    {t('SKU')}:{' '}
                                     <span className="text-xs font-medium text-foreground">
                                       {item.sku}
                                     </span>
@@ -193,9 +195,9 @@ export function CreateShippingLabelSheet({
                                   <BadgeDot className="bg-muted-foreground size-1 shrink-0" />
 
                                   <span className="text-xs font-normal text-secondary-foreground">
-                                    Color
+                                    {t('Color')}
                                     <span className="text-xs font-medium text-secondary-foreground ms-1">
-                                      {item.color}
+                                      {t(item.color)}
                                     </span>
                                   </span>
                                 </div>
@@ -204,7 +206,7 @@ export function CreateShippingLabelSheet({
 
                             <div className="flex flex-col text-end gap-2.5">
                               <span className="text-xs font-medium text-dark">
-                                Weight
+                                {t('Weight')}
                               </span>
                               <InputWrapper className="w-[66px] h-[28px]">
                                 <Input
@@ -231,7 +233,7 @@ export function CreateShippingLabelSheet({
                 <Card className="rounded-md">
                   <Tabs defaultValue="custom" className="w-full">
                     <CardHeader className="min-h-[40px] bg-accent/50">
-                      <CardTitle className="text-sm">Packaging</CardTitle>
+                      <CardTitle className="text-sm">{t('Packaging')}</CardTitle>
                       <TabsList
                         size="xs"
                         className="flex gap-3.5 border-none"
@@ -241,13 +243,13 @@ export function CreateShippingLabelSheet({
                           value="custom"
                           className="flex-1 pb-3 -mb-1.5 data-[state=active]:text-foreground text-muted-foreground data-[state=active]:border-foreground border-b-[1px] hover:text-inherit"
                         >
-                          Custom Package
+                          {t('Custom Package')}
                         </TabsTrigger>
                         <TabsTrigger
                           value="carrier"
                           className="flex-1 pb-3 -mb-1.5 gap-3 data-[state=active]:text-foreground text-muted-foreground data-[state=active]:border-foreground border-b-[1px] hover:text-inherit"
                         >
-                          Carrier Package
+                          {t('Carrier Package')}
                         </TabsTrigger>
                       </TabsList>
                     </CardHeader>
@@ -255,39 +257,39 @@ export function CreateShippingLabelSheet({
                     <CardContent className="pt-1.5">
                       <TabsContent value="custom" className="space-y-4">
                         <div className="flex flex-col gap-2.5">
-                          <Label className="text-xs">Package Name</Label>
+                          <Label className="text-xs">{t('Package Name')}</Label>
                           <Input defaultValue="Mike Anderson – Medium Box|" />
                         </div>
 
                         <div className="grid sm:grid-cols-2 lg:gap-5 gap-2">
                           <div className="flex flex-col gap-2.5">
-                            <Label className="text-xs">Package Type</Label>
+                            <Label className="text-xs">{t('Package Type')}</Label>
                             <Select
                               defaultValue="medium-box"
                               indicatorPosition="right"
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Medium Box" />
+                                <SelectValue placeholder={t('Medium Box')} />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="small-box">
-                                  Small Box
+                                  {t('Small Box')}
                                 </SelectItem>
                                 <SelectItem value="medium-box">
-                                  Medium Box
+                                  {t('Medium Box')}
                                 </SelectItem>
                                 <SelectItem value="large-box">
-                                  Large Box
+                                  {t('Large Box')}
                                 </SelectItem>
                                 <SelectItem value="xlarge-box">
-                                  Extra Large Box
+                                  {t('Extra Large Box')}
                                 </SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
 
                           <div className="flex flex-col gap-2.5">
-                            <Label className="text-xs">Total Weight</Label>
+                            <Label className="text-xs">{t('Total Weight')}</Label>
                             <InputWrapper>
                               <Input type="email" placeholder="2.1" />
                               <span className="text-2sm font-normal text-muted-foreground">
@@ -299,21 +301,21 @@ export function CreateShippingLabelSheet({
 
                         <div className="flex flex-row items-center lg:gap-5 gap-2">
                           <div className="flex basis-2/4 flex-col gap-2.5">
-                            <Label className="text-xs">Length</Label>
+                            <Label className="text-xs">{t('Length')}</Label>
                             <Input type="email" placeholder="48" />
                           </div>
                           <div className="flex basis-2/4 flex-col gap-2.5">
-                            <Label className="text-xs">Width</Label>
+                            <Label className="text-xs">{t('Width')}</Label>
                             <Input type="email" placeholder="36" />
                           </div>
                           <div className="flex basis-2/4 flex-col gap-2.5">
-                            <Label className="text-xs">Height</Label>
+                            <Label className="text-xs">{t('Height')}</Label>
                             <Input type="email" placeholder="20" />
                           </div>
 
                           <div className="flex lg:basis-1/4 flex-col gap-2.5">
                             <Label className="text-xs text-transparent">
-                              Height
+                              {t('Height')}
                             </Label>
                             <Select defaultValue="sm" indicatorPosition="right">
                               <SelectTrigger>
@@ -340,45 +342,45 @@ export function CreateShippingLabelSheet({
                             }}
                             size="sm"
                           />
-                          <Label>Save package for future orders</Label>
+                          <Label>{t('Save package for future orders')}</Label>
                         </div>
                       </TabsContent>
 
                       <TabsContent value="carrier" className="space-y-4">
                         <div className="flex flex-col gap-2.5">
-                          <Label className="text-xs">Package Name</Label>
+                          <Label className="text-xs">{t('Package Name')}</Label>
                           <Input defaultValue="Mike Anderson – Medium Box|" />
                         </div>
 
                         <div className="grid sm:grid-cols-2 lg:gap-5 gap-2">
                           <div className="flex flex-col gap-2.5">
-                            <Label className="text-xs">Package Type</Label>
+                            <Label className="text-xs">{t('Package Type')}</Label>
                             <Select
                               defaultValue="large-box"
                               indicatorPosition="right"
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Large Box" />
+                                <SelectValue placeholder={t('Large Box')} />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="small-box">
-                                  Small Box
+                                  {t('Small Box')}
                                 </SelectItem>
                                 <SelectItem value="medium-box">
-                                  Medium Box
+                                  {t('Medium Box')}
                                 </SelectItem>
                                 <SelectItem value="large-box">
-                                  Large Box
+                                  {t('Large Box')}
                                 </SelectItem>
                                 <SelectItem value="xlarge-box">
-                                  Extra Large Box
+                                  {t('Extra Large Box')}
                                 </SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
 
                           <div className="flex flex-col gap-2.5">
-                            <Label className="text-xs">Total Weight</Label>
+                            <Label className="text-xs">{t('Total Weight')}</Label>
                             <InputWrapper>
                               <Input type="email" placeholder="1.4" />
                               <span className="text-2sm font-normal text-muted-foreground">
@@ -390,21 +392,21 @@ export function CreateShippingLabelSheet({
 
                         <div className="flex flex-row items-center gap-5">
                           <div className="flex basis-2/4 flex-col gap-2.5">
-                            <Label className="text-xs">Length</Label>
+                            <Label className="text-xs">{t('Length')}</Label>
                             <Input type="email" placeholder="34" />
                           </div>
                           <div className="flex basis-2/4 flex-col gap-2.5">
-                            <Label className="text-xs">Width</Label>
+                            <Label className="text-xs">{t('Width')}</Label>
                             <Input type="email" placeholder="26" />
                           </div>
                           <div className="flex basis-2/4 flex-col gap-2.5">
-                            <Label className="text-xs">Height</Label>
+                            <Label className="text-xs">{t('Height')}</Label>
                             <Input type="email" placeholder="23" />
                           </div>
 
                           <div className="flex basis-1/4 flex-col gap-2.5">
                             <Label className="text-xs text-transparent">
-                              Height
+                              {t('Height')}
                             </Label>
                             <Select defaultValue="mm" indicatorPosition="right">
                               <SelectTrigger>
@@ -429,7 +431,7 @@ export function CreateShippingLabelSheet({
                             }}
                             size="sm"
                           />
-                          <Label>Save package for future </Label>
+                          <Label>{t('Save package for future')}</Label>
                         </div>
                       </TabsContent>
                     </CardContent>
@@ -441,12 +443,12 @@ export function CreateShippingLabelSheet({
               <div className="w-full lg:w-[320px] lg:mt-5 space-y-5 lg:ps-5 shrink-0">
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Summary</CardTitle>
+                    <CardTitle className="text-2sm">{t('Summary')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col gap-2">
                       <span className="text-sm font-medium text-foreground">
-                        Shipping to Jeroen’s Home
+                        {t("Shipping to Jeroen's Home")}
                       </span>
                       <span className="text-2sm font-normal text-secondary-foreground">
                         Prinsengracht 24
@@ -460,7 +462,7 @@ export function CreateShippingLabelSheet({
 
                     <div className="flex flex-col gap-2">
                       <span className="text-sm font-medium text-foreground">
-                        Price Details
+                        {t('Price Details')}
                       </span>
                       {Object.entries(prices).map(([key, value]) => (
                         <div
@@ -468,7 +470,7 @@ export function CreateShippingLabelSheet({
                           className="flex items-center justify-between"
                         >
                           <span className="text-2sm font-normal text-secondary-foreground">
-                            {key}
+                            {t(key)}
                           </span>
                           <span className="text-2sm font-medium text-foreground">
                             {value}
@@ -481,7 +483,7 @@ export function CreateShippingLabelSheet({
 
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-normal text-secondary-foreground">
-                        Total
+                        {t('Total')}
                       </span>
                       <span className="text-sm font-semibold text-foreground">
                         {formatMoney(22.99)}
@@ -491,7 +493,7 @@ export function CreateShippingLabelSheet({
                 </Card>
 
                 <div className="flex flex-col gap-2.5 mb-3.5">
-                  <Label className="text-xs">Shipping Date</Label>
+                  <Label className="text-xs">{t('Shipping Date')}</Label>
                   <Popover>
                     <PopoverTrigger asChild>
                       <div className="relative w-full shrink-0">
@@ -513,7 +515,7 @@ export function CreateShippingLabelSheet({
                           placeholder={!date}
                           className="w-full justify-between"
                         >
-                          <span>{date ? format(date, 'PPP') : 'Active'}</span>
+                          <span>{date ? format(date, 'PPP') : t('Active')}</span>
                           <CalendarIcon />
                         </Button>
                       </div>
@@ -539,14 +541,14 @@ export function CreateShippingLabelSheet({
                     }}
                   />
                   <div className="text-xs font-medium text-secondary-foreground">
-                    Send
+                    {t('Send')}
                     <Link
                       to="#"
                       className="hover:text-primary text-xs font-medium text-primary mx-1"
                     >
-                      Shipping Info
+                      {t('Shipping Info')}
                     </Link>
-                    to Customer
+                    {t('to Customer')}
                   </div>
                 </div>
               </div>
@@ -556,17 +558,17 @@ export function CreateShippingLabelSheet({
 
         <SheetFooter className="flex items-center not-only-of-type:justify-between border-t py-5 px-5 border-border gap-2">
           <div className="text-xs font-medium text-secondary-foreground">
-            Read Shipping
+            {t('Read Shipping')}
             <Link
               to="#"
               className="hover:text-primary text-xs font-medium text-primary ms-1"
             >
-              Terms & Conditions
+              {t('Terms & Conditions')}
             </Link>
           </div>
           <div className="flex items-center gap-2.5">
-            <Button variant="outline">Cancel</Button>
-            <Button variant="mono">Buy Shipping Label</Button>
+            <Button variant="outline">{t('Cancel')}</Button>
+            <Button variant="mono">{t('Buy Shipping Label')}</Button>
           </div>
         </SheetFooter>
       </SheetContent>

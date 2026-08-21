@@ -1,4 +1,5 @@
 import { ReactNode } from 'react';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,6 +17,8 @@ interface DropdownAppsItem {
 }
 
 export function AppsDropdownMenu({ trigger }: { trigger: ReactNode }) {
+  const t = useT();
+
   const items: DropdownAppsItem[] = [
     {
       logo: 'jira.svg',
@@ -54,8 +57,8 @@ export function AppsDropdownMenu({ trigger }: { trigger: ReactNode }) {
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent className="w-[325px] p-0" side="bottom" align="end">
         <div className="flex items-center justify-between gap-2.5 text-xs text-secondary-foreground font-medium px-5 py-3 border-b border-b-border">
-          <span>Apps</span>
-          <span>Enabled</span>
+          <span>{t('Apps')}</span>
+          <span>{t('Enabled')}</span>
         </div>
         <div className="flex flex-col scrollable-y-auto max-h-[400px] divide-y divide-border">
           {items.map((item, index) => (
@@ -79,7 +82,7 @@ export function AppsDropdownMenu({ trigger }: { trigger: ReactNode }) {
                     {item.title}
                   </a>
                   <span className="text-xs font-medium text-secondary-foreground">
-                    {item.description}
+                    {t(item.description)}
                   </span>
                 </div>
               </div>
@@ -89,7 +92,7 @@ export function AppsDropdownMenu({ trigger }: { trigger: ReactNode }) {
         </div>
         <div className="grid p-5 border-t border-t-border">
           <Button variant="outline" size="sm">
-            Go to Apps
+            {t('Go to Apps')}
           </Button>
         </div>
       </DropdownMenuContent>

@@ -15,6 +15,7 @@ import {
 } from '@tanstack/react-table';
 import { Link } from 'react-router';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
@@ -72,6 +73,7 @@ interface ProductInfoSheetProps {
 const mockData: IData[] = productInfoMockData;
 
 const ProductInfoSheet = ({ onClose }: ProductInfoSheetProps) => {
+  const t = useT();
   // Always use local mockData for now
   const data = mockData; 
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
@@ -95,7 +97,7 @@ const ProductInfoSheet = ({ onClose }: ProductInfoSheetProps) => {
   }: IColumnFilterProps<TData, TValue>) => {
     return (
       <Input
-        placeholder="Filter..."
+        placeholder={t('Filter...')}
         value={(column.getFilterValue() as string) ?? ''}
         onChange={(event) => column.setFilterValue(event.target.value)}
         variant="sm"
@@ -164,7 +166,7 @@ const ProductInfoSheet = ({ onClose }: ProductInfoSheetProps) => {
 
                 <span className="inline-flex items-center gap-0.5">
                   <span className="text-xs text-muted-foreground uppercase">
-                    sku:
+                    {t('SKU')}:
                   </span>{' '}
                   <span className="text-xs font-medium text-secondary-foreground">
                     {productInfo.label}
@@ -218,7 +220,7 @@ const ProductInfoSheet = ({ onClose }: ProductInfoSheetProps) => {
           const variant = trends.variant as keyof BadgeProps['variant'];
           return (
             <Badge variant={variant} appearance="light">
-              {trends.label}
+              {t(trends.label)}
             </Badge>
           );
         },
@@ -297,7 +299,7 @@ const ProductInfoSheet = ({ onClose }: ProductInfoSheetProps) => {
         },
       },
     ],
-    []
+    [t]
   );
 
   useEffect(() => {
@@ -305,18 +307,18 @@ const ProductInfoSheet = ({ onClose }: ProductInfoSheetProps) => {
 
     if (selectedRowIds.length > 0) {
       toast.custom(
-        (t) => (
+        (toastId) => (
           <Alert
             variant="mono"
             icon="success"
             close={true}
-            onClose={() => toast.dismiss(t)}
+            onClose={() => toast.dismiss(toastId)}
           >
             <AlertIcon>
               <Info />
             </AlertIcon>
             <AlertTitle>
-              Selected row IDs: {selectedRowIds.join(', ')}
+              {t('Selected row IDs: {ids}', { ids: selectedRowIds.join(', ') })}
             </AlertTitle>
           </Alert>
         ),

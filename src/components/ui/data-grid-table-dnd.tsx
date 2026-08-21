@@ -24,6 +24,7 @@ import {
   Row,
 } from '@tanstack/react-table';
 import { GripVertical } from 'lucide-react';
+import { useT } from '@/i18n/use-t';
 import { Button } from '@/components/ui/button';
 import { useDataGrid } from '@/components/ui/data-grid';
 import {
@@ -47,6 +48,7 @@ function DataGridTableDndHeader<TData>({
 }: {
   header: Header<TData, unknown>;
 }) {
+  const t = useT();
   const { props } = useDataGrid();
   const { column } = header;
 
@@ -85,7 +87,7 @@ function DataGridTableDndHeader<TData>({
           className="-ms-2 size-6"
           {...attributes}
           {...listeners}
-          aria-label="Drag to reorder"
+          aria-label={t('Drag to reorder')}
         >
           <GripVertical className="opacity-50" aria-hidden="true" />
         </Button>

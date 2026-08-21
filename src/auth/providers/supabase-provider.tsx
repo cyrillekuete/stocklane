@@ -3,7 +3,7 @@ import { SupabaseAdapter } from '@/auth/adapters/supabase-adapter';
 import { AuthContext } from '@/auth/context/auth-context';
 import * as authHelper from '@/auth/lib/helpers';
 import type { AuthModel, UserModel } from '@/auth/lib/models';
-import { roleHasPermission, type AppPermission, type AppRole } from '@/auth/lib/roles';
+import { hasAppPermission, type AppPermission, type AppRole } from '@/auth/lib/roles';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 export function AuthProvider({ children }: PropsWithChildren) {
@@ -145,8 +145,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
   };
 
   const hasPermission = useCallback(
-    (permission: AppPermission) => roleHasPermission(role, permission),
-    [role],
+    (permission: AppPermission) => hasAppPermission(role, currentUser?.permissions, permission),
+    [currentUser?.permissions, role],
   );
 
   const value = useMemo(

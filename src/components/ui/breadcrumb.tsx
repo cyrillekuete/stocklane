@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { ChevronRight, MoreHorizontal } from 'lucide-react';
 import { Slot as SlotPrimitive } from 'radix-ui';
+import { useT } from '@/i18n/use-t';
 import { cn } from '@/lib/utils';
 
 function Breadcrumb({
@@ -84,7 +85,9 @@ const BreadcrumbSeparator = ({
 const BreadcrumbEllipsis = ({
   className,
   ...props
-}: React.ComponentProps<'span'>) => (
+}: React.ComponentProps<'span'>) => {
+  const t = useT();
+  return (
   <span
     data-slot="breadcrumb-ellipsis"
     role="presentation"
@@ -93,9 +96,10 @@ const BreadcrumbEllipsis = ({
     {...props}
   >
     <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More</span>
+    <span className="sr-only">{t('More')}</span>
   </span>
-);
+  );
+};
 
 export {
   Breadcrumb,

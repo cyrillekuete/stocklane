@@ -13,6 +13,7 @@ import {
 } from '@tanstack/react-table';
 import { Info, Search, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { formatMoney } from '@/store-inventory/lib/format';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
@@ -420,6 +421,7 @@ function RecentOrdersToolbar({
   onSearchChange: (value: string) => void;
   inputRef: RefObject<HTMLInputElement | null>;
 }) {
+  const t = useT();
   const [inputValue, setInputValue] = useState(searchQuery);
 
   useEffect(() => {
@@ -442,7 +444,7 @@ function RecentOrdersToolbar({
         <InputWrapper>
           <Search />
           <Input
-            placeholder="Search by ID"
+            placeholder={t('Search by ID')}
             ref={inputRef}
             value={inputValue}
             onChange={(e) => {
@@ -465,12 +467,13 @@ function RecentOrdersToolbar({
           </Button>
         </InputWrapper>
       </div>
-      <Button variant="outline">Export CSV</Button>
+      <Button variant="outline">{t('Export CSV')}</Button>
     </CardToolbar>
   );
 }
 
 const DashboardTable = () => {
+  const t = useT();
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
@@ -487,7 +490,7 @@ const DashboardTable = () => {
   }: IColumnFilterProps<TData, TValue>) => {
     return (
       <Input
-        placeholder="Filter..."
+        placeholder={t('Filter...')}
         value={(column.getFilterValue() as string) ?? ''}
         onChange={(event) => column.setFilterValue(event.target.value)}
         variant="sm"
@@ -607,7 +610,7 @@ const DashboardTable = () => {
                 alt="image"
               />
               <span className="leading-none text-secondary-foreground">
-                {info.row.original.country.name}
+                {t(info.row.original.country.name)}
               </span>
             </div>
           );
@@ -630,7 +633,7 @@ const DashboardTable = () => {
 
           return (
             <Badge variant={variant} appearance="light">
-              {info.row.original.label}
+              {t(info.row.original.label)}
             </Badge>
           );
         },
@@ -647,14 +650,14 @@ const DashboardTable = () => {
         cell: () => {
           return (
             <Button mode="link" underlined="dashed">
-              Details
+              {t('Details')}
             </Button>
           );
         },
         size: 90,
       },
     ],
-    [],
+    [t],
   );
 
   const filteredData: IData[] = useMemo(() => {
@@ -671,18 +674,18 @@ const DashboardTable = () => {
 
     if (selectedRowIds.length > 0) {
       toast.custom(
-        (t) => (
+        (toastId) => (
           <Alert
             variant="mono"
             icon="success"
             close={true}
-            onClose={() => toast.dismiss(t)}
+            onClose={() => toast.dismiss(toastId)}
           >
             <AlertIcon>
               <Info />
             </AlertIcon>
             <AlertTitle>
-              Selected row IDs: {selectedRowIds.join(', ')}
+              {t('Selected row IDs: {ids}', { ids: selectedRowIds.join(', ') })}
             </AlertTitle>
           </Alert>
         ),
@@ -691,7 +694,7 @@ const DashboardTable = () => {
         },
       );
     }
-  }, [rowSelection]);
+  }, [rowSelection, t]);
 
   const table = useReactTable({
     columns,
@@ -723,7 +726,7 @@ const DashboardTable = () => {
     >
       <Card>
         <CardHeader className="py-3.5">
-          <CardTitle>Recent Orders</CardTitle>
+          <CardTitle>{t('Recent Orders')}</CardTitle>
           <RecentOrdersToolbar
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}

@@ -9,12 +9,14 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import { clampNonNegativeNumber } from "@/store-inventory/lib/settings-validation";
+import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "./settings-form-context";
 import type { ShippingZone } from "@/store-inventory/types";
 
 const carriers = ['DHL', 'FedEx', 'UPS', 'USPS', 'Chronopost', 'Colissimo'];
 
 export function ShippingDelivery() {
+  const t = useT();
   const { draft, updateDraft } = useSettingsForm();
 
   const updateZone = (id: string, patch: Partial<ShippingZone>) => {
@@ -46,12 +48,12 @@ export function ShippingDelivery() {
     <div className="space-y-5">
       <Card className="bg-accent/70 rounded-md shadow-none flex flex-col">
         <CardContent className="p-0 flex flex-col">
-          <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">Shipping Options</h3>
+          <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">{t('Shipping Options')}</h3>
           <div className="bg-background rounded-md m-1 mt-0 border border-input p-5 space-y-5">
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Free shipping</Label>
-                <span className="text-xs font-normal text-muted-foreground">Offer free shipping above a minimum order</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Free shipping')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('Offer free shipping above a minimum order')}</span>
               </div>
               <div className="basis-2/3 space-y-3">
                 <div className="flex items-center gap-2">
@@ -61,7 +63,7 @@ export function ShippingDelivery() {
                     checked={draft.freeShippingEnabled}
                     onCheckedChange={(freeShippingEnabled) => updateDraft({ freeShippingEnabled })}
                   />
-                  <Label htmlFor="free-shipping">{draft.freeShippingEnabled ? 'Active' : 'Inactive'}</Label>
+                  <Label htmlFor="free-shipping">{draft.freeShippingEnabled ? t('Active') : t('Inactive')}</Label>
                 </div>
                 <Input
                   type="number"
@@ -74,7 +76,7 @@ export function ShippingDelivery() {
                       freeShippingMin: Number.isFinite(raw) ? clampNonNegativeNumber(raw) : 0,
                     });
                   }}
-                  placeholder="Minimum order amount"
+                  placeholder={t('Minimum order amount')}
                 />
               </div>
             </div>
@@ -83,8 +85,8 @@ export function ShippingDelivery() {
 
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Local pickup</Label>
-                <span className="text-xs font-normal text-muted-foreground">Allow customers to collect orders in store</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Local pickup')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('Allow customers to collect orders in store')}</span>
               </div>
               <div className="basis-2/3 flex items-center gap-2">
                 <Switch
@@ -93,7 +95,7 @@ export function ShippingDelivery() {
                   checked={draft.localPickup}
                   onCheckedChange={(localPickup) => updateDraft({ localPickup })}
                 />
-                <Label htmlFor="local-pickup">{draft.localPickup ? 'Available' : 'Unavailable'}</Label>
+                <Label htmlFor="local-pickup">{draft.localPickup ? t('Available') : t('Unavailable')}</Label>
               </div>
             </div>
 
@@ -101,8 +103,8 @@ export function ShippingDelivery() {
 
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Express shipping</Label>
-                <span className="text-xs font-normal text-muted-foreground">Offer a faster paid shipping option</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Express shipping')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('Offer a faster paid shipping option')}</span>
               </div>
               <div className="basis-2/3 flex items-center gap-2">
                 <Switch
@@ -111,7 +113,7 @@ export function ShippingDelivery() {
                   checked={draft.expressShipping}
                   onCheckedChange={(expressShipping) => updateDraft({ expressShipping })}
                 />
-                <Label htmlFor="express-shipping">{draft.expressShipping ? 'Available' : 'Unavailable'}</Label>
+                <Label htmlFor="express-shipping">{draft.expressShipping ? t('Available') : t('Unavailable')}</Label>
               </div>
             </div>
 
@@ -119,8 +121,8 @@ export function ShippingDelivery() {
 
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Shipping origin</Label>
-                <span className="text-xs font-normal text-muted-foreground">City and country packages ship from</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Shipping origin')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('City and country packages ship from')}</span>
               </div>
               <Input
                 className="basis-2/3"
@@ -134,8 +136,8 @@ export function ShippingDelivery() {
 
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Default carrier</Label>
-                <span className="text-xs font-normal text-muted-foreground">Carrier used unless a zone overrides it</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Default carrier')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('Carrier used unless a zone overrides it')}</span>
               </div>
               <div className="basis-2/3">
                 <Select
@@ -144,7 +146,7 @@ export function ShippingDelivery() {
                   indicatorPosition="right"
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select carrier" />
+                    <SelectValue placeholder={t('Select carrier')} />
                   </SelectTrigger>
                   <SelectContent>
                     {carriers.map((carrier) => (
@@ -161,8 +163,8 @@ export function ShippingDelivery() {
 
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Handling days</Label>
-                <span className="text-xs font-normal text-muted-foreground">Days needed to prepare an order</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Handling days')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('Days needed to prepare an order')}</span>
               </div>
               <Input
                 className="basis-2/3"
@@ -186,22 +188,22 @@ export function ShippingDelivery() {
       <Card className="bg-accent/70 rounded-md shadow-none flex flex-col">
         <CardContent className="p-0 flex flex-col">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">Shipping Zones</h3>
+            <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">{t('Shipping Zones')}</h3>
             <Button variant="outline" size="sm" className="me-2" onClick={addZone}>
               <Plus className="size-4" />
-              Add zone
+              {t('Add zone')}
             </Button>
           </div>
           <div className="bg-background rounded-md m-1 mt-0 border border-input p-5 space-y-4">
             {draft.shippingZones.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No shipping zones yet.</p>
+              <p className="text-sm text-muted-foreground">{t('No shipping zones yet.')}</p>
             ) : (
               draft.shippingZones.map((zone) => (
                 <div key={zone.id} className="grid gap-3 rounded-md border border-border p-4 md:grid-cols-4">
                   <Input
                     value={zone.name}
                     onChange={(e) => updateZone(zone.id, { name: e.target.value })}
-                    placeholder="Zone name"
+                    placeholder={t('Zone name')}
                   />
                   <Input
                     type="number"
@@ -213,16 +215,16 @@ export function ShippingDelivery() {
                         rate: Number.isFinite(raw) ? clampNonNegativeNumber(raw) : 0,
                       });
                     }}
-                    placeholder="Rate"
+                    placeholder={t('Rate')}
                   />
                   <Input
                     value={zone.estimatedDays}
                     onChange={(e) => updateZone(zone.id, { estimatedDays: e.target.value })}
-                    placeholder="3-5 days"
+                    placeholder={t('3-5 days')}
                   />
                   <Button variant="ghost" size="sm" onClick={() => removeZone(zone.id)}>
                     <Trash2 className="size-4" />
-                    Remove
+                    {t('Remove')}
                   </Button>
                 </div>
               ))

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { format } from 'date-fns';
+import { useT } from '@/i18n/use-t';
 import { Badge, BadgeDot } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -48,6 +49,7 @@ function SettingsSheetBody({
   onOpenChange: (open: boolean) => void;
   initialTab?: string;
 }) {
+  const t = useT();
   const { draft, lastOrderLabel, dirty, saving, loading, resetDraft, save } = useSettingsForm();
   const [activeTab, setActiveTab] = useState(
     SETTINGS_TABS.some((tab) => tab.value === initialTab) ? initialTab! : 'general-settings',
@@ -55,7 +57,7 @@ function SettingsSheetBody({
 
   const confirmDiscard = () => {
     if (!dirty) return true;
-    return window.confirm('Discard unsaved settings changes?');
+    return window.confirm(t('Discard unsaved settings changes?'));
   };
 
   const handleCancel = () => {
@@ -75,7 +77,7 @@ function SettingsSheetBody({
     <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent className="gap-0 lg:w-[1000px] sm:max-w-none inset-5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
-          <SheetTitle className="font-medium">Settings</SheetTitle>
+          <SheetTitle className="font-medium">{t('Settings')}</SheetTitle>
         </SheetHeader>
 
         <SheetBody className="p-0 grow">
@@ -86,38 +88,38 @@ function SettingsSheetBody({
                   {draft.storeName}
                 </span>
                 <Badge size="sm" variant="success" appearance="light">
-                  {draft.status}
+                  {t(draft.status)}
                 </Badge>
               </div>
               <div className="flex items-center flex-wrap gap-2 text-2sm">
-                <span className="font-normal text-muted-foreground">Store ID:</span>
+                <span className="font-normal text-muted-foreground">{t('Store ID')}:</span>
                 <span className="font-medium text-foreground">{draft.storeCode}</span>
                 <BadgeDot className="bg-muted-foreground size-1" />
-                <span className="font-normal text-muted-foreground">Established</span>
+                <span className="font-normal text-muted-foreground">{t('Established')}</span>
                 <span className="font-medium text-foreground">
                   {formatEstablished(draft.establishedAt)}
                 </span>
                 <BadgeDot className="bg-muted-foreground size-1" />
-                <span className="font-normal text-muted-foreground">Last Order</span>
+                <span className="font-normal text-muted-foreground">{t('Last Order')}</span>
                 <span className="font-medium text-foreground">{lastOrderLabel}</span>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
               <Button variant="ghost" onClick={() => handleClose(false)}>
-                Close
+                {t('Close')}
               </Button>
               <Button variant="outline" onClick={handleCancel} disabled={!dirty || saving}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button variant="mono" onClick={() => void save()} disabled={!dirty || saving || loading}>
-                {saving ? 'Saving...' : 'Save'}
+                {saving ? t('Saving...') : t('Save')}
               </Button>
             </div>
           </div>
           <div className="flex flex-col h-[calc(100dvh-22rem)]">
             <div className="flex flex-wrap lg:flex-nowrap py-5 px-2 grow">
               {loading ? (
-                <div className="px-5 py-8 text-sm text-muted-foreground">Loading settings…</div>
+                <div className="px-5 py-8 text-sm text-muted-foreground">{t('Loading settings…')}</div>
               ) : (
               <Tabs value={activeTab} onValueChange={setActiveTab} className="text-2sm text-muted-foreground w-full space-y-3">
                 <div className="px-3">
@@ -125,7 +127,7 @@ function SettingsSheetBody({
                     <TabsList className="inline-flex whitespace-nowrap border border-border/80 bg-muted/80 [&_[data-slot=tabs-trigger]]:text-foreground [&_[data-slot=tabs-trigger]]:font-normal [&_[data-slot=tabs-trigger][data-state=active]]:shadow-lg">
                       {SETTINGS_TABS.map((tab) => (
                         <TabsTrigger key={tab.value} value={tab.value}>
-                          {tab.label}
+                          {t(tab.label)}
                         </TabsTrigger>
                       ))}
                     </TabsList>
@@ -163,13 +165,13 @@ function SettingsSheetBody({
 
         <SheetFooter className="flex-row border-t pb-4 p-5 border-border gap-2.5 lg:gap-0">
           <Button variant="ghost" onClick={() => handleClose(false)}>
-            Close
+            {t('Close')}
           </Button>
           <Button variant="outline" onClick={handleCancel} disabled={!dirty || saving}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button variant="mono" onClick={() => void save()} disabled={!dirty || saving || loading}>
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? t('Saving...') : t('Save')}
           </Button>
         </SheetFooter>
       </SheetContent>

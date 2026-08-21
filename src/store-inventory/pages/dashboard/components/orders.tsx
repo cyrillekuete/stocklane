@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useT } from '@/i18n/use-t';
 import { formatMoney } from '@/store-inventory/lib/format';
 
 interface IOrdersProps {
@@ -21,6 +22,7 @@ interface IOrdersProps {
 }
 
 const Orders = ({ className }: IOrdersProps) => {
+  const t = useT();
   const [activePeriod, setActivePeriod] = useState('14D');
 
   const getDataForPeriod = (period: string) => {
@@ -39,58 +41,58 @@ const Orders = ({ className }: IOrdersProps) => {
         ];
       case '1D':
         return [
-          { name: 'Mon', value: 25 },
-          { name: 'Tue', value: 55 },
-          { name: 'Wed', value: 65 },
-          { name: 'Thu', value: 45 },
-          { name: 'Fri', value: 25 },
-          { name: 'Sat', value: 65 },
-          { name: 'Sun', value: 50 },
-          { name: 'Mon', value: 40 },
-          { name: 'Tue', value: 60 },
+          { name: t('Mon'), value: 25 },
+          { name: t('Tue'), value: 55 },
+          { name: t('Wed'), value: 65 },
+          { name: t('Thu'), value: 45 },
+          { name: t('Fri'), value: 25 },
+          { name: t('Sat'), value: 65 },
+          { name: t('Sun'), value: 50 },
+          { name: t('Mon'), value: 40 },
+          { name: t('Tue'), value: 60 },
         ];
       case '14D':
         return [
-          { name: 'Sep 8', value: 95 },
-          { name: 'Sep 9', value: 70 },
-          { name: 'Sep 10', value: 85 },
-          { name: 'Sep 11', value: 60 },
-          { name: 'Sep 12', value: 80 },
-          { name: 'Sep 13', value: 50 },
-          { name: 'Sep 14', value: 90 },
-          { name: 'Sep 15', value: 60 },
-          { name: 'Sep 16', value: 85 },
-          { name: 'Sep 17', value: 55 },
-          { name: 'Sep 18', value: 75 },
-          { name: 'Sep 19', value: 45 },
-          { name: 'Sep 20', value: 80 },
-          { name: 'Sep 21', value: 70 },
-          { name: 'Sep 22', value: 65 },
-          { name: 'Sep 23', value: 75 },
+          { name: t('Sep 8'), value: 95 },
+          { name: t('Sep 9'), value: 70 },
+          { name: t('Sep 10'), value: 85 },
+          { name: t('Sep 11'), value: 60 },
+          { name: t('Sep 12'), value: 80 },
+          { name: t('Sep 13'), value: 50 },
+          { name: t('Sep 14'), value: 90 },
+          { name: t('Sep 15'), value: 60 },
+          { name: t('Sep 16'), value: 85 },
+          { name: t('Sep 17'), value: 55 },
+          { name: t('Sep 18'), value: 75 },
+          { name: t('Sep 19'), value: 45 },
+          { name: t('Sep 20'), value: 80 },
+          { name: t('Sep 21'), value: 70 },
+          { name: t('Sep 22'), value: 65 },
+          { name: t('Sep 23'), value: 75 },
         ];
       case '1M':
         return [
-          { name: 'Jan', value: 20 },
-          { name: 'Feb', value: 65 },
-          { name: 'Mar', value: 20 },
-          { name: 'Apr', value: 50 },
-          { name: 'May', value: 70 },
-          { name: 'Jun', value: 25 },
-          { name: 'Jul', value: 40 },
-          { name: 'Aug', value: 60 },
-          { name: 'Sep', value: 80 },
+          { name: t('Jan'), value: 20 },
+          { name: t('Feb'), value: 65 },
+          { name: t('Mar'), value: 20 },
+          { name: t('Apr'), value: 50 },
+          { name: t('May'), value: 70 },
+          { name: t('Jun'), value: 25 },
+          { name: t('Jul'), value: 40 },
+          { name: t('Aug'), value: 60 },
+          { name: t('Sep'), value: 80 },
         ];
       case '3M':
         return [
-          { name: 'Q1', value: 45 },
-          { name: 'Q2', value: 35 },
-          { name: 'Q3', value: 45 },
-          { name: 'Q4', value: 35 },
-          { name: 'Q1', value: 55 },
-          { name: 'Q2', value: 85 },
-          { name: 'Q3', value: 20 },
-          { name: 'Q4', value: 25 },
-          { name: 'Q1', value: 55 },
+          { name: t('Q1'), value: 45 },
+          { name: t('Q2'), value: 35 },
+          { name: t('Q3'), value: 45 },
+          { name: t('Q4'), value: 35 },
+          { name: t('Q1'), value: 55 },
+          { name: t('Q2'), value: 85 },
+          { name: t('Q3'), value: 20 },
+          { name: t('Q4'), value: 25 },
+          { name: t('Q1'), value: 55 },
         ];
       case '1Y':
         return [
@@ -133,7 +135,7 @@ const Orders = ({ className }: IOrdersProps) => {
       return (
         <div className="flex flex-col gap-2 p-3.5 bg-background border border-border rounded-lg shadow-lg">
           <div className="font-medium text-sm text-secondary-foreground">
-            {label}, 2025 Sales
+            {t('{label}, 2025 Sales', { label })}
           </div>
           <div className="flex items-center gap-1.5">
             <div className="font-semibold text-base text-mono">{value}</div>
@@ -150,9 +152,9 @@ const Orders = ({ className }: IOrdersProps) => {
   return (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>Orders</CardTitle>
+        <CardTitle>{t('Orders')}</CardTitle>
         <Button mode="link" underline="solid" asChild>
-          <Link to="#">See All</Link>
+          <Link to="#">{t('See All')}</Link>
         </Button>
       </CardHeader>
       <CardContent className="flex flex-col justify-between gap-2 p-0 lg:pt-7.5 pt-5">
@@ -168,7 +170,7 @@ const Orders = ({ className }: IOrdersProps) => {
           >
             {['1H', '1D', '14D', '1M', '3M', '1Y', 'All'].map((period) => (
               <ToggleGroupItem className="h-[28px]" key={period} value={period}>
-                {period}
+                {period === 'All' ? t('All') : period}
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
@@ -242,10 +244,10 @@ const Orders = ({ className }: IOrdersProps) => {
                   activePeriod === '14D'
                     ? (value: string) => {
                         const visibleDates = [
-                          'Sep 8',
-                          'Sep 13',
-                          'Sep 18',
-                          'Sep 23',
+                          t('Sep 8'),
+                          t('Sep 13'),
+                          t('Sep 18'),
+                          t('Sep 23'),
                         ];
                         return visibleDates.includes(value) ? value : '';
                       }

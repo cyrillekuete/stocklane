@@ -9,9 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { clampTaxPercent } from "@/store-inventory/lib/settings-validation";
+import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "../../settings-form-context";
 
 export function TaxSettings() {
+  const t = useT();
   const { draft, saved, updateDraft } = useSettingsForm();
   const taxChanged =
     draft.taxPercent !== saved.taxPercent || draft.taxCalculation !== saved.taxCalculation;
@@ -34,35 +36,35 @@ export function TaxSettings() {
   return (
     <Card className="bg-accent/70 rounded-md shadow-none h-full flex flex-col">
       <CardContent className="p-0 flex flex-col h-full">
-        <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">Tax Settings</h3>
+        <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">{t('Tax Settings')}</h3>
         <div className="bg-background rounded-md m-1 mt-0 border border-input py-6 px-3.5 space-y-5 h-full">
           <div className="flex items-start gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">Tax Rates</Label>
-              <span className="text-xs font-normal text-muted-foreground">How tax rates are applied to orders</span>
+              <Label className="text-2sm font-medium shrink-0">{t('Tax Rates')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('How tax rates are applied to orders')}</span>
             </div>
             <div className="basis-2/3">
               <Select value={draft.taxRateScope} onValueChange={(taxRateScope) => updateDraft({ taxRateScope })} indicatorPosition="right">
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Apply per country" />
+                  <SelectValue placeholder={t('Apply per country')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="country">
                     <span className="flex items-center gap-2">
                       <Globe className="size-4 text-muted-foreground/60" />
-                      <span>Apply per country</span>
+                      <span>{t('Apply per country')}</span>
                     </span>
                   </SelectItem>
                   <SelectItem value="state">
                     <span className="flex items-center gap-2">
                       <Globe2 className="size-4 text-muted-foreground/60" />
-                      <span>Apply per state</span>
+                      <span>{t('Apply per state')}</span>
                     </span>
                   </SelectItem>
                   <SelectItem value="city">
                     <span className="flex items-center gap-2">
                       <RiMapPinLine className="size-4 text-muted-foreground/60" />
-                      <span>Apply per city</span>
+                      <span>{t('Apply per city')}</span>
                     </span>
                   </SelectItem>
                 </SelectContent>
@@ -74,8 +76,8 @@ export function TaxSettings() {
 
           <div className="flex items-start gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">Tax Percent</Label>
-              <span className="text-xs font-normal text-muted-foreground">Used at POS checkout</span>
+              <Label className="text-2sm font-medium shrink-0">{t('Tax Percent')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Used at POS checkout')}</span>
             </div>
             <div className="basis-2/3">
               <Input
@@ -91,7 +93,7 @@ export function TaxSettings() {
               />
               {taxChanged ? (
                 <p className="mt-2 text-xs text-muted-foreground">
-                  New POS sales will use this tax. Completed sales keep their original tax snapshot.
+                  {t('New POS sales will use this tax. Completed sales keep their original tax snapshot.')}
                 </p>
               ) : null}
             </div>
@@ -101,8 +103,8 @@ export function TaxSettings() {
 
           <div className="flex items-start gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">Tax Calculation</Label>
-              <span className="text-xs font-normal text-muted-foreground">Whether prices already include tax</span>
+              <Label className="text-2sm font-medium shrink-0">{t('Tax Calculation')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Whether prices already include tax')}</span>
             </div>
             <div className="basis-2/3">
               <RadioGroup className="gap-1" value={draft.taxCalculation} onValueChange={(taxCalculation) => updateDraft({ taxCalculation })}>
@@ -123,8 +125,8 @@ export function TaxSettings() {
                           </div>
                         </Card>
                         <div>
-                          <h3 className="font-medium text-2sm text-foreground">{option.name}</h3>
-                          <p className="text-xs text-muted-foreground font-normal">{option.description}</p>
+                          <h3 className="font-medium text-2sm text-foreground">{t(option.name)}</h3>
+                          <p className="text-xs text-muted-foreground font-normal">{t(option.description)}</p>
                         </div>
                       </div>
                     </div>

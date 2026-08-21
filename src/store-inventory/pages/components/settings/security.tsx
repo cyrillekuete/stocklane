@@ -10,20 +10,22 @@ import {
   clampSessionTimeout,
 } from "@/store-inventory/lib/settings-validation";
 import { useSettingsForm } from "./settings-form-context";
+import { useT } from '@/i18n/use-t';
 
 export function Security() {
+  const t = useT();
   const { draft, updateDraft } = useSettingsForm();
 
   return (
     <div className="space-y-5">
       <Card className="bg-accent/70 rounded-md shadow-none flex flex-col">
         <CardContent className="p-0 flex flex-col">
-          <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">Account Security</h3>
+          <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">{t('Account Security')}</h3>
           <div className="bg-background rounded-md m-1 mt-0 border border-input p-5 space-y-5">
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Two-factor authentication</Label>
-                <span className="text-xs font-normal text-muted-foreground">Require 2FA for staff sign-in</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Two-factor authentication')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('Require 2FA for staff sign-in')}</span>
               </div>
               <div className="basis-2/3 flex items-center gap-2">
                 <Switch
@@ -32,7 +34,7 @@ export function Security() {
                   checked={draft.twoFactorRequired}
                   onCheckedChange={(twoFactorRequired) => updateDraft({ twoFactorRequired })}
                 />
-                <Label htmlFor="two-factor">{draft.twoFactorRequired ? 'Required' : 'Optional'}</Label>
+                <Label htmlFor="two-factor">{draft.twoFactorRequired ? t('Required') : t('Optional')}</Label>
               </div>
             </div>
 
@@ -40,8 +42,8 @@ export function Security() {
 
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Session timeout</Label>
-                <span className="text-xs font-normal text-muted-foreground">Minutes of inactivity before sign-out</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Session timeout')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('Minutes of inactivity before sign-out')}</span>
               </div>
               <Input
                 className="basis-2/3"
@@ -62,8 +64,8 @@ export function Security() {
 
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Login alerts</Label>
-                <span className="text-xs font-normal text-muted-foreground">Email staff when a new device signs in</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Login alerts')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('Email staff when a new device signs in')}</span>
               </div>
               <div className="basis-2/3 flex items-center gap-2">
                 <Switch
@@ -72,7 +74,7 @@ export function Security() {
                   checked={draft.loginAlerts}
                   onCheckedChange={(loginAlerts) => updateDraft({ loginAlerts })}
                 />
-                <Label htmlFor="login-alerts">{draft.loginAlerts ? 'Active' : 'Inactive'}</Label>
+                <Label htmlFor="login-alerts">{draft.loginAlerts ? t('Active') : t('Inactive')}</Label>
               </div>
             </div>
 
@@ -80,8 +82,8 @@ export function Security() {
 
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Minimum password length</Label>
-                <span className="text-xs font-normal text-muted-foreground">Characters required for staff passwords</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Minimum password length')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('Characters required for staff passwords')}</span>
               </div>
               <Input
                 className="basis-2/3"
@@ -102,8 +104,8 @@ export function Security() {
 
             <div className="flex items-start gap-5">
               <div className="flex flex-col gap-0.5 basis-1/3">
-                <Label className="text-2sm font-medium shrink-0">Require strong passwords</Label>
-                <span className="text-xs font-normal text-muted-foreground">Must include letters, numbers, and a symbol</span>
+                <Label className="text-2sm font-medium shrink-0">{t('Require strong passwords')}</Label>
+                <span className="text-xs font-normal text-muted-foreground">{t('Must include letters, numbers, and a symbol')}</span>
               </div>
               <div className="basis-2/3 flex items-center gap-2">
                 <Switch
@@ -112,7 +114,7 @@ export function Security() {
                   checked={draft.requireStrongPassword}
                   onCheckedChange={(requireStrongPassword) => updateDraft({ requireStrongPassword })}
                 />
-                <Label htmlFor="strong-password">{draft.requireStrongPassword ? 'Required' : 'Optional'}</Label>
+                <Label htmlFor="strong-password">{draft.requireStrongPassword ? t('Required') : t('Optional')}</Label>
               </div>
             </div>
           </div>

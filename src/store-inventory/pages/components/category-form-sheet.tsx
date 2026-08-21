@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import {
   useCategories,
   useCreateCategory,
@@ -52,6 +53,7 @@ export function CategoryFormSheet({
 }) {
   const isNewMode = mode === 'new';
   const isEditMode = mode === 'edit';
+  const t = useT();
   const createCategory = useCreateCategory();
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
@@ -106,15 +108,15 @@ export function CategoryFormSheet({
 
   const handleSave = async () => {
     if (!categoryName.trim()) {
-      toast.error('Category name is required');
+      toast.error(t('Category name is required'));
       return;
     }
     if (categoryName.trim().length > 80) {
-      toast.error('Name must be 80 characters or fewer');
+      toast.error(t('Name must be 80 characters or fewer'));
       return;
     }
     if (description.length > 500) {
-      toast.error('Description must be 500 characters or fewer');
+      toast.error(t('Description must be 500 characters or fewer'));
       return;
     }
     const nextStatus = normalizeCategoryStatus(status);
@@ -123,12 +125,12 @@ export function CategoryFormSheet({
       try {
         persistIcon = await resolveIconForSave();
       } catch (error) {
-        toast.error(mapCategoryError(error, 'Unable to upload category icon').message);
+        toast.error(t(mapCategoryError(error, 'Unable to upload category icon').message));
         return;
       }
       if (isEditMode) {
         if (!category?.id) {
-          toast.error('Select a category to edit');
+          toast.error(t('Select a category to edit'));
           return;
         }
         await updateCategory.mutateAsync({
@@ -150,7 +152,7 @@ export function CategoryFormSheet({
           icon: persistIcon,
         });
       }
-      toast.success(isNewMode ? 'Category created' : 'Category saved');
+      toast.success(isNewMode ? t('Category created') : t('Category saved'));
       onOpenChange(false);
     } catch {
       // Mutation errors are toasted by the shared mutation hook.
@@ -168,13 +170,15 @@ export function CategoryFormSheet({
         reassignToCategoryId,
       });
       if (result.reassigned) {
-        toast.success('Category deleted and products reassigned');
+        toast.success(t('Category deleted and products reassigned'));
       } else if (result.productCount > 0) {
         toast.success(
-          `Category deleted. ${result.productCount} ${result.productCount === 1 ? 'product is' : 'products are'} now Uncategorized.`,
+          result.productCount === 1
+            ? t('Category deleted. {count} product is now Uncategorized.', { count: result.productCount })
+            : t('Category deleted. {count} products are now Uncategorized.', { count: result.productCount }),
         );
       } else {
-        toast.success('Category deleted');
+        toast.success(t('Category deleted'));
       }
       setConfirmDeleteOpen(false);
       onOpenChange(false);
@@ -189,7 +193,7 @@ export function CategoryFormSheet({
         <SheetContent className="gap-0 w-[500px] p-0 inset-5 border start-auto h-auto rounded-lg [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
           <SheetHeader className="border-b py-4 px-6">
             <SheetTitle className="font-medium">
-              {isNewMode ? 'Add Category' : 'Edit Category'}
+              {isNewMode ? t('Add Category') : t('Edit Category')}
             </SheetTitle>
           </SheetHeader>
 
@@ -215,9 +219,9 @@ export function CategoryFormSheet({
                 />
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium">Category Name</Label>
+                  <Label className="text-xs font-medium">{t('Category Name')}</Label>
                   <Input
-                    placeholder="Category Name"
+                    placeholder={t('Category Name')}
                     value={categoryName}
                     onChange={(e) => setCategoryName(e.target.value)}
                     maxLength={80}
@@ -226,33 +230,33 @@ export function CategoryFormSheet({
 
                 {isEditMode && category?.productInfo.label ? (
                   <div className="space-y-2">
-                    <Label className="text-xs font-medium">Code</Label>
+                    <Label className="text-xs font-medium">{t('Code')}</Label>
                     <Input value={category.productInfo.label} disabled readOnly />
                     <p className="text-xs text-muted-foreground">
-                      Codes are assigned on create and do not change when you rename a category.
+                      {t('Codes are assigned on create and do not change when you rename a category.')}
                     </p>
                   </div>
                 ) : null}
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium">Status</Label>
+                  <Label className="text-xs font-medium">{t('Status')}</Label>
                   <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select Status" />
+                      <SelectValue placeholder={t('Select Status')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
+                      <SelectItem value="active">{t('Active')}</SelectItem>
+                      <SelectItem value="inactive">{t('Inactive')}</SelectItem>
+                      <SelectItem value="draft">{t('Draft')}</SelectItem>
+                      <SelectItem value="archived">{t('Archived')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium">Description</Label>
+                  <Label className="text-xs font-medium">{t('Description')}</Label>
                   <Textarea
-                    placeholder="Category Description"
+                    placeholder={t('Category Description')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     rows={4}
@@ -267,7 +271,7 @@ export function CategoryFormSheet({
                     onCheckedChange={(checked) => setIsFeatured(checked as boolean)}
                   />
                   <Label htmlFor={featuredId} className="text-xs font-medium">
-                    Featured
+                    {t('Featured')}
                   </Label>
                 </div>
               </div>
@@ -277,7 +281,7 @@ export function CategoryFormSheet({
           <SheetFooter className="border-t p-5">
             <div className="flex items-center justify-end gap-3 w-full">
               <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isPending}>
-                Close
+                {t('Close')}
               </Button>
               {isEditMode && (
                 <Button
@@ -285,11 +289,11 @@ export function CategoryFormSheet({
                   onClick={() => setConfirmDeleteOpen(true)}
                   disabled={isPending || !category?.id}
                 >
-                  Delete
+                  {t('Delete')}
                 </Button>
               )}
               <Button variant="mono" onClick={handleSave} disabled={isPending}>
-                {uploading ? 'Uploading…' : isNewMode ? 'Create' : 'Save'}
+                {uploading ? t('Uploading…') : isNewMode ? t('Create') : t('Save')}
               </Button>
             </div>
           </SheetFooter>

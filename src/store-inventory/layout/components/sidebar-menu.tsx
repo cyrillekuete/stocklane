@@ -2,6 +2,7 @@ import { JSX, useCallback, useMemo } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/auth';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { useT } from '@/i18n/use-t';
 import { MENU_SIDEBAR } from '@/store-inventory/config/app.config';
 import { MenuConfig, MenuItem } from '@/store-inventory/config/types';
 import { cn } from '@/lib/utils';
@@ -31,53 +32,69 @@ const MENU_CLASS_NAMES: AccordionMenuClassNames = {
   indicator: '',
 };
 
-function buildMenuHeading(item: MenuItem, index: number): JSX.Element {
-  return <AccordionMenuLabel key={index}>{item.heading}</AccordionMenuLabel>;
+type Translate = (id: string) => string;
+
+function buildMenuHeading(item: MenuItem, index: number, t: Translate): JSX.Element {
+  return <AccordionMenuLabel key={index}>{t(item.heading || '')}</AccordionMenuLabel>;
 }
 
-function buildMenuItemRootDisabled(item: MenuItem, index: number): JSX.Element {
+function buildMenuItemRootDisabled(item: MenuItem, index: number, t: Translate): JSX.Element {
   return (
     <AccordionMenuItem key={index} value={`disabled-${index}`} className="text-sm font-medium">
       {item.icon && <item.icon data-slot="accordion-menu-icon" />}
-      <span data-slot="accordion-menu-title">{item.title}</span>
+      <span data-slot="accordion-menu-title">{t(item.title || '')}</span>
       {item.disabled && (
         <Badge variant="secondary" size="sm" className="ms-auto me-[-10px]">
-          Soon
+          {t('Soon')}
         </Badge>
       )}
     </AccordionMenuItem>
   );
 }
 
-function buildMenuItemChildDisabled(item: MenuItem, index: number, level: number): JSX.Element {
+function buildMenuItemChildDisabled(
+  item: MenuItem,
+  index: number,
+  level: number,
+  t: Translate,
+): JSX.Element {
   return (
     <AccordionMenuItem
       key={index}
       value={`disabled-child-${level}-${index}`}
       className="text-[13px]"
     >
-      <span data-slot="accordion-menu-title">{item.title}</span>
+      <span data-slot="accordion-menu-title">{t(item.title || '')}</span>
       {item.disabled && (
         <Badge variant="secondary" size="sm" className="ms-auto me-[-10px]">
-          Soon
+          {t('Soon')}
         </Badge>
       )}
     </AccordionMenuItem>
   );
 }
 
-function buildMenuItemChild(item: MenuItem, index: number, level: number): JSX.Element {
+function buildMenuItemChild(
+  item: MenuItem,
+  index: number,
+  level: number,
+  t: Translate,
+): JSX.Element {
   if (item.children) {
     return (
       <AccordionMenuSub key={index} value={item.path || `child-${level}-${index}`}>
         <AccordionMenuSubTrigger className="text-[13px]">
           {item.collapse ? (
             <span className="text-muted-foreground">
-              <span className="hidden [[data-state=open]>span>&]:inline">{item.collapseTitle}</span>
-              <span className="inline [[data-state=open]>span>&]:hidden">{item.expandTitle}</span>
+              <span className="hidden [[data-state=open]>span>&]:inline">
+                {t(item.collapseTitle || '')}
+              </span>
+              <span className="inline [[data-state=open]>span>&]:hidden">
+                {t(item.expandTitle || '')}
+              </span>
             </span>
           ) : (
-            item.title
+            t(item.title || '')
           )}
         </AccordionMenuSubTrigger>
         <AccordionMenuSubContent
@@ -87,7 +104,7 @@ function buildMenuItemChild(item: MenuItem, index: number, level: number): JSX.E
           className={cn('ps-4', !item.collapse && 'relative')}
         >
           <AccordionMenuGroup>
-            {buildMenuItemChildren(item.children, item.collapse ? level : level + 1)}
+            {buildMenuItemChildren(item.children, t, item.collapse ? level : level + 1)}
           </AccordionMenuGroup>
         </AccordionMenuSubContent>
       </AccordionMenuSub>
@@ -96,27 +113,27 @@ function buildMenuItemChild(item: MenuItem, index: number, level: number): JSX.E
 
   return (
     <AccordionMenuItem key={index} value={item.path || ''} className="text-[13px]">
-      <Link to={item.path || '#'}>{item.title}</Link>
+      <Link to={item.path || '#'}>{t(item.title || '')}</Link>
     </AccordionMenuItem>
   );
 }
 
-function buildMenuItemChildren(items: MenuConfig, level: number = 0): JSX.Element[] {
+function buildMenuItemChildren(items: MenuConfig, t: Translate, level: number = 0): JSX.Element[] {
   return items.map((item: MenuItem, index: number) => {
     if (item.disabled) {
-      return buildMenuItemChildDisabled(item, index, level);
+      return buildMenuItemChildDisabled(item, index, level, t);
     }
-    return buildMenuItemChild(item, index, level);
+    return buildMenuItemChild(item, index, level, t);
   });
 }
 
-function buildMenuItemRoot(item: MenuItem, index: number): JSX.Element {
+function buildMenuItemRoot(item: MenuItem, index: number, t: Translate): JSX.Element {
   if (item.children) {
     return (
       <AccordionMenuSub key={index} value={item.path || `root-${index}`}>
         <AccordionMenuSubTrigger className="text-sm font-medium">
           {item.icon && <item.icon data-slot="accordion-menu-icon" />}
-          <span data-slot="accordion-menu-title">{item.title}</span>
+          <span data-slot="accordion-menu-title">{t(item.title || '')}</span>
         </AccordionMenuSubTrigger>
         <AccordionMenuSubContent
           type="single"
@@ -124,7 +141,7 @@ function buildMenuItemRoot(item: MenuItem, index: number): JSX.Element {
           parentValue={item.path || `root-${index}`}
           className="ps-6"
         >
-          <AccordionMenuGroup>{buildMenuItemChildren(item.children, 1)}</AccordionMenuGroup>
+          <AccordionMenuGroup>{buildMenuItemChildren(item.children, t, 1)}</AccordionMenuGroup>
         </AccordionMenuSubContent>
       </AccordionMenuSub>
     );
@@ -134,21 +151,21 @@ function buildMenuItemRoot(item: MenuItem, index: number): JSX.Element {
     <AccordionMenuItem key={index} value={item.path || ''} className="text-sm font-medium">
       <Link to={item.path || '#'} className="flex items-center justify-between grow gap-2">
         {item.icon && <item.icon data-slot="accordion-menu-icon" />}
-        <span data-slot="accordion-menu-title">{item.title}</span>
+        <span data-slot="accordion-menu-title">{t(item.title || '')}</span>
       </Link>
     </AccordionMenuItem>
   );
 }
 
-function buildMenu(items: MenuConfig): JSX.Element[] {
+function buildMenu(items: MenuConfig, t: Translate): JSX.Element[] {
   return items.map((item: MenuItem, index: number) => {
     if (item.heading) {
-      return buildMenuHeading(item, index);
+      return buildMenuHeading(item, index, t);
     }
     if (item.disabled) {
-      return buildMenuItemRootDisabled(item, index);
+      return buildMenuItemRootDisabled(item, index, t);
     }
-    return buildMenuItemRoot(item, index);
+    return buildMenuItemRoot(item, index, t);
   });
 }
 
@@ -175,6 +192,7 @@ function filterMenuByPermission(
 export function SidebarMenu() {
   const { pathname } = useLocation();
   const { hasPermission } = useAuth();
+  const t = useT();
 
   const matchPath = useCallback(
     (path: string): boolean =>
@@ -184,8 +202,8 @@ export function SidebarMenu() {
   );
 
   const menuItems = useMemo(
-    () => buildMenu(filterMenuByPermission(MENU_SIDEBAR as MenuConfig, hasPermission)),
-    [hasPermission],
+    () => buildMenu(filterMenuByPermission(MENU_SIDEBAR as MenuConfig, hasPermission), t),
+    [hasPermission, t],
   );
 
   return (

@@ -6,6 +6,7 @@ import { Input, InputAddon, InputGroup, InputWrapper } from "@/components/ui/inp
 import { Label } from "@/components/ui/label";
 import { toAbsoluteUrl } from "@/lib/helpers";
 import { CircleCheck, SquarePlus } from "lucide-react";
+import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "../../settings-form-context";
 import type { ContactChannel } from "@/store-inventory/types";
 
@@ -20,6 +21,7 @@ const CHANNEL_META: Record<string, { prefix: string; logo: string; label: string
 const DEFAULT_ORDER = ['github', 'linkedin', 'figma', 'twitch', 'slack'];
 
 export function ContactChannels() {
+  const t = useT();
   const { draft, updateDraft } = useSettingsForm();
 
   const updateHandle = (provider: string, handle: string) => {
@@ -51,7 +53,7 @@ export function ContactChannels() {
     <Card className="bg-accent/70 rounded-md shadow-none h-full flex flex-col">
       <CardContent className="p-0 flex flex-col h-full">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">Contact Channels</h3>
+          <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">{t('Contact Channels')}</h3>
           <Button variant="dim" mode="icon" className="me-1" onClick={addChannel}>
             <SquarePlus className="text-muted-foreground/70"/>
           </Button>
@@ -59,8 +61,8 @@ export function ContactChannels() {
         <div className="bg-background rounded-md m-1 mt-0 border border-input p-5 space-y-5 h-full">
           <div className="flex items-start gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">Social profiles</Label>
-              <span className="text-xs font-normal text-muted-foreground">Public links shown on invoices and store pages</span>
+              <Label className="text-2sm font-medium shrink-0">{t('Social profiles')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Public links shown on invoices and store pages')}</span>
             </div>
             <div className="basis-2/3 space-y-3.5">
               {channels.map((channel) => {
@@ -78,7 +80,7 @@ export function ContactChannels() {
                     </InputAddon>
                     <Input
                       type="text"
-                      placeholder="Enter your social link"
+                      placeholder={t('Enter your social link')}
                       value={channel.handle}
                       onChange={(e) => updateHandle(channel.provider, e.target.value)}
                     />
@@ -103,7 +105,7 @@ export function ContactChannels() {
                   </InputAddon>
                   <Input
                     type="text"
-                    placeholder="Enter your social link"
+                    placeholder={t('Enter your social link')}
                     value=""
                     onChange={(e) => updateHandle('twitch', e.target.value)}
                   />
@@ -122,7 +124,7 @@ export function ContactChannels() {
                   </InputAddon>
                   <Input
                     type="text"
-                    placeholder="Enter your social link"
+                    placeholder={t('Enter your social link')}
                     value=""
                     onChange={(e) => updateHandle('slack', e.target.value)}
                   />

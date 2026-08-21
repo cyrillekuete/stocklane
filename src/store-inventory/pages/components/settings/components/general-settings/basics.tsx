@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { toAbsoluteUrl } from "@/lib/helpers";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useT } from '@/i18n/use-t';
 import { LOGO_MAX_CHARS } from "@/store-inventory/lib/settings-validation";
 import { useSettingsForm } from "../../settings-form-context";
 
@@ -93,19 +94,20 @@ function PhoneNumberInput({
 }
 
 export function Basics() {
+  const t = useT();
   const { draft, updateDraft } = useSettingsForm();
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
+      toast.error(t('Please upload an image file'));
       event.target.value = '';
       return;
     }
     // Base64 expands ~4/3; keep under LOGO_MAX_CHARS after encoding.
     if (file.size > LOGO_MAX_CHARS * 0.7) {
-      toast.error('Logo is too large (max ~500KB)');
+      toast.error(t('Logo is too large (max ~500KB)'));
       event.target.value = '';
       return;
     }
@@ -113,7 +115,7 @@ export function Basics() {
     reader.onload = () => {
       const result = reader.result as string;
       if (result.length > LOGO_MAX_CHARS) {
-        toast.error('Logo is too large (max ~500KB)');
+        toast.error(t('Logo is too large (max ~500KB)'));
         return;
       }
       updateDraft({ logo: result });
@@ -124,12 +126,12 @@ export function Basics() {
   return (
     <Card className="bg-accent/70 rounded-md shadow-none h-full flex flex-col">
       <CardContent className="p-0 flex flex-col h-full">
-        <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">Basics</h3>
+        <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">{t('Basics')}</h3>
         <div className="bg-background rounded-md m-1 mt-0 border border-input p-5 space-y-5 h-full">
           <div className="flex items-center gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">Company Name</Label>
-              <span className="text-xs font-normal text-muted-foreground">Store name shown across the app</span>
+              <Label className="text-2sm font-medium shrink-0">{t('Company Name')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Store name shown across the app')}</span>
             </div>
             <Input
               placeholder="Bob’s Shoes Store"
@@ -143,15 +145,15 @@ export function Basics() {
 
           <div className="flex items-center gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">Profile Image</Label>
-              <span className="text-xs font-normal text-muted-foreground">Store logo or brand icon</span>
+              <Label className="text-2sm font-medium shrink-0">{t('Profile Image')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Store logo or brand icon')}</span>
             </div>
             <div className="basis-2/3">
               <div className="flex items-center gap-2.5">
                 <div className="w-[60px] h-[60px] border border-border/50 rounded-lg flex items-center justify-center">
                   <img
                     src={logoSrc(draft.logo)}
-                    alt="Profile"
+                    alt={t('Profile')}
                     className="rounded-lg size-[60px] object-contain"
                   />
                 </div>
@@ -164,11 +166,11 @@ export function Basics() {
                 />
                 <label htmlFor="profile-image-upload" className="ml-2.5">
                   <Button size="sm" variant="outline" asChild>
-                    <span>Upload</span>
+                    <span>{t('Upload')}</span>
                   </Button>
                 </label>
                 <Button variant="ghost" size="sm" onClick={() => updateDraft({ logo: null })}>
-                  Delete
+                  {t('Delete')}
                 </Button>
               </div>
             </div>
@@ -178,8 +180,8 @@ export function Basics() {
 
           <div className="flex items-center gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">Store URL</Label>
-              <span className="text-xs font-normal text-muted-foreground">Link to your online store</span>
+              <Label className="text-2sm font-medium shrink-0">{t('Store URL')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Link to your online store')}</span>
             </div>
             <InputGroup className="basis-2/3">
               <InputAddon>https://</InputAddon>
@@ -196,8 +198,8 @@ export function Basics() {
 
           <div className="flex items-center gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">Store Phone</Label>
-              <span className="text-xs font-normal text-muted-foreground">Customer service phone number</span>
+              <Label className="text-2sm font-medium shrink-0">{t('Store Phone')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Customer service phone number')}</span>
             </div>
             <div className="basis-2/3">
               <PhoneNumberInput
@@ -211,8 +213,8 @@ export function Basics() {
 
           <div className="flex items-center gap-5">
             <div className="flex flex-col gap-0.5 lg:basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">Contact Email</Label>
-              <span className="text-xs font-normal text-muted-foreground">Email for customer inquiries</span>
+              <Label className="text-2sm font-medium shrink-0">{t('Contact Email')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Email for customer inquiries')}</span>
             </div>
             <Input
               placeholder="hello@mystore.io"
@@ -227,11 +229,11 @@ export function Basics() {
 
           <div className="flex items-center gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">What do you do?</Label>
-              <span className="text-xs font-normal text-muted-foreground">Tags describing store products</span>
+              <Label className="text-2sm font-medium shrink-0">{t('What do you do?')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Tags describing store products')}</span>
             </div>
             <Input
-              placeholder="Start typing tags"
+              placeholder={t('Start typing tags')}
               className="basis-2/3"
               type="text"
               value={draft.tags.join(', ')}

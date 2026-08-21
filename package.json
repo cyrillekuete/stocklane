@@ -22,6 +22,7 @@
     "test:customer-rpcs": "node scripts/test-customer-rpcs.cjs",
     "test:pos-edge-cases": "node scripts/test-pos-edge-cases.cjs",
     "test:order-edge-cases": "node scripts/test-order-edge-cases.cjs",
+    "test:user-permissions": "node scripts/test-user-permissions.cjs",
     "test:category-validation": "tsx scripts/test-category-validation.ts",
     "test:category-edge-cases": "node scripts/test-category-edge-cases.cjs"
   },

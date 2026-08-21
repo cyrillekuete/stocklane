@@ -1,6 +1,7 @@
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { invalidateKeys, restoreQueries, snapshotQueries } from '../lib/optimistic';
 import { inventoryKeys } from '../lib/query-keys';
 import { mapSettingsError } from '../lib/settings-errors';
@@ -20,6 +21,7 @@ export function useStoreSettings() {
 }
 
 export function useUpdateStoreSettings() {
+  const t = useT();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: StoreSettings) => updateStoreSettings(input),
@@ -30,7 +32,7 @@ export function useUpdateStoreSettings() {
     },
     onError: (error, _input, context) => {
       if (context?.previous) restoreQueries(queryClient, context.previous);
-      toast.error(mapSettingsError(error).message);
+      toast.error(t(mapSettingsError(error).message));
     },
     onSuccess: (data) => {
       queryClient.setQueryData(settingsKey, data);

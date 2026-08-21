@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useT } from '@/i18n/use-t';
 import { formatMoney } from '@/store-inventory/lib/format';
 
 type BestSellerProps = object;
@@ -15,6 +16,7 @@ interface BestSellerItem {
 type BestSellerItems = Array<BestSellerItem>;
 
 export function BestSeller({}: BestSellerProps) {
+  const t = useT();
   const items: BestSellerItems = [
     {
       logo: '11.png',
@@ -45,9 +47,9 @@ export function BestSeller({}: BestSellerProps) {
   return (
     <Card className="h-full">
       <CardHeader className="lg:px-7.5">
-        <CardTitle>Best Sellers</CardTitle>
+        <CardTitle>{t('Best Sellers')}</CardTitle>
         <Button mode="link" underline="solid" asChild>
-          <Link to="#">See All</Link>
+          <Link to="#">{t('See All')}</Link>
         </Button>
       </CardHeader>
       <CardContent className="flex flex-col gap-2 lg:gap-7.5 p-5 lg:p-7.5">
@@ -57,7 +59,7 @@ export function BestSeller({}: BestSellerProps) {
               <img
                 src={toAbsoluteUrl(`/media/store/client/1200x1200/${item.logo}`)}
                 className="cursor-pointer h-[50px]"
-                alt="image"
+                alt={t('image')}
               />
             </Card>
 
@@ -70,7 +72,7 @@ export function BestSeller({}: BestSellerProps) {
               </Link>
 
               <span className="text-xs font-normal text-muted-foreground uppercase">
-                sku:{' '}
+                {t('sku:')}{' '}
                 <span className="text-xs font-medium text-foreground">
                   {item.sku}
                 </span>

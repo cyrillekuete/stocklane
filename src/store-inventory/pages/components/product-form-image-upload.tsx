@@ -27,6 +27,7 @@ import {
   XIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useT } from '@/i18n/use-t';
 import { isRemoteAsset, resolveProductImageSrc } from '@/store-inventory/lib/format';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { uploadProductImage } from '@/store-inventory/services/inventory';
@@ -169,6 +170,7 @@ export function ProductFormImageUpload({
   image,
   onImageChange,
 }: ImageUploadProps & { mode: 'new' | 'edit' }) {
+  const t = useT();
   const isEditMode = mode === 'edit';
 
   const imageFromFilename = (filename: string): DefaultImage => {
@@ -176,7 +178,7 @@ export function ProductFormImageUpload({
     return {
       id: 'default-primary',
       src: isRemoteAsset(resolved) ? resolved : toAbsoluteUrl(resolved),
-      alt: 'Product image',
+      alt: t('Product image'),
     };
   };
   
@@ -185,7 +187,7 @@ export function ProductFormImageUpload({
       {
         id: 'default-1',
         src: toAbsoluteUrl('/media/store/client/1200x1200/3.png'),
-        alt: 'Product view 1',
+        alt: t('Product view 1'),
       },
     ] : []
   );
@@ -235,16 +237,16 @@ export function ProductFormImageUpload({
 
   const validateFile = useCallback((file: File, currentImagesCount: number): string | null => {
     if (!file.type.startsWith('image/')) {
-      return 'File must be an image';
+      return t('File must be an image');
     }
     if (file.size > maxSize) {
-      return `File size must be less than ${(maxSize / 1024 / 1024).toFixed(1)}MB`;
+      return t('File size must be less than {size}MB', { size: (maxSize / 1024 / 1024).toFixed(1) });
     }
     if (currentImagesCount >= maxFiles) {
-      return `Maximum ${maxFiles} files allowed`;
+      return t('Maximum {count} files allowed', { count: maxFiles });
     }
     return null;
-  }, [maxSize, maxFiles]);
+  }, [maxSize, maxFiles, t]);
 
   const uploadImageFile = useCallback(async (imageFile: ImageFile) => {
     try {
@@ -270,7 +272,7 @@ export function ProductFormImageUpload({
         return updatedImages;
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Upload failed';
+      const message = error instanceof Error ? error.message : t('Upload failed');
       setErrors((prev) => [...prev, `${imageFile.file.name}: ${message}`]);
       setAllImages((prev) =>
         prev.map((img) =>
@@ -280,7 +282,7 @@ export function ProductFormImageUpload({
         ),
       );
     }
-  }, [onImageChange, onUploadComplete]);
+  }, [onImageChange, onUploadComplete, t]);
 
   const addImages = useCallback(
     (files: FileList | File[]) => {
@@ -418,9 +420,9 @@ export function ProductFormImageUpload({
   }, [accept, addImages]);
 
   const formatBytes = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return t('0 Bytes');
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = [t('Bytes'), t('KB'), t('MB'), t('GB')];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
@@ -473,7 +475,7 @@ export function ProductFormImageUpload({
                       : (item as ImageFile).preview;
                   })()}
                   className="h-[120px] w-full object-cover rounded-md pointer-events-none"
-                  alt="Dragged item"
+                  alt={t('Dragged item')}
                 />
               </div>
             ) : null}
@@ -505,7 +507,7 @@ export function ProductFormImageUpload({
                         </span>
                         {imageFile.status === 'uploading' && (
                           <p className="text-xs text-muted-foreground">
-                            Uploading... {Math.round(imageFile.progress)}%
+                            {t('Uploading... {pct}%', { pct: Math.round(imageFile.progress) })}
                           </p>
                         )}
                       </div>
@@ -552,13 +554,13 @@ export function ProductFormImageUpload({
             <CloudUpload className="size-4" />
           </div>
           <h3 className="text-2sm text-foreground font-semibold mb-0.5">
-            Choose a file or drag & drop here.
+            {t('Choose a file or drag & drop here.')}
           </h3>
           <span className="text-xs text-secondary-foreground font-normal block mb-3">
-            JPEG, PNG, up to {formatBytes(maxSize)}.
+            {t('JPEG, PNG, up to {size}.', { size: formatBytes(maxSize) })}
           </span>
           <Button size="sm" variant="mono" onClick={openFileDialog}>
-            Browse File
+            {t('Browse File')}
           </Button>
         </CardContent>
       </Card>
@@ -570,7 +572,7 @@ export function ProductFormImageUpload({
             <TriangleAlert />
           </AlertIcon>
           <AlertContent>
-            <AlertTitle>File upload error(s)</AlertTitle>
+            <AlertTitle>{t('File upload error(s)')}</AlertTitle>
             <AlertDescription>
               {errors.map((error, index) => (
                 <p key={index} className="last:mb-0">

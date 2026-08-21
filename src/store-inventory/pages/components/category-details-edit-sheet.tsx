@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { Star, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { Area, AreaChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { formatMoney, parseMoney } from '@/store-inventory/lib/format';
 import {
@@ -72,6 +73,7 @@ export function CategoryDetailsEditSheet({
   onOpenChange: (open: boolean) => void;
   category?: CategoryListRow;
 }) {
+  const t = useT();
   const featuredId = useId();
   const updateCategory = useUpdateCategory();
   const deleteCategory = useDeleteCategory();
@@ -133,15 +135,15 @@ export function CategoryDetailsEditSheet({
       return;
     }
     if (!categoryName.trim()) {
-      toast.error('Category name is required');
+      toast.error(t('Category name is required'));
       return;
     }
     if (categoryName.trim().length > 80) {
-      toast.error('Name must be 80 characters or fewer');
+      toast.error(t('Name must be 80 characters or fewer'));
       return;
     }
     if (description.length > 500) {
-      toast.error('Description must be 500 characters or fewer');
+      toast.error(t('Description must be 500 characters or fewer'));
       return;
     }
     const nextStatus = normalizeCategoryStatus(status);
@@ -152,7 +154,7 @@ export function CategoryDetailsEditSheet({
         try {
           persistIcon = await uploadCategoryIcon(pendingFile, category.id);
         } catch (error) {
-          toast.error(mapCategoryError(error, 'Unable to upload category icon').message);
+          toast.error(t(mapCategoryError(error, 'Unable to upload category icon').message));
           return;
         } finally {
           setUploading(false);
@@ -168,7 +170,7 @@ export function CategoryDetailsEditSheet({
           icon: persistIcon,
         },
       });
-      toast.success('Category saved');
+      toast.success(t('Category saved'));
       onOpenChange(false);
     } catch {
       // Mutation errors are toasted by the shared mutation hook.
@@ -186,13 +188,15 @@ export function CategoryDetailsEditSheet({
         reassignToCategoryId,
       });
       if (result.reassigned) {
-        toast.success('Category deleted and products reassigned');
+        toast.success(t('Category deleted and products reassigned'));
       } else if (result.productCount > 0) {
         toast.success(
-          `Category deleted. ${result.productCount} ${result.productCount === 1 ? 'product is' : 'products are'} now Uncategorized.`,
+          result.productCount === 1
+            ? t('Category deleted. {count} product is now Uncategorized.', { count: result.productCount })
+            : t('Category deleted. {count} products are now Uncategorized.', { count: result.productCount }),
         );
       } else {
-        toast.success('Category deleted');
+        toast.success(t('Category deleted'));
       }
       setConfirmDeleteOpen(false);
       onOpenChange(false);
@@ -208,7 +212,7 @@ export function CategoryDetailsEditSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="gap-0 lg:w-[1080px] sm:max-w-none inset-5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
-          <SheetTitle className="font-medium">Category Details</SheetTitle>
+          <SheetTitle className="font-medium">{t('Category Details')}</SheetTitle>
         </SheetHeader>
 
         <SheetBody className="p-0 grow">
@@ -216,11 +220,11 @@ export function CategoryDetailsEditSheet({
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2.5">
                 <span className="lg:text-[22px] font-semibold text-foreground leading-none">
-                  {category?.productInfo.title ?? 'Category'}
+                  {category?.productInfo.title ?? t('Category')}
                 </span>
                 {category?.status.label ? (
                   <Badge size="sm" variant={statusVariant} appearance="light">
-                    {category.status.label}
+                    {t(category.status.label)}
                   </Badge>
                 ) : null}
               </div>
@@ -233,14 +237,14 @@ export function CategoryDetailsEditSheet({
                 </span>
                 <BadgeDot className="bg-muted-foreground size-1" />
                 <span className="font-normal text-muted-foreground">
-                  Created
+                  {t('Created')}
                 </span>
                 <span className="font-medium text-foreground">
                   {category?.created || '—'}
                 </span>
                 <BadgeDot className="bg-muted-foreground size-1" />
                 <span className="font-normal text-muted-foreground">
-                  Last Updated
+                  {t('Last Updated')}
                 </span>
                 <span className="font-medium text-foreground">
                   {category?.updated || '—'}
@@ -249,13 +253,13 @@ export function CategoryDetailsEditSheet({
             </div>
             <div className="flex items-center gap-2.5">
               <Button variant="ghost" onClick={handleClose} disabled={isPending}>
-                Close
+                {t('Close')}
               </Button>
               <Button variant="outline" onClick={() => setConfirmDeleteOpen(true)} disabled={isPending || !category?.id}>
-                Delete
+                {t('Delete')}
               </Button>
               <Button variant="mono" onClick={handleSave} disabled={isPending || !category?.id}>
-                {uploading ? 'Uploading…' : 'Save'}
+                {uploading ? t('Uploading…') : t('Save')}
               </Button>
             </div>
           </div>
@@ -267,23 +271,23 @@ export function CategoryDetailsEditSheet({
               <div className="grow lg:border-e border-border lg:pe-5 space-y-5 py-5">
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Metrics</CardTitle>
+                    <CardTitle className="text-2sm">{t('Metrics')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start lg:gap-10 gap-5">
                       {[
-                        { label: 'Total Qty', value: String(metrics.totalQty) },
-                        { label: 'Stock value', value: metrics.stockValue },
-                        { label: 'Return Rate', value: '—' },
-                        { label: 'Avg. Margin', value: '—' },
-                        { label: 'Avg. Rating', value: '—' },
+                        { label: t('Total Qty'), value: String(metrics.totalQty) },
+                        { label: t('Stock value'), value: metrics.stockValue },
+                        { label: t('Return Rate'), value: '—' },
+                        { label: t('Avg. Margin'), value: '—' },
+                        { label: t('Avg. Rating'), value: '—' },
                       ].map((item) => (
                         <div key={item.label} className="flex flex-col gap-1.5">
                           <span className="text-2sm font-normal text-secondary-foreground">
                             {item.label}
                           </span>
                           <span className="text-2sm font-medium text-foreground">
-                            {item.label?.includes('Avg. Rating') ? (
+                            {item.label?.includes(t('Avg. Rating')) ? (
                               <Badge
                                 size="sm"
                                 variant="warning"
@@ -307,12 +311,12 @@ export function CategoryDetailsEditSheet({
 
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Analytics</CardTitle>
+                    <CardTitle className="text-2sm">{t('Analytics')}</CardTitle>
                   </CardHeader>
                   <CardContent className="grid lg:grid-cols-2 gap-5 lg:gap-7.5 pt-4 pb-5">
                     <div className="space-y-1">
                       <div className="text-2sm font-normal text-secondary-foreground">
-                        Avg. Product Price
+                        {t('Avg. Product Price')}
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-lg font-semibold text-foreground">
@@ -400,14 +404,14 @@ export function CategoryDetailsEditSheet({
 
                     <div className="space-y-1">
                       <div className="text-2sm font-normal text-secondary-foreground">
-                        Category Product Sales
+                        {t('Category Product Sales')}
                       </div>
                       <div className="flex items-center gap-1.5">
                         <span className="text-lg font-semibold text-foreground">
                           {metrics.productCount.toLocaleString()}
                         </span>
                         <span className="text-2sm font-normal text-secondary-foreground ps-2.5">
-                          {formatMoney(metrics.totalSalesValue)} stock value
+                          {t('{amount} stock value', { amount: formatMoney(metrics.totalSalesValue) })}
                         </span>
                       </div>
 
@@ -487,10 +491,12 @@ export function CategoryDetailsEditSheet({
 
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Category Items</CardTitle>
+                    <CardTitle className="text-2sm">{t('Category Items')}</CardTitle>
                     <CardToolbar>
                       <span className="text-xs text-muted-foreground">
-                        {products.length} {products.length === 1 ? 'product' : 'products'}
+                        {products.length === 1
+                          ? t('{count} product', { count: products.length })
+                          : t('{count} products', { count: products.length })}
                       </span>
                     </CardToolbar>
                   </CardHeader>
@@ -501,13 +507,13 @@ export function CategoryDetailsEditSheet({
                         <TableHeader>
                           <TableRow className="text-secondary-foreground font-normal text-2sm bg-accent/50">
                             <TableHead className="w-[200px] h-8.5 border-e border-border ps-3.5">
-                              Product Info
+                              {t('Product Info')}
                             </TableHead>
                             <TableHead className="w-[120px] h-8.5 border-e border-border">
-                              Total Sales
+                              {t('Total Sales')}
                             </TableHead>
                             <TableHead className="w-[120px] h-8.5">
-                              Last Moved
+                              {t('Last Moved')}
                             </TableHead>
                           </TableRow>
                         </TableHeader>
@@ -516,7 +522,7 @@ export function CategoryDetailsEditSheet({
                           {products.length === 0 ? (
                             <TableRow>
                               <TableCell colSpan={3} className="py-6 text-center text-sm text-muted-foreground">
-                                No products in this category
+                                {t('No products in this category')}
                               </TableCell>
                             </TableRow>
                           ) : (
@@ -542,7 +548,7 @@ export function CategoryDetailsEditSheet({
                                         {item.name}
                                       </span>
                                       <span className="text-xs text-muted-foreground uppercase font-normal">
-                                        sku:{' '}
+                                        {t('SKU')}:{' '}
                                         <span className="text-xs font-medium text-secondary-foreground">
                                           {item.sku}
                                         </span>
@@ -584,43 +590,43 @@ export function CategoryDetailsEditSheet({
                 />
 
                 <div className="flex flex-col gap-2.5">
-                  <Label className="text-xs">Category Name</Label>
+                  <Label className="text-xs">{t('Category Name')}</Label>
                   <Input
                     value={categoryName}
                     onChange={(e) => setCategoryName(e.target.value)}
-                    placeholder="Category Name"
+                    placeholder={t('Category Name')}
                     maxLength={80}
                   />
                 </div>
                 {category?.productInfo.label ? (
                   <div className="flex flex-col gap-2.5">
-                    <Label className="text-xs">Code</Label>
+                    <Label className="text-xs">{t('Code')}</Label>
                     <Input value={category.productInfo.label} disabled readOnly />
                     <p className="text-xs text-muted-foreground">
-                      Immutable after create — renaming keeps this code.
+                      {t('Immutable after create — renaming keeps this code.')}
                     </p>
                   </div>
                 ) : null}
                 <div className="flex flex-col gap-2.5">
-                  <Label className="text-xs">Status</Label>
+                  <Label className="text-xs">{t('Status')}</Label>
                   <Select value={status} onValueChange={setStatus} indicatorPosition="right">
                     <SelectTrigger>
-                      <SelectValue placeholder="Active" />
+                      <SelectValue placeholder={t('Active')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="archived">Archived</SelectItem>
+                      <SelectItem value="active">{t('Active')}</SelectItem>
+                      <SelectItem value="inactive">{t('Inactive')}</SelectItem>
+                      <SelectItem value="draft">{t('Draft')}</SelectItem>
+                      <SelectItem value="archived">{t('Archived')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="flex flex-col gap-2.5">
-                  <Label className="text-xs">Description</Label>
+                  <Label className="text-xs">{t('Description')}</Label>
                   <Textarea
                     className="h-[100px]"
-                    placeholder="Category Description"
+                    placeholder={t('Category Description')}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     maxLength={500}
@@ -634,7 +640,7 @@ export function CategoryDetailsEditSheet({
                     onCheckedChange={(value) => setFeatured(value === true)}
                     size="sm"
                   />
-                  <Label htmlFor={featuredId}>Featured</Label>
+                  <Label htmlFor={featuredId}>{t('Featured')}</Label>
                 </div>
               </div>
             </div>
@@ -643,13 +649,13 @@ export function CategoryDetailsEditSheet({
 
         <SheetFooter className="flex-row border-t pb-4 p-5 border-border gap-2.5 lg:gap-0">
           <Button variant="ghost" onClick={handleClose} disabled={isPending}>
-            Close
+            {t('Close')}
           </Button>
           <Button variant="outline" onClick={() => setConfirmDeleteOpen(true)} disabled={isPending || !category?.id}>
-            Delete
+            {t('Delete')}
           </Button>
           <Button variant="mono" onClick={handleSave} disabled={isPending || !category?.id}>
-            {uploading ? 'Uploading…' : 'Save'}
+            {uploading ? t('Uploading…') : t('Save')}
           </Button>
         </SheetFooter>
       </SheetContent>

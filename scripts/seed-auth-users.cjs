@@ -52,6 +52,23 @@ const DEMO_USERS = [
   },
 ];
 
+const ROLE_PERMISSIONS = {
+  admin: [
+    'dashboard',
+    'inventory',
+    'warehouses',
+    'pos',
+    'products',
+    'categories',
+    'orders',
+    'customers',
+    'settings',
+    'users',
+  ],
+  cashier: ['dashboard', 'pos', 'orders', 'customers'],
+  store_keeper: ['dashboard', 'inventory', 'warehouses', 'products', 'categories'],
+};
+
 async function upsertUser(admin, user) {
   const list = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
   if (list.error) throw list.error;
@@ -60,12 +77,13 @@ async function upsertUser(admin, user) {
   );
 
   const fullname = `${user.first_name} ${user.last_name}`.trim();
+  const permissions = ROLE_PERMISSIONS[user.role] ?? ROLE_PERMISSIONS.cashier;
 
   if (existing) {
     const { data, error } = await admin.auth.admin.updateUserById(existing.id, {
       password: user.password,
       email_confirm: true,
-      app_metadata: { role: user.role },
+      app_metadata: { role: user.role, permissions },
       user_metadata: {
         first_name: user.first_name,
         last_name: user.last_name,
@@ -82,6 +100,7 @@ async function upsertUser(admin, user) {
       full_name: fullname,
       role: user.role,
       status: 'active',
+      permissions,
       updated_at: new Date().toISOString(),
     });
     if (profileError) throw profileError;
@@ -93,7 +112,7 @@ async function upsertUser(admin, user) {
     email: user.email,
     password: user.password,
     email_confirm: true,
-    app_metadata: { role: user.role },
+    app_metadata: { role: user.role, permissions },
     user_metadata: {
       first_name: user.first_name,
       last_name: user.last_name,
@@ -111,6 +130,7 @@ async function upsertUser(admin, user) {
     full_name: fullname,
     role: user.role,
     status: 'active',
+    permissions,
     updated_at: new Date().toISOString(),
   });
   if (profileError) throw profileError;

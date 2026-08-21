@@ -25,6 +25,7 @@ import {
 import { DateRange } from 'react-day-picker';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
@@ -123,6 +124,7 @@ const CurrentStockTable = ({
   isLoading = false,
   isError = false,
 }: CurrentStockProps) => {
+  const t = useT();
   const data = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
   const deleteProduct = useDeleteProduct();
   const [productToDelete, setProductToDelete] = useState<IData | null>(null);
@@ -302,7 +304,7 @@ const CurrentStockTable = ({
   }: IColumnFilterProps<TData, TValue>) => {
     return (
       <Input
-        placeholder="Filter..."
+        placeholder={t('Filter...')}
         value={(column.getFilterValue() as string) ?? ''}
         onChange={(event) => column.setFilterValue(event.target.value)}
         variant="sm"
@@ -351,7 +353,7 @@ const CurrentStockTable = ({
                     `/media/store/client/1200x1200/${productInfo.image}`,
                   )}
                   className="cursor-pointer h-[40px]"
-                  alt="image"
+                  alt={t('image')}
                 />
               </Card>
 
@@ -513,7 +515,7 @@ const CurrentStockTable = ({
           const variant = trend.variant as keyof BadgeProps['variant'];
           return (
             <Badge variant={variant} appearance="light">
-              {trend.label}
+              {t(trend.label)}
             </Badge>
           );
         },
@@ -535,22 +537,22 @@ const CurrentStockTable = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('Actions')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Settings />
-                Settings
+                {t('Settings')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleProductClick(info.row.original)}
               >
                 <Pencil />
-                Edit
+                {t('Edit')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={() => setProductToDelete(info.row.original)}>
                 <Trash />
-                Move to trash
+                {t('Move to trash')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -558,7 +560,7 @@ const CurrentStockTable = ({
         size: 60,
       },
     ],
-    [],
+    [t],
   );
 
   const filteredData = useMemo(() => {
@@ -624,18 +626,18 @@ const CurrentStockTable = ({
 
     if (selectedRowIds.length > 0) {
       toast.custom(
-        (t) => (
+        (toastId) => (
           <Alert
             variant="mono"
             icon="success"
             close={true}
-            onClose={() => toast.dismiss(t)}
+            onClose={() => toast.dismiss(toastId)}
           >
             <AlertIcon>
               <Info />
             </AlertIcon>
             <AlertTitle>
-              Selected row IDs: {selectedRowIds.join(', ')}
+              {t('Selected row IDs: {ids}', { ids: selectedRowIds.join(', ') })}
             </AlertTitle>
           </Alert>
         ),
@@ -644,7 +646,7 @@ const CurrentStockTable = ({
         },
       );
     }
-  }, [rowSelection]);
+  }, [rowSelection, t]);
 
   const table = useReactTable({
     data: filteredData,
@@ -665,10 +667,10 @@ const CurrentStockTable = ({
   return (
     <div className="space-y-3">
       {isError && (
-        <p className="text-sm text-destructive">Unable to load warehouse stock. Check your connection and try again.</p>
+        <p className="text-sm text-destructive">{t('Unable to load warehouse stock. Check your connection and try again.')}</p>
       )}
       {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading stock...</p>
+        <p className="text-sm text-muted-foreground">{t('Loading stock...')}</p>
       )}
     <DataGrid
       table={table}
@@ -688,7 +690,7 @@ const CurrentStockTable = ({
               <InputWrapper>
                 <Search />
                 <Input
-                  placeholder="Search..."
+                  placeholder={t('Search...')}
                   ref={inputRef}
                   value={inputValue}
                   onChange={(e) => {
@@ -736,7 +738,7 @@ const CurrentStockTable = ({
                       format(dateRange.from, 'MMM dd, yyyy')
                     )
                   ) : (
-                    <span>Pick date range</span>
+                    <span>{t('Pick date range')}</span>
                   )}
                   <ChevronDown className="size-4 ml-1" />
                 </Button>
@@ -753,13 +755,13 @@ const CurrentStockTable = ({
                 />
                 <div className="flex items-center justify-between border-t border-border p-3">
                   <Button variant="outline" onClick={handleDateRangeReset}>
-                    Reset
+                    {t('Reset')}
                   </Button>
                   <div className="flex items-center gap-1.5">
                     <Button variant="outline" onClick={handleDateRangeCancel}>
-                      Cancel
+                      {t('Cancel')}
                     </Button>
-                    <Button onClick={handleDateRangeApply}>Apply</Button>
+                    <Button onClick={handleDateRangeApply}>{t('Apply')}</Button>
                   </div>
                 </div>
               </PopoverContent>
@@ -769,7 +771,7 @@ const CurrentStockTable = ({
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="relative">
-                  Trends
+                  {t('Trends')}
                   {selectedTrends.length > 0 && (
                     <Badge variant="outline" size="sm" className="ml-1.5">
                       {selectedTrends.length}
@@ -780,9 +782,9 @@ const CurrentStockTable = ({
               </PopoverTrigger>
               <PopoverContent className="w-56 p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Search trends..." />
+                  <CommandInput placeholder={t('Search trends...')} />
                   <CommandList>
-                    <CommandEmpty>No trends found.</CommandEmpty>
+                    <CommandEmpty>{t('No trends found.')}</CommandEmpty>
                     <CommandGroup>
                       {uniqueTrends.map((trend) => {
                         const count = trendCounts[trend.id] || 0;
@@ -819,7 +821,7 @@ const CurrentStockTable = ({
                                 }
                                 appearance="light"
                               >
-                                {trend.name}
+                                {t(trend.name)}
                               </Badge>
                               <span className="text-muted-foreground font-semibold me-2.5">
                                 {count}
@@ -838,7 +840,7 @@ const CurrentStockTable = ({
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="relative">
-                  Handler
+                  {t('Handler')}
                   {selectedHandlers.length > 0 && (
                     <Badge variant="outline" size="sm" className="ml-1.5">
                       {selectedHandlers.length}
@@ -849,9 +851,9 @@ const CurrentStockTable = ({
               </PopoverTrigger>
               <PopoverContent className="w-56 p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Search handler..." />
+                  <CommandInput placeholder={t('Search handler...')} />
                   <CommandList>
-                    <CommandEmpty>No handler found.</CommandEmpty>
+                    <CommandEmpty>{t('No handler found.')}</CommandEmpty>
                     <CommandGroup>
                       {uniqueHandlers.map((handler) => {
                         const count = handlerCounts[handler.id] || 0;
@@ -894,7 +896,7 @@ const CurrentStockTable = ({
           </CardHeading>
           <CardToolbar>
             <Link to="/store-inventory/stock-planner">
-              <Button variant="mono">Stock Planner</Button>
+              <Button variant="mono">{t('Stock Planner')}</Button>
             </Link>
           </CardToolbar>
         </CardHeader>
@@ -936,11 +938,11 @@ const CurrentStockTable = ({
           if (!productToDelete) return;
           deleteProduct.mutate(productToDelete.id, {
             onSuccess: () => {
-              toast.success('Product moved to trash');
+              toast.success(t('Product moved to trash'));
               setProductToDelete(null);
             },
             onError: (error) => {
-              toast.error(error instanceof Error ? error.message : 'Unable to delete product');
+              toast.error(error instanceof Error ? t(error.message) : t('Unable to delete product'));
             },
           });
         }}

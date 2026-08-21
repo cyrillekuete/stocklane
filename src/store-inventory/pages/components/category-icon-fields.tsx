@@ -3,6 +3,7 @@
 import { useId } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { isRemoteAsset, resolveCategoryIconSrc } from '@/store-inventory/lib/format';
 import { CATEGORY_BUNDLED_ICONS } from '@/store-inventory/lib/category-validation';
@@ -42,6 +43,7 @@ export function CategoryIconFields({
   onClearPreview: () => void;
   compact?: boolean;
 }) {
+  const t = useT();
   const inputId = useId();
   const persisted = resolvePersistedCategoryIcon(icon);
   const displaySrc = previewUrl
@@ -57,11 +59,11 @@ export function CategoryIconFields({
     event.target.value = '';
     if (!file) return;
     if (!file.type.startsWith('image/')) {
-      toast.error('Choose an image file');
+      toast.error(t('Choose an image file'));
       return;
     }
     if (file.size > MAX_ICON_BYTES) {
-      toast.error('Icon must be 2MB or smaller');
+      toast.error(t('Icon must be 2MB or smaller'));
       return;
     }
     const reader = new FileReader();
@@ -77,7 +79,7 @@ export function CategoryIconFields({
         {displaySrc ? (
           <img
             src={displaySrc}
-            alt="Category"
+            alt={t('Category')}
             className="max-h-full max-w-full object-contain"
           />
         ) : (
@@ -85,12 +87,12 @@ export function CategoryIconFields({
             <img
               src={toAbsoluteUrl(resolveCategoryIconSrc(bundledName, 'light'))}
               className="max-h-[140px] object-contain dark:hidden"
-              alt="Category icon"
+              alt={t('Category icon')}
             />
             <img
               src={toAbsoluteUrl(resolveCategoryIconSrc(bundledName, 'dark'))}
               className="max-h-[140px] object-contain light:hidden"
-              alt="Category icon"
+              alt={t('Category icon')}
             />
           </>
         )}
@@ -106,7 +108,7 @@ export function CategoryIconFields({
         />
         <label htmlFor={inputId} className="absolute bottom-3 right-3">
           <Button size="sm" variant="outline" asChild>
-            <span>{pendingFile || displaySrc ? 'Replace' : 'Upload'}</span>
+            <span>{pendingFile || displaySrc ? t('Replace') : t('Upload')}</span>
           </Button>
         </label>
         {pendingFile || previewUrl ? (
@@ -117,13 +119,13 @@ export function CategoryIconFields({
             className="absolute top-2 right-2"
             onClick={onClearPreview}
           >
-            Clear
+            {t('Clear')}
           </Button>
         ) : null}
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs font-medium">Bundled icon</Label>
+        <Label className="text-xs font-medium">{t('Bundled icon')}</Label>
         <Select
           value={isRemoteAsset(persisted) || previewUrl ? undefined : bundledName}
           onValueChange={(value) => {
@@ -132,7 +134,7 @@ export function CategoryIconFields({
           }}
         >
           <SelectTrigger>
-            <SelectValue placeholder={previewUrl || isRemoteAsset(persisted) ? 'Custom upload' : 'Select icon'} />
+            <SelectValue placeholder={previewUrl || isRemoteAsset(persisted) ? t('Custom upload') : t('Select icon')} />
           </SelectTrigger>
           <SelectContent>
             {CATEGORY_BUNDLED_ICONS.map((name) => (
@@ -143,7 +145,7 @@ export function CategoryIconFields({
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          Uploads are saved to storage on Create/Save. Bundled icons stay as filenames.
+          {t('Uploads are saved to storage on Create/Save. Bundled icons stay as filenames.')}
         </p>
       </div>
     </div>

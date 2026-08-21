@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -66,6 +67,7 @@ interface OrderFormSheetProps {
 }
 
 export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormSheetProps) {
+  const t = useT();
   const isNewMode = mode === 'new';
   const createOrder = useCreateOrder();
   const updateOrder = useUpdateOrder();
@@ -199,20 +201,20 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
   const handleSave = async () => {
     const customerName = selectedCustomer?.customerInfo.title || order?.customer || '';
     if (!customerName.trim()) {
-      toast.error('Customer is required');
+      toast.error(t('Customer is required'));
       return;
     }
     if (isNewMode || itemsDirty) {
       if (!builtItems.length) {
-        toast.error('Add at least one product line');
+        toast.error(t('Add at least one product line'));
         return;
       }
     } else if (!existingItems?.length && !builtItems.length) {
-      toast.error('Add at least one product line');
+      toast.error(t('Add at least one product line'));
       return;
     }
     if (!warehouseId && (warehouses?.length ?? 0) > 0) {
-      toast.error('Select a warehouse');
+      toast.error(t('Select a warehouse'));
       return;
     }
 
@@ -255,10 +257,10 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
           items: builtItems,
         });
       }
-      toast.success(isNewMode ? 'Order created' : 'Order saved');
+      toast.success(isNewMode ? t('Order created') : t('Order saved'));
       onOpenChange(false);
     } catch (error) {
-      toast.error(mapOrderError(error).message);
+      toast.error(t(mapOrderError(error).message));
     }
   };
 
@@ -266,24 +268,24 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="gap-0 lg:w-[720px] sm:max-w-none inset-5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
-          <SheetTitle className="font-medium">{isNewMode ? 'New Order' : 'Edit Order'}</SheetTitle>
+          <SheetTitle className="font-medium">{isNewMode ? t('New Order') : t('Edit Order')}</SheetTitle>
         </SheetHeader>
         <SheetBody className="p-0 grow">
           <ScrollArea className="h-[calc(100dvh-10rem)] px-5 py-5">
             <div className="space-y-5 max-w-xl">
               <div className="flex items-center gap-10">
-                <Label className="text-xs font-medium w-28 shrink-0">Order Number</Label>
+                <Label className="text-xs font-medium w-28 shrink-0">{t('Order Number')}</Label>
                 <Input value={orderNumber} onChange={(event) => setOrderNumber(event.target.value)} />
               </div>
               <div className="flex items-center gap-10">
-                <Label className="text-xs font-medium w-28 shrink-0">Date</Label>
+                <Label className="text-xs font-medium w-28 shrink-0">{t('Date')}</Label>
                 <Input value={date} onChange={(event) => setDate(event.target.value)} />
               </div>
               <div className="flex items-center gap-10">
-                <Label className="text-xs font-medium w-28 shrink-0">Customer</Label>
+                <Label className="text-xs font-medium w-28 shrink-0">{t('Customer')}</Label>
                 <Select value={customerId} onValueChange={setCustomerId}>
                   <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select customer" />
+                    <SelectValue placeholder={t('Select customer')} />
                   </SelectTrigger>
                   <SelectContent>
                     {(customers ?? []).map((customer) => (
@@ -295,11 +297,11 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
                 </Select>
               </div>
               <div className="flex items-center gap-10">
-                <Label className="text-xs font-medium w-28 shrink-0">Category</Label>
-                <Input value={category} onChange={(event) => setCategory(event.target.value)} placeholder="Electronics" />
+                <Label className="text-xs font-medium w-28 shrink-0">{t('Category')}</Label>
+                <Input value={category} onChange={(event) => setCategory(event.target.value)} placeholder={t('Electronics')} />
               </div>
               <div className="flex items-center gap-10">
-                <Label className="text-xs font-medium w-28 shrink-0">Payment</Label>
+                <Label className="text-xs font-medium w-28 shrink-0">{t('Payment')}</Label>
                 <Select value={paymentStatus} onValueChange={setPaymentStatus}>
                   <SelectTrigger className="flex-1">
                     <SelectValue />
@@ -307,14 +309,14 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
                   <SelectContent>
                     {paymentOptions.map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status}
+                        {t(status)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex items-center gap-10">
-                <Label className="text-xs font-medium w-28 shrink-0">Delivery</Label>
+                <Label className="text-xs font-medium w-28 shrink-0">{t('Delivery')}</Label>
                 <Select value={deliveryStatus} onValueChange={setDeliveryStatus}>
                   <SelectTrigger className="flex-1">
                     <SelectValue />
@@ -322,14 +324,14 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
                   <SelectContent>
                     {deliveryOptions.map((status) => (
                       <SelectItem key={status} value={status}>
-                        {status}
+                        {t(status)}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex items-center gap-10">
-                <Label className="text-xs font-medium w-28 shrink-0">Carrier</Label>
+                <Label className="text-xs font-medium w-28 shrink-0">{t('Carrier')}</Label>
                 <Select value={carrierName} onValueChange={setCarrierName}>
                   <SelectTrigger className="flex-1">
                     <SelectValue />
@@ -345,16 +347,16 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
               </div>
               {(warehouses?.length ?? 0) > 0 && (
                 <div className="flex items-center gap-10">
-                  <Label className="text-xs font-medium w-28 shrink-0">Warehouse</Label>
+                  <Label className="text-xs font-medium w-28 shrink-0">{t('Warehouse')}</Label>
                   <Select value={warehouseId} onValueChange={setWarehouseId}>
                     <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select warehouse" />
+                      <SelectValue placeholder={t('Select warehouse')} />
                     </SelectTrigger>
                     <SelectContent>
                       {warehouses?.map((warehouse) => (
                         <SelectItem key={warehouse.id} value={warehouse.id}>
                           {warehouse.name}
-                          {warehouse.isDefault ? ' (Default)' : ''}
+                          {warehouse.isDefault ? ` (${t('Default')})` : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -364,7 +366,7 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
 
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-medium">Line items</Label>
+                  <Label className="text-xs font-medium">{t('Line items')}</Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -378,7 +380,7 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
                     }}
                   >
                     <Plus className="size-3.5" />
-                    Add line
+                    {t('Add line')}
                   </Button>
                 </div>
                 {lines.map((line) => (
@@ -388,7 +390,7 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
                       onValueChange={(value) => updateLine(line.key, { productId: value })}
                     >
                       <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Select product" />
+                        <SelectValue placeholder={t('Select product')} />
                       </SelectTrigger>
                       <SelectContent>
                         {liveProducts.map((product) => (
@@ -424,10 +426,10 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
                   </div>
                 ))}
                 <div className="text-sm text-muted-foreground space-y-1 pt-1">
-                  <div>Subtotal: {formatMoney(pricingPreview.subtotal)}</div>
-                  <div>Shipping: {formatMoney(pricingPreview.shippingCost)}</div>
-                  <div>Tax: {formatMoney(pricingPreview.tax)}</div>
-                  <div className="font-medium text-foreground">Total: {formatMoney(pricingPreview.total)}</div>
+                  <div>{t('Subtotal')}: {formatMoney(pricingPreview.subtotal)}</div>
+                  <div>{t('Shipping')}: {formatMoney(pricingPreview.shippingCost)}</div>
+                  <div>{t('Tax')}: {formatMoney(pricingPreview.tax)}</div>
+                  <div className="font-medium text-foreground">{t('Total')}: {formatMoney(pricingPreview.total)}</div>
                 </div>
               </div>
             </div>
@@ -435,10 +437,10 @@ export function OrderFormSheet({ mode, open, onOpenChange, order }: OrderFormShe
         </SheetBody>
         <SheetFooter className="flex-row border-t pb-4 p-5 border-border gap-2.5">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button variant="mono" onClick={handleSave} disabled={isPending}>
-            {isPending ? 'Saving...' : isNewMode ? 'Create' : 'Save'}
+            {isPending ? t('Saving...') : isNewMode ? t('Create') : t('Save')}
           </Button>
         </SheetFooter>
       </SheetContent>

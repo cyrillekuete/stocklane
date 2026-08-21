@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +45,7 @@ export function CustomerSoftDeleteDialog({
   onConfirm: () => void;
   confirming?: boolean;
 }) {
+  const t = useT();
   const balance = customer?.accountBalance ?? 0;
   const blocked = balance !== 0;
 
@@ -51,33 +53,35 @@ export function CustomerSoftDeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Archive customer?</AlertDialogTitle>
+          <AlertDialogTitle>{t('Archive customer?')}</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2 text-sm text-muted-foreground">
               {blocked ? (
                 <p>
-                  <strong className="text-foreground">{customer?.title}</strong> has an account
-                  balance of <strong className="text-foreground">{formatMoney(balance)}</strong>.
-                  Settle the balance (deposit or collect credit) before archiving.
+                  {t(
+                    '{title} has an account balance of {amount}. Settle the balance (deposit or collect credit) before archiving.',
+                    { title: customer?.title ?? '', amount: formatMoney(balance) },
+                  )}
                 </p>
               ) : (
                 <p>
-                  <strong className="text-foreground">{customer?.title}</strong> ({customer?.code})
-                  will be archived and hidden from POS and the main customer list. You can restore
-                  them later from the Archived tab.
+                  {t(
+                    '{title} ({code}) will be archived and hidden from POS and the main customer list. You can restore them later from the Archived tab.',
+                    { title: customer?.title ?? '', code: customer?.code ?? '' },
+                  )}
                 </p>
               )}
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={confirming}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={confirming}>{t('Cancel')}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={confirming || !customer || blocked}
             onClick={onConfirm}
           >
-            {confirming ? 'Archiving…' : 'Move to archive'}
+            {confirming ? t('Archiving…') : t('Move to archive')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -94,6 +98,7 @@ export function CustomerHardDeleteDialog({
   onOpenChange: (open: boolean) => void;
   customer: HardDeleteTarget | null;
 }) {
+  const t = useT();
   const [codeConfirm, setCodeConfirm] = useState('');
   const hardDelete = useHardDeleteCustomer();
   const { data: impact, isLoading, isError } = useCustomerDeleteImpact(
@@ -117,11 +122,11 @@ export function CustomerHardDeleteDialog({
     if (!customer || !canDelete) return;
     hardDelete.mutate(customer.id, {
       onSuccess: () => {
-        toast.success('Customer permanently deleted');
+        toast.success(t('Customer permanently deleted'));
         onOpenChange(false);
       },
       onError: (error) => {
-        toast.error(mapCustomerError(error).message);
+        toast.error(t(mapCustomerError(error).message));
       },
     });
   };
@@ -130,35 +135,36 @@ export function CustomerHardDeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Permanently delete customer?</AlertDialogTitle>
+          <AlertDialogTitle>{t('Permanently delete customer?')}</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-3 text-sm text-muted-foreground">
               <p>
-                This will permanently wipe <strong className="text-foreground">{customer?.title}</strong>.
-                This cannot be undone.
+                {t('This will permanently wipe {title}. This cannot be undone.', {
+                  title: customer?.title ?? '',
+                })}
               </p>
-              {isLoading && <p>Loading impact…</p>}
-              {isError && <p className="text-destructive">Unable to load delete impact.</p>}
+              {isLoading && <p>{t('Loading impact…')}</p>}
+              {isError && <p className="text-destructive">{t('Unable to load delete impact.')}</p>}
               {impact && (
                 <ul className="list-disc ps-5 space-y-1">
-                  <li>Account balance: {formatMoney(impact.account_balance)}</li>
-                  <li>{impact.ledger_count} ledger transactions</li>
-                  <li>{impact.pos_sales_count} POS sales</li>
-                  <li>{impact.orders_count} orders</li>
+                  <li>{t('Account balance: {amount}', { amount: formatMoney(impact.account_balance) })}</li>
+                  <li>{t('{count} ledger transactions', { count: impact.ledger_count })}</li>
+                  <li>{t('{count} POS sales', { count: impact.pos_sales_count })}</li>
+                  <li>{t('{count} orders', { count: impact.orders_count })}</li>
                 </ul>
               )}
               {impact && !impact.can_hard_delete ? (
                 <p className="text-destructive">
-                  This customer has history or a non-zero balance and must stay archived.
+                  {t('This customer has history or a non-zero balance and must stay archived.')}
                 </p>
               ) : null}
               <div className="space-y-2 pt-1">
-                <Label htmlFor="hard-delete-customer-code">Type the customer code to confirm</Label>
+                <Label htmlFor="hard-delete-customer-code">{t('Type the customer code to confirm')}</Label>
                 <Input
                   id="hard-delete-customer-code"
                   value={codeConfirm}
                   onChange={(e) => setCodeConfirm(e.target.value)}
-                  placeholder={customer?.code ?? 'Code'}
+                  placeholder={customer?.code ?? t('Code')}
                   autoComplete="off"
                 />
               </div>
@@ -166,9 +172,9 @@ export function CustomerHardDeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={hardDelete.isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={hardDelete.isPending}>{t('Cancel')}</AlertDialogCancel>
           <AlertDialogAction variant="destructive" disabled={!canDelete} onClick={handleConfirm}>
-            {hardDelete.isPending ? 'Deleting…' : 'Delete permanently'}
+            {hardDelete.isPending ? t('Deleting…') : t('Delete permanently')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -178,16 +184,17 @@ export function CustomerHardDeleteDialog({
 
 export function useCustomerRestoreAction() {
   const restoreCustomer = useRestoreCustomer();
+  const t = useT();
   return {
     restoreCustomer,
     restore: (id: string, onSuccess?: () => void) => {
       restoreCustomer.mutate(id, {
         onSuccess: () => {
-          toast.success('Customer restored as Active');
+          toast.success(t('Customer restored as Active'));
           onSuccess?.();
         },
         onError: (error) => {
-          toast.error(mapCustomerError(error).message);
+          toast.error(t(mapCustomerError(error).message));
         },
       });
     },

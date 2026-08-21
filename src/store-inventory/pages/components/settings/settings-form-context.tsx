@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { defaultStoreSettings } from '@/store-inventory/data/settings';
 import { useOrders } from '@/store-inventory/hooks/use-inventory';
@@ -34,6 +35,7 @@ type SettingsFormContextValue = {
 const SettingsFormContext = createContext<SettingsFormContextValue | null>(null);
 
 export function SettingsFormProvider({ children }: { children: ReactNode }) {
+  const t = useT();
   const settingsQuery = useStoreSettings();
   const updateSettings = useUpdateStoreSettings();
   const ordersQuery = useOrders();
@@ -52,8 +54,8 @@ export function SettingsFormProvider({ children }: { children: ReactNode }) {
 
   const lastOrderLabel = useMemo(() => {
     const latest = ordersQuery.data?.[0]?.date;
-    return latest || 'No orders yet';
-  }, [ordersQuery.data]);
+    return latest || t('No orders yet');
+  }, [ordersQuery.data, t]);
 
   const updateDraft = useCallback((patch: Partial<StoreSettings>) => {
     setDraft((current) => ({ ...current, ...patch }));
@@ -65,17 +67,17 @@ export function SettingsFormProvider({ children }: { children: ReactNode }) {
 
   const save = useCallback(async () => {
     if (!isSupabaseConfigured) {
-      toast.error('Supabase is not configured');
+      toast.error(t('Supabase is not configured'));
       return;
     }
     try {
       const next = await updateSettings.mutateAsync(draft);
       setDraft(next);
-      toast.success('Settings saved');
+      toast.success(t('Settings saved'));
     } catch (error) {
-      toast.error(mapSettingsError(error).message);
+      toast.error(t(mapSettingsError(error).message));
     }
-  }, [draft, updateSettings]);
+  }, [draft, updateSettings, t]);
 
   const exportSettings = useCallback(() => {
     const blob = new Blob([JSON.stringify(draft, null, 2)], { type: 'application/json' });
@@ -85,8 +87,8 @@ export function SettingsFormProvider({ children }: { children: ReactNode }) {
     link.download = `${draft.storeCode || 'store'}-settings.json`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success(dirty ? 'Draft settings exported (unsaved changes included)' : 'Settings exported');
-  }, [draft, dirty]);
+    toast.success(dirty ? t('Draft settings exported (unsaved changes included)') : t('Settings exported'));
+  }, [draft, dirty, t]);
 
   const value = useMemo<SettingsFormContextValue>(
     () => ({

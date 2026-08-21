@@ -1,4 +1,4 @@
-import type { AppRole } from './roles';
+import type { AppPermission, AppRole } from './roles';
 
 export type UUID = string;
 
@@ -24,5 +24,6 @@ export interface UserModel {
   language?: LanguageCode;
   role: AppRole;
   status: UserStatus;
+  permissions: AppPermission[];
   is_admin: boolean;
 }

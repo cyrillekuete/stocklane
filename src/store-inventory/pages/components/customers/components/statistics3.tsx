@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useT } from '@/i18n/use-t';
 import { formatMoney } from '@/store-inventory/lib/format';
 
 export function Statistics3({
@@ -14,6 +15,7 @@ export function Statistics3({
 }: {
   items?: { total: string; label: string }[];
 }) {
+  const t = useT();
   return (
     <Card className="rounded-md mb-5 bg-accent/70 p-1">
       <CardContent className="rounded-md p-0 bg-background border border-border">
@@ -22,15 +24,15 @@ export function Statistics3({
             <div key={item.label} className={`${index === 0 ? 'flex-2' : 'flex-1'} flex flex-col px-4.5 py-3 gap-2 ${index > 0 ? 'sm:border-s border-border' : ''}`}>
               <div className="flex items-center flex-wrap gap-1">
                 <span className={`font-semibold text-foreground ${index === 0 ? 'text-xl leading-6' : 'text-base leading-5'}`}>
-                  {item.total}
+                  {index === 0 ? t(item.total) : item.total}
                 </span>
                 {index === 0 && (
                   <Badge variant="success" appearance="light" size="sm">
-                    Monthly
+                    {t('Monthly')}
                   </Badge>
                 )}
               </div>
-              <span className="text-xs font-normal text-secondary-foreground/70">{item.label}</span>
+              <span className="text-xs font-normal text-secondary-foreground/70">{t(item.label)}</span>
             </div>
           ))}
         </div>

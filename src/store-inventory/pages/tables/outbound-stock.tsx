@@ -25,6 +25,7 @@ import {
 import { DateRange } from 'react-day-picker';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -139,6 +140,7 @@ const mockData: OutboundStockData[] = outboundStockMockData;
 export function OutboundStockTable({
   mockData: propsMockData,
 }: OutboundStockProps) {
+  const t = useT();
   // Prefer live data (including empty arrays); only fall back to mocks when undefined.
   const data = propsMockData ?? mockData;
   const deleteOutbound = useDeleteOutboundShipment();
@@ -162,18 +164,18 @@ export function OutboundStockTable({
     // Show toaster notification with custom Alert style
     if (value) {
       toast.custom(
-        (t) => (
+        (toastId) => (
           <Alert
             variant="mono"
             icon="success"
             close={true}
-            onClose={() => toast.dismiss(t)}
+            onClose={() => toast.dismiss(toastId)}
           >
             <AlertIcon>
               <Info />
             </AlertIcon>
             <AlertTitle>
-              Client notifications enabled for shipping and status updates.
+              {t('Client notifications enabled for shipping and status updates.')}
             </AlertTitle>
           </Alert>
         ),
@@ -183,18 +185,18 @@ export function OutboundStockTable({
       );
     } else {
       toast.custom(
-        (t) => (
+        (toastId) => (
           <Alert
             variant="mono"
             icon="success"
             close={true}
-            onClose={() => toast.dismiss(t)}
+            onClose={() => toast.dismiss(toastId)}
           >
             <AlertIcon>
               <Info />
             </AlertIcon>
             <AlertTitle>
-              Client notifications disabled for this order.
+              {t('Client notifications disabled for this order.')}
             </AlertTitle>
           </Alert>
         ),
@@ -417,7 +419,7 @@ export function OutboundStockTable({
   }: IColumnFilterProps<TData, TValue>) => {
     return (
       <Input
-        placeholder="Filter..."
+        placeholder={t('Filter...')}
         value={(column.getFilterValue() as string) ?? ''}
         onChange={(event) => column.setFilterValue(event.target.value)}
         variant="sm"
@@ -504,7 +506,7 @@ export function OutboundStockTable({
               )}
 
               <span className="text-xs text-muted-foreground uppercase">
-                sku:{' '}
+                {t('sku:')}{' '}
                 <span className="text-xs font-medium text-foreground">
                   {productInfo.label}
                 </span>
@@ -545,7 +547,7 @@ export function OutboundStockTable({
           return (
             <div className="text-center">
               <Badge variant={variant} appearance="light">
-                {status.label}
+                {t(status.label)}
               </Badge>
             </div>
           );
@@ -618,7 +620,7 @@ export function OutboundStockTable({
                   setTrackShippingSheetOpen(true);
                 }}
               >
-                Show
+                {t('Show')}
               </Button>
             </div>
           </>
@@ -661,20 +663,20 @@ export function OutboundStockTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="bottom">
-                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('Actions')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Settings />
-                  Settings
+                  {t('Settings')}
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Pencil />
-                  Edit
+                  {t('Edit')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive" onClick={() => deleteOutbound.mutate(row.original.id)}>
                   <Trash />
-                  Delete
+                  {t('Delete')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -683,7 +685,7 @@ export function OutboundStockTable({
         size: 70,
       },
     ],
-    [],
+    [t, deleteOutbound],
   );
 
   useEffect(() => {
@@ -691,18 +693,18 @@ export function OutboundStockTable({
 
     if (selectedRowIds.length > 0) {
       toast.custom(
-        (t) => (
+        (toastId) => (
           <Alert
             variant="mono"
             icon="success"
             close={true}
-            onClose={() => toast.dismiss(t)}
+            onClose={() => toast.dismiss(toastId)}
           >
             <AlertIcon>
               <Info />
             </AlertIcon>
             <AlertTitle>
-              Selected row IDs: {selectedRowIds.join(', ')}
+              {t('Selected row IDs: {ids}', { ids: selectedRowIds.join(', ') })}
             </AlertTitle>
           </Alert>
         ),
@@ -711,7 +713,7 @@ export function OutboundStockTable({
         },
       );
     }
-  }, [rowSelection]);
+  }, [rowSelection, t]);
 
   const table = useReactTable({
     data: filteredData,
@@ -737,7 +739,7 @@ export function OutboundStockTable({
           <InputWrapper>
             <Search />
             <Input
-              placeholder="Search..."
+              placeholder={t('Search...')}
               ref={inputRef}
               value={inputValue}
               onChange={(e) => {
@@ -785,7 +787,7 @@ export function OutboundStockTable({
                   format(dateRange.from, 'MMM dd, yyyy')
                 )
               ) : (
-                <span>Pick date range</span>
+                <span>{t('Pick date range')}</span>
               )}
               <ChevronDown className="size-4 ml-1" />
             </Button>
@@ -802,13 +804,13 @@ export function OutboundStockTable({
             />
             <div className="flex items-center justify-between border-t border-border p-3">
               <Button variant="outline" onClick={handleDateRangeReset}>
-                Reset
+                {t('Reset')}
               </Button>
               <div className="flex items-center gap-1.5">
                 <Button variant="outline" onClick={handleDateRangeCancel}>
-                  Cancel
+                  {t('Cancel')}
                 </Button>
-                <Button onClick={handleDateRangeApply}>Apply</Button>
+                <Button onClick={handleDateRangeApply}>{t('Apply')}</Button>
               </div>
             </div>
           </PopoverContent>
@@ -818,7 +820,7 @@ export function OutboundStockTable({
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="relative">
-              Status
+              {t('Status')}
               {selectedStatuses.length > 0 && (
                 <Badge variant="outline" size="sm">
                   {selectedStatuses.length}
@@ -829,9 +831,9 @@ export function OutboundStockTable({
           </PopoverTrigger>
           <PopoverContent className="w-56 p-0" align="start">
             <Command>
-              <CommandInput placeholder="Search status..." />
+              <CommandInput placeholder={t('Search status...')} />
               <CommandList>
-                <CommandEmpty>No status found.</CommandEmpty>
+                <CommandEmpty>{t('No status found.')}</CommandEmpty>
                 <CommandGroup>
                   {Array.from(
                     new Set(data.map((row) => row.status?.label)),
@@ -873,7 +875,7 @@ export function OutboundStockTable({
                           className="grow flex items-center justify-between font-normal gap-1.5"
                         >
                           <Badge variant={variant} appearance="light">
-                            {status}
+                            {t(status)}
                           </Badge>
                           <span className="text-muted-foreground font-semibold me-2.5">
                             {count}
@@ -892,7 +894,7 @@ export function OutboundStockTable({
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="relative">
-              Carrier
+              {t('Carrier')}
               {selectedCarriers.length > 0 && (
                 <Badge variant="outline" size="sm">
                   {selectedCarriers.length}
@@ -903,9 +905,9 @@ export function OutboundStockTable({
           </PopoverTrigger>
           <PopoverContent className="w-56 p-0" align="start">
             <Command>
-              <CommandInput placeholder="Search carrier..." />
+              <CommandInput placeholder={t('Search carrier...')} />
               <CommandList>
-                <CommandEmpty>No carrier found.</CommandEmpty>
+                <CommandEmpty>{t('No carrier found.')}</CommandEmpty>
                 <CommandGroup>
                   {Array.from(new Set(data.map((row) => row.carrier))).map(
                     (carrier) => {
@@ -965,6 +967,7 @@ export function OutboundStockTable({
     handleCarrierChange,
     data,
     handleClearInput,
+    t,
   ]);
 
   return (
@@ -1013,10 +1016,10 @@ export function OutboundStockTable({
                   setCreateShippingSheetOpen(true);
                 }}
               >
-                Create Shipping Label
+                {t('Create Shipping Label')}
               </Button>
               <Link to="/store-inventory/stock-planner">
-                <Button variant="mono">Stock Planner</Button>
+                <Button variant="mono">{t('Stock Planner')}</Button>
               </Link>
             </CardToolbar>
           </CardHeader>

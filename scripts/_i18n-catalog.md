@@ -1,0 +1,2417 @@
+# Stocklane i18n string catalog (auth + store-inventory)
+
+## AUTH
+
+- `AUTH.STORE_INVENTORY_ALL_STOCK`: "/store-inventory/all-stock"
+  - auth/lib/roles.ts
+- `AUTH.STORE_INVENTORY_CATEGORY_LIST`: "/store-inventory/category-list"
+  - auth/lib/roles.ts
+- `AUTH.STORE_INVENTORY_CUSTOMER_LIST`: "/store-inventory/customer-list"
+  - auth/lib/roles.ts
+- `AUTH.STORE_INVENTORY_DASHBOARD`: "/store-inventory/dashboard"
+  - auth/lib/roles.ts
+- `AUTH.STORE_INVENTORY_ORDER_LIST`: "/store-inventory/order-list"
+  - auth/lib/roles.ts
+- `AUTH.STORE_INVENTORY_POS`: "/store-inventory/pos"
+  - auth/lib/roles.ts
+- `AUTH.STORE_INVENTORY_PRODUCT_LIST`: "/store-inventory/product-list"
+  - auth/lib/roles.ts
+- `AUTH.STORE_INVENTORY_SETTINGS_MODAL`: "/store-inventory/settings-modal"
+  - auth/lib/roles.ts
+- `AUTH.STORE_INVENTORY_USERS`: "/store-inventory/users"
+  - auth/lib/roles.ts
+- `AUTH.STORE_INVENTORY_WAREHOUSES`: "/store-inventory/warehouses"
+  - auth/lib/roles.ts
+- `AUTH.ADMIN`: "Admin"
+  - auth/lib/roles.ts
+- `AUTH.AUTHENTICATION_ERROR`: "Authentication Error"
+  - auth/pages/callback-page.tsx
+- `AUTH.AUTHENTICATION_SESSION_NOT_ESTABLISHED`: "Authentication session not established"
+  - auth/pages/callback-page.tsx
+- `AUTH.BACK_TO_SIGN_IN`: "Back to Sign In"
+  - auth/pages/change-password-page.tsx, auth/pages/reset-password-page.tsx
+- `AUTH.CASHIER`: "Cashier"
+  - auth/lib/roles.ts
+- `AUTH.CASHIER_STORE_KEEPER_ACCOUNTS_USE_THE_SAME_PASSWORD_PATTERN`: "Cashier & Store Keeper accounts use the same password pattern."
+  - auth/pages/signin-page.tsx
+- `AUTH.CATEGORIES`: "Categories"
+  - auth/lib/roles.ts
+- `AUTH.CATEGORY_LIST_AND_ORGANIZATION`: "Category list and organization"
+  - auth/lib/roles.ts
+- `AUTH.CONFIRM_PASSWORD`: "Confirm password"
+  - auth/pages/change-password-page.tsx
+- `AUTH.CREATE_AND_MANAGE_STAFF_USERS_ADMINS_ONLY`: "Create and manage staff users (admins only)"
+  - auth/lib/roles.ts
+- `AUTH.CUSTOMER_LIST_AND_PROFILES`: "Customer list and profiles"
+  - auth/lib/roles.ts
+- `AUTH.CUSTOMERS`: "Customers"
+  - auth/lib/roles.ts
+- `AUTH.DASHBOARD`: "Dashboard"
+  - auth/lib/roles.ts
+- `AUTH.DEMO_STRONG_ADMIN_STOCKLANE_LOCAL_STRONG_STRONG_ADMIN123_STR`: "Demo: <strong>admin@stocklane.local</strong> / <strong>Admin123</strong> {' · '} Cashier & Store Keeper accounts use the same password pattern."
+  - auth/pages/signin-page.tsx
+- `AUTH.EMAIL`: "Email"
+  - auth/pages/reset-password-page.tsx, auth/pages/signin-page.tsx
+- `AUTH.EMAIL_IS_REQUIRED`: "Email is required."
+  - auth/forms/reset-password-schema.ts, auth/forms/signin-schema.ts, auth/forms/signup-schema.ts
+- `AUTH.ENTER_YOUR_EMAIL_TO_RECEIVE_A_PASSWORD_RESET_LINK`: "Enter your email to receive a password reset link"
+  - auth/pages/reset-password-page.tsx
+- `AUTH.FAILED_TO_RELOAD_PROFILE`: "Failed to reload profile"
+  - auth/adapters/supabase-adapter.ts
+- `AUTH.FIRST_NAME_IS_REQUIRED`: "First name is required."
+  - auth/forms/signup-schema.ts
+- `AUTH.FORGOT_PASSWORD`: "Forgot Password?"
+  - auth/pages/signin-page.tsx
+- `AUTH.INVENTORY`: "Inventory"
+  - auth/lib/roles.ts
+- `AUTH.LAST_NAME_IS_REQUIRED`: "Last name is required."
+  - auth/forms/signup-schema.ts
+- `AUTH.NEED_AN_ACCOUNT_ASK_AN_ADMIN_TO_CREATE_ONE_IN_USER_MANAGEMEN`: "Need an account? Ask an Admin to create one in User Management."
+  - auth/pages/signin-page.tsx
+- `AUTH.NEW_PASSWORD`: "New password"
+  - auth/pages/change-password-page.tsx
+- `AUTH.NO_SESSION_RETURNED_AFTER_LOGIN`: "No session returned after login."
+  - auth/adapters/supabase-adapter.ts
+- `AUTH.ORDERS`: "Orders"
+  - auth/lib/roles.ts
+- `AUTH.ORDERS_DETAILS_AND_TRACKING`: "Orders, details, and tracking"
+  - auth/lib/roles.ts
+- `AUTH.PASSWORD`: "Password"
+  - auth/pages/signin-page.tsx
+- `AUTH.PASSWORD_IS_REQUIRED`: "Password is required."
+  - auth/forms/signin-schema.ts
+- `AUTH.PASSWORD_MUST_BE_AT_LEAST_6_CHARACTERS`: "Password must be at least 6 characters."
+  - auth/forms/reset-password-schema.ts, auth/forms/signup-schema.ts
+- `AUTH.PASSWORD_MUST_CONTAIN_AT_LEAST_ONE_NUMBER`: "Password must contain at least one number."
+  - auth/forms/reset-password-schema.ts, auth/forms/signup-schema.ts
+- `AUTH.PASSWORD_MUST_CONTAIN_AT_LEAST_ONE_UPPERCASE_LETTER`: "Password must contain at least one uppercase letter."
+  - auth/forms/reset-password-schema.ts, auth/forms/signup-schema.ts
+- `AUTH.PASSWORD_RESET_LINK_SENT_TO_CHECK_YOUR_INBOX_AND_SPAM_FOLDER`: "Password reset link sent to ${values.email}. Check your inbox and spam folder."
+  - auth/pages/reset-password-page.tsx
+- `AUTH.PASSWORDS_DO_NOT_MATCH`: "Passwords do not match"
+  - auth/adapters/supabase-adapter.ts
+- `AUTH.PASSWORDS_DON`: "Passwords don"
+  - auth/forms/reset-password-schema.ts, auth/forms/signup-schema.ts
+- `AUTH.PLEASE_CONFIRM_YOUR_PASSWORD`: "Please confirm your password."
+  - auth/forms/reset-password-schema.ts, auth/forms/signup-schema.ts
+- `AUTH.PLEASE_ENTER_A_VALID_EMAIL_ADDRESS`: "Please enter a valid email address."
+  - auth/forms/reset-password-schema.ts, auth/forms/signin-schema.ts, auth/forms/signup-schema.ts
+- `AUTH.POINT_OF_SALE`: "Point of Sale"
+  - auth/lib/roles.ts
+- `AUTH.PRODUCT_CATALOG_VARIANTS_AND_EDITING`: "Product catalog, variants, and editing"
+  - auth/lib/roles.ts
+- `AUTH.PRODUCTS`: "Products"
+  - auth/lib/roles.ts
+- `AUTH.REDIRECTING_TO_SIGN_IN_PAGE`: "Redirecting to sign-in page..."
+  - auth/pages/callback-page.tsx
+- `AUTH.REGISTER_AND_SALE_HISTORY`: "Register and sale history"
+  - auth/lib/roles.ts
+- `AUTH.REMEMBER_ME`: "Remember me"
+  - auth/pages/signin-page.tsx
+- `AUTH.RESET_PASSWORD`: "Reset Password"
+  - auth/pages/reset-password-page.tsx
+- `AUTH.SAVING`: "Saving..."
+  - auth/pages/change-password-page.tsx
+- `AUTH.SECURE_STORE_ACCESS`: "Secure store access"
+  - auth/layouts/branded.tsx
+- `AUTH.SENDING`: "Sending..."
+  - auth/pages/reset-password-page.tsx
+- `AUTH.SET_NEW_PASSWORD`: "Set New Password"
+  - auth/pages/change-password-page.tsx
+- `AUTH.SETTINGS`: "Settings"
+  - auth/lib/roles.ts
+- `AUTH.SIGN_IN`: "Sign In"
+  - auth/pages/signin-page.tsx
+- `AUTH.SIGN_IN_TO_MANAGE_INVENTORY_POINT_OF_SALE`: "Sign in to manage inventory, point of sale,"
+  - auth/layouts/branded.tsx
+- `AUTH.SIGN_IN_TO_MANAGE_INVENTORY_POINT_OF_SALE_BR_AND_WAREHOUSE_O`: "Sign in to manage inventory, point of sale, <br /> and warehouse operations with role-based <br /> access for Admin, Cashier, and Store Keeper."
+  - auth/layouts/branded.tsx
+- `AUTH.SIGNING_IN`: "Signing in..."
+  - auth/pages/signin-page.tsx
+- `AUTH.STOCK_LEVELS_INBOUND_OUTBOUND_AND_SHIPPING`: "Stock levels, inbound, outbound, and shipping"
+  - auth/lib/roles.ts
+- `AUTH.STORE_KEEPER`: "Store Keeper"
+  - auth/lib/roles.ts
+- `AUTH.STORE_OVERVIEW_AND_DASHBOARD_PAGES`: "Store overview and dashboard pages"
+  - auth/lib/roles.ts
+- `AUTH.STORE_SETTINGS`: "Store settings"
+  - auth/lib/roles.ts
+- `AUTH.SUPABASE_IS_NOT_CONFIGURED`: "Supabase is not configured"
+  - auth/pages/callback-page.tsx
+- `AUTH.SUPABASE_IS_NOT_CONFIGURED_SET_VITE_SUPABASE_URL_AND_VITE_SU`: "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY."
+  - auth/adapters/supabase-adapter.ts
+- `AUTH.USER_MANAGEMENT`: "User Management"
+  - auth/lib/roles.ts
+- `AUTH.WAREHOUSE_LIST_AND_LOCATIONS`: "Warehouse list and locations"
+  - auth/lib/roles.ts
+- `AUTH.WAREHOUSES`: "Warehouses"
+  - auth/lib/roles.ts
+- `AUTH.WELCOME_BACK_SIGN_IN_WITH_YOUR_STOCKLANE_ACCOUNT`: "Welcome back. Sign in with your Stocklane account."
+  - auth/pages/signin-page.tsx
+- `AUTH.YOU_DO_NOT_HAVE_ACCESS_TO_THIS_AREA_ASK_AN_ADMIN_TO_UPDATE_Y`: "You do not have access to this area. Ask an Admin to update your permissions in User Management."
+  - auth/require-permission.tsx
+- `AUTH.YOU_MUST_AGREE_TO_THE_TERMS_AND_CONDITIONS`: "You must agree to the terms and conditions."
+  - auth/forms/signup-schema.ts
+- `AUTH.YOUR_ACCOUNT_IS_INACTIVE_CONTACT_AN_ADMINISTRATOR`: "Your account is inactive. Contact an administrator."
+  - auth/adapters/supabase-adapter.ts
+- `AUTH.YOUR_EMAIL`: "Your email"
+  - auth/pages/reset-password-page.tsx, auth/pages/signin-page.tsx
+- `AUTH.YOUR_PASSWORD`: "Your password"
+  - auth/pages/signin-page.tsx
+- `AUTH.YOUR_PASSWORD_HAS_BEEN_SUCCESSFULLY_RESET_YOU_CAN_NOW_SIGN_I`: "Your password has been successfully reset. You can now sign in with your new password."
+  - auth/pages/signin-page.tsx
+
+## CATEGORIES
+
+- `CATEGORIES.ACTIVE`: "Active"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.ADD_CATEGORY`: "Add Category"
+  - store-inventory/pages/category-details/page.tsx, store-inventory/pages/category-list/page.tsx, store-inventory/pages/create-category/page.tsx, store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.ADD_NEW_CATEGORIES_TO_ORGANIZE_YOUR_PRODUCTS`: "Add new categories to organize your products"
+  - store-inventory/pages/create-category/page.tsx
+- `CATEGORIES.ALL_STATUSES`: "All statuses"
+  - store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.ANALYTICS`: "Analytics"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.ARCHIVE`: "Archive"
+  - store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.ARCHIVED`: "Archived"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.AVG_MARGIN`: "Avg. Margin"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.AVG_PRODUCT_PRICE`: "Avg. Product Price"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.AVG_RATING`: "Avg. Rating"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.BUNDLED_ICON`: "Bundled icon"
+  - store-inventory/pages/components/category-icon-fields.tsx
+- `CATEGORIES.CANCEL`: "Cancel"
+  - store-inventory/pages/components/category-delete-dialog.tsx
+- `CATEGORIES.CATEGORIES`: "Categories"
+  - store-inventory/pages/category-list/page.tsx
+- `CATEGORIES.CATEGORY`: "Category"
+  - store-inventory/pages/components/category-icon-fields.tsx, store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.CATEGORY_DELETED`: "Category deleted"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.CATEGORY_DELETED_AND_PRODUCTS_REASSIGNED`: "Category deleted and products reassigned"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.CATEGORY_DESCRIPTION`: "Category Description"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.CATEGORY_DETAILS`: "Category Details"
+  - store-inventory/pages/category-details/page.tsx, store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.CATEGORY_ICON`: "Category icon"
+  - store-inventory/pages/components/category-icon-fields.tsx
+- `CATEGORIES.CATEGORY_ITEMS`: "Category Items"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.CATEGORY_NAME`: "Category Name"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.CATEGORY_NAME_IS_REQUIRED`: "Category name is required"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.CATEGORY_PRODUCT_SALES`: "Category Product Sales"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.CATEGORY_SAVED`: "Category saved"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.CHOOSE_AN_IMAGE_FILE`: "Choose an image file"
+  - store-inventory/pages/components/category-icon-fields.tsx
+- `CATEGORIES.CLEAR`: "Clear"
+  - store-inventory/pages/components/category-icon-fields.tsx
+- `CATEGORIES.CLOSE`: "Close"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.CODE`: "Code"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.CODES_ARE_ASSIGNED_ON_CREATE_AND_DO_NOT_CHANGE_WHEN_YOU_RENA`: "Codes are assigned on create and do not change when you rename a category."
+  - store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.CREATE_CATEGORY`: "Create Category"
+  - store-inventory/pages/create-category/page.tsx
+- `CATEGORIES.CREATED`: "Created"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.DELETE`: "Delete"
+  - store-inventory/pages/components/category-delete-dialog.tsx, store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx, store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.DELETE_CATEGORY`: "Delete category"
+  - store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.DESCRIPTION`: "Description"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.DESCRIPTION_MUST_BE_500_CHARACTERS_OR_FEWER`: "Description must be 500 characters or fewer"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.DRAFT`: "Draft"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.EARNINGS`: "Earnings"
+  - store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.EDIT_CATEGORY`: "Edit category"
+  - store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.EDIT_CATEGORY`: "Edit Category"
+  - store-inventory/pages/edit-category/page.tsx
+- `CATEGORIES.FEATURED`: "Featured"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx, store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.ICON_MUST_BE_2MB_OR_SMALLER`: "Icon must be 2MB or smaller"
+  - store-inventory/pages/components/category-icon-fields.tsx
+- `CATEGORIES.INACTIVE`: "Inactive"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.LAST_MOVED`: "Last Moved"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.LAST_UPDATED`: "Last Updated"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.LEAVE_UNCATEGORIZED`: "Leave Uncategorized"
+  - store-inventory/pages/components/category-delete-dialog.tsx
+- `CATEGORIES.LIVE_SALES_EARNINGS_ARE_NOT_TRACKED_YET`: "Live sales earnings are not tracked yet"
+  - store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.METRICS`: "Metrics"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.NAME_MUST_BE_80_CHARACTERS_OR_FEWER`: "Name must be 80 characters or fewer"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.NO_PRODUCTS_IN_THIS_CATEGORY`: "No products in this category"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.OPENDELETECONFIRM_CATEGORY_TITLE_DELETE_CATEGORY`: "openDeleteConfirm(category)} title="Delete category" >"
+  - store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.PRODUCT_INFO`: "Product Info"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.PRODUCTS_QTY`: "Products QTY"
+  - store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.REASSIGN_PRODUCTS_TO`: "Reassign products to"
+  - store-inventory/pages/components/category-delete-dialog.tsx
+- `CATEGORIES.RETURN_RATE`: "Return Rate"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.SEARCH`: "Search..."
+  - store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.SELECT_A_CATEGORY_FROM_THE_TABLE_TO_EDIT_IT`: "Select a category from the table to edit it"
+  - store-inventory/pages/edit-category/page.tsx
+- `CATEGORIES.SELECT_A_CATEGORY_TO_EDIT`: "Select a category to edit"
+  - store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.SELECT_STATUS`: "Select Status"
+  - store-inventory/pages/components/category-form-sheet.tsx
+- `CATEGORIES.SETSEARCHQUERY`: "setSearchQuery('')} >"
+  - store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.STATUS`: "Status"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx, store-inventory/pages/components/category-form-sheet.tsx, store-inventory/pages/tables/category-list.tsx
+- `CATEGORIES.STOCK_VALUE`: "Stock value"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.TOTAL_QTY`: "Total Qty"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.TOTAL_SALES`: "Total Sales"
+  - store-inventory/pages/components/category-details-edit-sheet.tsx
+- `CATEGORIES.UPLOADS_ARE_SAVED_TO_STORAGE_ON_CREATE_SAVE_BUNDLED_ICONS_ST`: "Uploads are saved to storage on Create/Save. Bundled icons stay as filenames."
+  - store-inventory/pages/components/category-icon-fields.tsx
+- `CATEGORIES.VIEW_CATEGORY`: "View category"
+  - store-inventory/pages/tables/category-list.tsx
+
+## COMMON
+
+- `COMMON.CANCEL_ORDER`: "Cancel Order"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.DATE`: "Date"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.DUE_DATE`: "Due Date"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.EDIT_ORDER`: "Edit Order"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.FUNCTION_NOT_IMPLEMENTED`: "Function not implemented."
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.INVOICEID`: "InvoiceID"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.ORDER_ACTIONS`: "Order Actions"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.SETORDERDETAILSSHEETOPEN_TRUE`: "setOrderDetailsSheetOpen(true)}>"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.SETTRACKSHIPPINGSHEETOPEN_TRUE`: "setTrackShippingSheetOpen(true)}>"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.STATUS`: "Status"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.TOTAL`: "Total"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.TRACK_SHIPPING`: "Track Shipping"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.VIEW_CATEGORY`: "View category"
+  - store-inventory/pages/tables/details-invoice.tsx
+- `COMMON.VIEW_DETAILS`: "View Details"
+  - store-inventory/pages/tables/details-invoice.tsx
+
+## CUSTOMERS
+
+- `CUSTOMERS.ACCOUNT`: "Account"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.ACCOUNT_ACTIVITY`: "Account activity"
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.ACCOUNT_BALANCE`: "Account Balance"
+  - store-inventory/pages/components/customers/components/statistics1.tsx, store-inventory/pages/components/customers/customer-details-account.tsx, store-inventory/pages/components/customers/customer-details-overviews.tsx
+- `CUSTOMERS.ACTIVE`: "Active"
+  - store-inventory/pages/components/customer-form-sheet.tsx, store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.ACTIVITY`: "Activity"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.ADDRESS`: "Address"
+  - store-inventory/pages/components/customers/components/billing-details.tsx
+- `CUSTOMERS.ALL`: "All"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.AMERICA_LOS_ANGELES`: "America/Los_Angeles"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.AMERICA_MEXICO_CITY`: "America/Mexico_City"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.AMERICA_NEW_YORK`: "America/New_York"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.AMERICA_SAO_PAULO`: "America/Sao_Paulo"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.AMERICA_TORONTO`: "America/Toronto"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.AMOUNT`: "Amount"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx, store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.ANNUAL_FEE`: "Annual Fee"
+  - store-inventory/pages/components/customers/components/statistics3.tsx, store-inventory/pages/components/customers/customer-details-billing.tsx
+- `CUSTOMERS.APR`: "Apr"
+  - store-inventory/pages/components/customers/components/activity/photography-workshop.tsx
+- `CUSTOMERS.ARCHIVE`: "Archive"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.ARCHIVE_CUSTOMER`: "Archive customer"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.ARCHIVE_CUSTOMER`: "Archive customer?"
+  - store-inventory/pages/components/customer-delete-dialogs.tsx
+- `CUSTOMERS.ARCHIVE_CUSTOMERS`: "Archive Customers"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.ARCHIVE_SELECTED`: "Archive Selected"
+  - store-inventory/pages/customer-list/page.tsx
+- `CUSTOMERS.ARCHIVED`: "Archived"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.ASIA_KOLKATA`: "Asia/Kolkata"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.ASIA_KUALA_LUMPUR`: "Asia/Kuala_Lumpur"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.ASIA_SEOUL`: "Asia/Seoul"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.ASIA_SINGAPORE`: "Asia/Singapore"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.ASIA_TOKYO`: "Asia/Tokyo"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.AUSTRALIA_SYDNEY`: "Australia/Sydney"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.AVG_ORDER_VALUE_AOV`: "Avg. Order Value(AOV)"
+  - store-inventory/pages/components/customers/components/statistics1.tsx, store-inventory/pages/components/customers/customer-details-overviews.tsx
+- `CUSTOMERS.AVG_SPENT`: "Avg. Spent"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.BALANCE`: "Balance"
+  - store-inventory/pages/components/customers/customer-details-account.tsx, store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.BANNED`: "Banned"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.BILLING_DETAILS`: "Billing Details"
+  - store-inventory/pages/components/customer-details-sheet.tsx, store-inventory/pages/components/customers/components/billing-details.tsx
+- `CUSTOMERS.BOUGHT_ON_CREDIT`: "Bought on Credit"
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.CANCEL`: "Cancel"
+  - store-inventory/pages/components/customer-delete-dialogs.tsx, store-inventory/pages/components/customer-deposit-sheet.tsx, store-inventory/pages/components/customer-form-sheet.tsx, store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.CHANGE`: "Change"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.CHANGE_STATUS`: "Change status"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.CLOSE`: "Close"
+  - store-inventory/pages/components/customer-details-sheet.tsx, store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.COMPANY`: "Company"
+  - store-inventory/pages/components/customers/components/upload.tsx
+- `CUSTOMERS.COMPANY_NAME`: "Company Name"
+  - store-inventory/pages/components/customer-form-sheet.tsx, store-inventory/pages/components/customers/components/billing-details.tsx
+- `CUSTOMERS.COMPLETED_PHASE_ONE_OF_CLIENT_PROJECT_AHEAD_OF_SCHEDULE`: "Completed phase one of client project ahead of schedule."
+  - store-inventory/pages/components/customers/components/activity/project-status.tsx
+- `CUSTOMERS.CONTACT`: "Contact"
+  - store-inventory/pages/components/customers/components/billing-details.tsx
+- `CUSTOMERS.COUNTRY`: "Country"
+  - store-inventory/pages/components/customers/components/upload.tsx, store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.CUMULATIVE_SPEND`: "Cumulative Spend"
+  - store-inventory/pages/components/customers/components/statistics1.tsx, store-inventory/pages/components/customers/customer-details-overviews.tsx
+- `CUSTOMERS.CURRENT_BALANCE`: "Current balance"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx
+- `CUSTOMERS.CUSTOMER`: "Customer"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx, store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.CUSTOMER_AVATAR`: "Customer Avatar"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.CUSTOMER_DETAILS`: "Customer Details"
+  - store-inventory/pages/components/customer-details-sheet.tsx, store-inventory/pages/customer-list-details/page.tsx
+- `CUSTOMERS.CUSTOMER_ID`: "Customer ID:"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.CUSTOMER_LIST`: "Customer List"
+  - store-inventory/pages/customer-list/page.tsx
+- `CUSTOMERS.CUSTOMER_NAME_IS_REQUIRED`: "Customer name is required"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.CUSTOMER_PERMANENTLY_DELETED`: "Customer permanently deleted"
+  - store-inventory/pages/components/customer-delete-dialogs.tsx
+- `CUSTOMERS.CUSTOMER_RESTORED_AS_ACTIVE`: "Customer restored as Active"
+  - store-inventory/pages/components/customer-delete-dialogs.tsx
+- `CUSTOMERS.CUSTOMER_TRACKING`: "Customer Tracking"
+  - store-inventory/pages/customer-list/page.tsx
+- `CUSTOMERS.DATE`: "Date"
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.DELETE_PERMANENTLY`: "Delete permanently"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.DELIVERED_ORDERS`: "Delivered Orders"
+  - store-inventory/pages/components/customers/components/statistics2.tsx
+- `CUSTOMERS.DEPOSIT`: "Deposit"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx, store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.DEPOSIT_TO_ACCOUNT`: "Deposit to account"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx, store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.DUPLICATE`: "Duplicate"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.EDIT_CUSTOMER`: "Edit customer"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.EDIT_DETAILS`: "Edit Details"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.EMAIL`: "Email"
+  - store-inventory/pages/components/customer-form-sheet.tsx, store-inventory/pages/components/customers/components/upload.tsx
+- `CUSTOMERS.ENTER_A_DEPOSIT_AMOUNT_GREATER_THAN_0`: "Enter a deposit amount greater than 0"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx
+- `CUSTOMERS.ENTER_A_VALID_EMAIL_ADDRESS`: "Enter a valid email address"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.ENTER_PHONE_NUMBER`: "Enter phone number"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EUROPE_AMSTERDAM`: "Europe/Amsterdam"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EUROPE_DUBLIN`: "Europe/Dublin"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EUROPE_KYIV`: "Europe/Kyiv"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EUROPE_LONDON`: "Europe/London"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EUROPE_MADRID`: "Europe/Madrid"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EUROPE_MOSCOW`: "Europe/Moscow"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EUROPE_PARIS`: "Europe/Paris"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EUROPE_ROME`: "Europe/Rome"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EUROPE_TALLINN`: "Europe/Tallinn"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EUROPE_WARSAW`: "Europe/Warsaw"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.EXPORT`: "Export"
+  - store-inventory/pages/customer-list/page.tsx, store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.FILTER`: "Filter..."
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.FULL_NAME`: "Full Name"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.GOOD_FOR_STARTUPS_INDIVIDUALS`: "Good for Startups & Individuals"
+  - store-inventory/pages/components/customers/components/statistics3.tsx, store-inventory/pages/components/customers/customer-details-billing.tsx
+- `CUSTOMERS.HANDLEOPENCUSTOMERDETAILS_CUSTOMER_TITLE_VIEW_CUSTOMER`: "handleOpenCustomerDetails(customer)} title="View customer" >"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.HANDLEOPENCUSTOMERFORM_EDIT_CUSTOMER_TITLE_EDIT_CUSTOMER`: "handleOpenCustomerForm('edit', customer)} title="Edit customer" >"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.IN_PROGRESS`: "In Progress"
+  - store-inventory/pages/components/customers/components/statistics2.tsx
+- `CUSTOMERS.INACTIVE`: "Inactive"
+  - store-inventory/pages/components/customer-form-sheet.tsx, store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.INVOICES`: "Invoices"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.JENNY_ATTENDED_A_NATURE_PHOTOGRAPHY_IMMERSION_WORKSHOP`: "Jenny attended a Nature Photography Immersion workshop"
+  - store-inventory/pages/components/customers/components/activity/photography-workshop.tsx
+- `CUSTOMERS.JOINED`: "Joined"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.LAST_ORDER`: "Last Order"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.LAST_VISIT`: "Last Visit"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.LOADING_ACCOUNT_ACTIVITY`: "Loading account activity..."
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.LOADING_CUSTOMERS`: "Loading customers..."
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.LOYALTY_TIER`: "Loyalty Tier"
+  - store-inventory/pages/components/customers/components/loyalty-tier.tsx
+- `CUSTOMERS.METHOD`: "Method"
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.MONTHLY`: "Monthly"
+  - store-inventory/pages/components/customers/components/statistics3.tsx
+- `CUSTOMERS.MORE_ACTIONS`: "More Actions"
+  - store-inventory/pages/customer-list/page.tsx
+- `CUSTOMERS.NATURE_PHOTOGRAPHY_IMMERSION`: "Nature Photography Immersion"
+  - store-inventory/pages/components/customers/components/activity/photography-workshop.tsx
+- `CUSTOMERS.NEW`: "New"
+  - store-inventory/pages/customer-list/page.tsx
+- `CUSTOMERS.NEXT_BILL_AMOUNT`: "Next Bill Amount"
+  - store-inventory/pages/components/customers/components/statistics3.tsx, store-inventory/pages/components/customers/customer-details-billing.tsx
+- `CUSTOMERS.NEXT_BILL_DATE`: "Next Bill Date"
+  - store-inventory/pages/components/customers/components/statistics3.tsx, store-inventory/pages/components/customers/customer-details-billing.tsx
+- `CUSTOMERS.NO_COUNTRY_FOUND`: "No country found."
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.NO_CUSTOMERS_TO_EXPORT`: "No customers to export"
+  - store-inventory/pages/customer-list/page.tsx
+- `CUSTOMERS.NO_CUSTOMERS_YET_CREATE_YOUR_FIRST_CUSTOMER_TO_GET_STARTED`: "No customers yet. Create your first customer to get started."
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.NO_DEPOSITS_OR_ACCOUNT_CHARGES_YET`: "No deposits or account charges yet."
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.NOTES`: "Notes"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx
+- `CUSTOMERS.ONCHANGE_NULL`: "onChange(null)} >"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.ONLY_ACTIVE_CUSTOMERS_CAN_RECEIVE_DEPOSITS`: "Only Active customers can receive deposits"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx
+- `CUSTOMERS.ONOPENCHANGE_FALSE_CANCEL`: "onOpenChange(false)}> Cancel"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx
+- `CUSTOMERS.ONOPENCHANGE_FALSE_CLOSE`: "onOpenChange(false)}>Close"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.OPENSHEET_CREATECUSTOMER`: "openSheet('createCustomer')}>"
+  - store-inventory/pages/customer-list/page.tsx
+- `CUSTOMERS.OPTIONAL`: "Optional"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx
+- `CUSTOMERS.ORDERS`: "Orders"
+  - store-inventory/pages/components/customer-details-sheet.tsx, store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.OVERDUE_INVOICES`: "Overdue Invoices"
+  - store-inventory/pages/components/customers/components/statistics4.tsx, store-inventory/pages/components/customers/customer-details-invoice.tsx
+- `CUSTOMERS.OVERVIEW`: "Overview"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.PAID_FROM_ACCOUNT`: "Paid from Account"
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.PAID_INVOICES`: "Paid Invoices"
+  - store-inventory/pages/components/customers/components/statistics4.tsx, store-inventory/pages/components/customers/customer-details-invoice.tsx
+- `CUSTOMERS.PENDING`: "Pending"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.PERMANENTLY_DELETE_CUSTOMER`: "Permanently delete customer?"
+  - store-inventory/pages/components/customer-delete-dialogs.tsx
+- `CUSTOMERS.PHONE_NO`: "Phone No."
+  - store-inventory/pages/components/customers/components/upload.tsx
+- `CUSTOMERS.PHONE_NUMBER`: "Phone Number"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.PHOTO_WORKSHOP`: "Photo Workshop"
+  - store-inventory/pages/components/customers/components/activity/photography-workshop.tsx
+- `CUSTOMERS.RECEIVED_VIA`: "Received via"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx
+- `CUSTOMERS.REFERENCE`: "Reference"
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.RESTORE_CUSTOMER`: "Restore customer"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.RESTORE_CUSTOMER_ID_TITLE_RESTORE_CUSTOMER`: "restore(customer.id)} title="Restore customer" >"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.RETURNS`: "Returns"
+  - store-inventory/pages/components/customers/components/statistics2.tsx
+- `CUSTOMERS.REVIEW`: "Review"
+  - store-inventory/pages/components/customers/components/loyalty-tier.tsx
+- `CUSTOMERS.REVIEWS`: "Reviews"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.SEARCH_COUNTRY`: "Search country..."
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.SEARCH_CUSTOMERS`: "Search customers"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.SELECT_A_CUSTOMER_FIRST`: "Select a customer first"
+  - store-inventory/pages/components/customer-deposit-sheet.tsx
+- `CUSTOMERS.SELECT_A_CUSTOMER_TO_VIEW_THEIR_PROFILE`: "Select a customer to view their profile"
+  - store-inventory/pages/customer-list/page.tsx
+- `CUSTOMERS.SELECT_CUSTOMERS_TO_ARCHIVE`: "Select customers to archive"
+  - store-inventory/pages/customer-list/page.tsx
+- `CUSTOMERS.SELECT_STATUS`: "Select Status"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.SELECT_TIME_ZONE`: "Select Time Zone"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.SEND_EMAIL`: "Send Email"
+  - store-inventory/pages/components/customer-details-sheet.tsx
+- `CUSTOMERS.SETHARDDELETETARGET_CUSTOMER_TITLE_DELETE_PERMANENTLY`: "setHardDeleteTarget(customer)} title="Delete permanently" >"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.SKU`: "SKU:"
+  - store-inventory/pages/components/customers/components/card-date.tsx
+- `CUSTOMERS.STATUS`: "Status"
+  - store-inventory/pages/components/customer-form-sheet.tsx, store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.THIS_CUSTOMER_HAS_HISTORY_OR_A_NON_ZERO_BALANCE_AND_MUST_STA`: "This customer has history or a non-zero balance and must stay archived."
+  - store-inventory/pages/components/customer-delete-dialogs.tsx
+- `CUSTOMERS.THIS_WILL_PERMANENTLY_WIPE`: "This will permanently wipe"
+  - store-inventory/pages/components/customer-delete-dialogs.tsx
+- `CUSTOMERS.TIME_ZONE`: "Time Zone"
+  - store-inventory/pages/components/customer-form-sheet.tsx, store-inventory/pages/components/customers/components/upload.tsx
+- `CUSTOMERS.TODAY_9_00_AM`: "Today, 9:00 AM"
+  - store-inventory/pages/components/customers/components/activity/new-article.tsx
+- `CUSTOMERS.TOP_10_TECH_TRENDS`: "Top 10 Tech Trends"
+  - store-inventory/pages/components/customers/components/activity/new-article.tsx
+- `CUSTOMERS.TOTAL_DEPOSITS`: "Total Deposits"
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.TOTAL_INVOICES`: "Total Invoices"
+  - store-inventory/pages/components/customers/components/statistics4.tsx, store-inventory/pages/components/customers/customer-details-invoice.tsx
+- `CUSTOMERS.TOTAL_ORDERS`: "Total Orders"
+  - store-inventory/pages/components/customers/components/statistics1.tsx, store-inventory/pages/components/customers/components/statistics2.tsx, store-inventory/pages/components/customers/customer-details-overviews.tsx
+- `CUSTOMERS.TOTAL_SPENT`: "Total Spent"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.TYPE`: "Type"
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.TYPE_THE_CUSTOMER_CODE_TO_CONFIRM`: "Type the customer code to confirm"
+  - store-inventory/pages/components/customer-delete-dialogs.tsx
+- `CUSTOMERS.UNABLE_TO_LOAD_ACCOUNT_ACTIVITY`: "Unable to load account activity."
+  - store-inventory/pages/components/customers/customer-details-account.tsx
+- `CUSTOMERS.UNABLE_TO_LOAD_CUSTOMERS_CHECK_YOUR_CONNECTION_AND_TRY_AGAIN`: "Unable to load customers. Check your connection and try again."
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.UNABLE_TO_LOAD_DELETE_IMPACT`: "Unable to load delete impact."
+  - store-inventory/pages/components/customer-delete-dialogs.tsx
+- `CUSTOMERS.UNPAID_INVOICES`: "Unpaid Invoices"
+  - store-inventory/pages/components/customers/components/statistics4.tsx, store-inventory/pages/components/customers/customer-details-invoice.tsx
+- `CUSTOMERS.UPLOAD`: "Upload"
+  - store-inventory/pages/components/customer-form-sheet.tsx
+- `CUSTOMERS.USER_ID`: "User ID"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.VAT_ID`: "VAT ID"
+  - store-inventory/pages/components/customers/components/billing-details.tsx
+- `CUSTOMERS.VIEW_CUSTOMER`: "View customer"
+  - store-inventory/pages/tables/customer-list.tsx
+- `CUSTOMERS.VIEW_CUSTOMER_PROFILE`: "View Customer Profile"
+  - store-inventory/pages/customer-list/page.tsx
+
+## DASHBOARD
+
+- `DASHBOARD.24`: "+24%"
+  - store-inventory/pages/dashboard/components/orders.tsx
+- `DASHBOARD.4_7`: "+4.7%"
+  - store-inventory/pages/dashboard/components/orders.tsx
+- `DASHBOARD.ADD_ALERT`: "Add Alert"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.AVAILABLE`: "Available"
+  - store-inventory/pages/dashboard/components/inventory.tsx
+- `DASHBOARD.BEST_SELLERS`: "Best Sellers"
+  - store-inventory/pages/dashboard/components/best-sellers.tsx
+- `DASHBOARD.CONVERSION`: "Conversion"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.DEALS_CLOSED`: "Deals Closed"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.IN_HAND`: "In Hand:"
+  - store-inventory/pages/dashboard/components/inventory-summary.tsx
+- `DASHBOARD.INVENTORY`: "Inventory"
+  - store-inventory/pages/dashboard/components/inventory.tsx
+- `DASHBOARD.INVENTORY_SUMMARY`: "Inventory Summary"
+  - store-inventory/pages/dashboard/components/inventory-summary.tsx
+- `DASHBOARD.LAST_12_MONTHS`: "Last 12 months"
+  - store-inventory/pages/dashboard/components/product-stock.tsx
+- `DASHBOARD.LAST_30_DAYS`: "Last 30 days"
+  - store-inventory/pages/dashboard/components/product-stock.tsx
+- `DASHBOARD.LAST_7_DAYS`: "Last 7 days"
+  - store-inventory/pages/dashboard/components/product-stock.tsx
+- `DASHBOARD.LAST_90_DAYS`: "Last 90 days"
+  - store-inventory/pages/dashboard/components/product-stock.tsx
+- `DASHBOARD.LAST_UPDATED`: "Last updated"
+  - store-inventory/pages/dashboard/components/inventory-summary.tsx
+- `DASHBOARD.LOW_STOCK`: "Low stock"
+  - store-inventory/pages/dashboard/components/inventory.tsx
+- `DASHBOARD.NO_LOW_STOCK_PRODUCTS_RIGHT_NOW`: "No low-stock products right now."
+  - store-inventory/pages/dashboard/components/inventory.tsx
+- `DASHBOARD.ORDER`: "Order"
+  - store-inventory/pages/dashboard/components/inventory.tsx
+- `DASHBOARD.ORDERS`: "Orders"
+  - store-inventory/pages/dashboard/components/orders.tsx
+- `DASHBOARD.OUT_OF_STOCK`: "Out of stock"
+  - store-inventory/pages/dashboard/components/inventory.tsx
+- `DASHBOARD.PIN_TO_DASHBOARD`: "Pin to Dashboard"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.PIPELINE_PROGRESS`: "Pipeline Progress"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.Q3_PERFORMANCE`: "Q3 Performance"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.RECENT_ACTIVITY`: "Recent Activity"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.REMOVE`: "Remove"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.REVENUE`: "Revenue"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.SALES`: "Sales"
+  - store-inventory/pages/dashboard/components/product-stock.tsx
+- `DASHBOARD.SALES_ACTIVITY`: "Sales Activity"
+  - store-inventory/pages/dashboard/components/product-stock.tsx
+- `DASHBOARD.SEE_ALL`: "See All"
+  - store-inventory/pages/dashboard/components/best-sellers.tsx, store-inventory/pages/dashboard/components/inventory.tsx, store-inventory/pages/dashboard/components/orders.tsx
+- `DASHBOARD.SETTINGS`: "Settings"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.SHARE`: "Share"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.STAFF_PERFORMANCE`: "Staff Performance"
+  - store-inventory/pages/dashboard/components/sales-activity.tsx
+- `DASHBOARD.TODAY`: "Today"
+  - store-inventory/pages/dashboard/components/inventory-summary.tsx
+- `DASHBOARD.TOTAL_ASSET_VALUE`: "Total Asset Value"
+  - store-inventory/pages/dashboard/components/inventory.tsx
+- `DASHBOARD.VIEW_DETAILS`: "View Details"
+  - store-inventory/pages/dashboard/components/inventory-summary.tsx
+- `DASHBOARD.VIEWS`: "Views"
+  - store-inventory/pages/dashboard/components/product-stock.tsx
+
+## INVENTORY
+
+- `INVENTORY.INPUTVALUE_ISDATEPICKEROPEN_DATERANGE_TEMPDATERANGE_HANDLEDA`: "); }, [ inputValue, isDatePickerOpen, dateRange, tempDateRange, handleDateRangeReset, handleDateRangeCancel, handleDateRangeApply, selectedStatuses, selectedCarriers, handleStatusChange, handleCarrierChange, data, handleClearInput, ]); return ("
+  - store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.INPUTVALUE_SELECTEDSTOCKS_SELECTEDUPDATED_DATA_SETPAGINATION`: "); }, [ inputValue, selectedStocks, selectedUpdated, data, setPagination, setInputValue, setSearchQuery, ]); return ("
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.ACTIONS`: "Actions"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.ACTIVATE_A_WAREHOUSE_FIRST`: "Activate a warehouse first"
+  - store-inventory/pages/components/receive-stock-sheet.tsx
+- `INVENTORY.ALL_STOCK`: "All Stock"
+  - store-inventory/pages/components/stock-navbar.tsx
+- `INVENTORY.APPLY`: "Apply"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.AR`: "AR"
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.ARRIVAL_DATE`: "Arrival Date"
+  - store-inventory/pages/tables/inbound-stock.tsx
+- `INVENTORY.AUTO_REORDER_DISABLED_FOR_THIS_PRODUCT`: "Auto-reorder disabled for this product."
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.AUTO_REORDER_ENABLED_FOR_THIS_PRODUCT`: "Auto-reorder enabled for this product."
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.AUTOMATIC_REORDER`: "Automatic Reorder"
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.CANCEL`: "Cancel"
+  - store-inventory/pages/components/receive-stock-sheet.tsx, store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.CARRIER`: "Carrier"
+  - store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.CATEGORY`: "Category"
+  - store-inventory/pages/tables/all-stock.tsx
+- `INVENTORY.CLIENT_NOTIFICATIONS_DISABLED_FOR_THIS_ORDER`: "Client notifications disabled for this order."
+  - store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.CLIENT_NOTIFICATIONS_ENABLED_FOR_SHIPPING_AND_STATUS_UPDATES`: "Client notifications enabled for shipping and status updates."
+  - store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.CREATE_SHIPPING_LABEL`: "Create Shipping Label"
+  - store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.CURRENT_STOCK`: "Current Stock"
+  - store-inventory/pages/components/stock-navbar.tsx, store-inventory/pages/tables/all-stock.tsx
+- `INVENTORY.DELETE`: "Delete"
+  - store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.DELETEINBOUND_MUTATE_ROW_ORIGINAL_ID`: "deleteInbound.mutate(row.original.id)}>"
+  - store-inventory/pages/tables/inbound-stock.tsx
+- `INVENTORY.DELETEOUTBOUND_MUTATE_ROW_ORIGINAL_ID`: "deleteOutbound.mutate(row.original.id)}>"
+  - store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.DELTA`: "Delta"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.EDIT`: "Edit"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.EXP_DELIVERY`: "Exp. Delivery"
+  - store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.FILTER`: "Filter..."
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.FLOW`: "Flow"
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.HANDLEPRODUCTCLICK_INFO_ROW_ORIGINAL`: "handleProductClick(info.row.original)} >"
+  - store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.HANDLER`: "Handler"
+  - store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.HANDLESHOWCLICK_INFO_ROW_ORIGINAL_SHOW`: "handleShowClick(info.row.original)} > Show"
+  - store-inventory/pages/tables/inbound-stock.tsx
+- `INVENTORY.IN_STOCK`: "In stock"
+  - store-inventory/pages/all-stock/total-asset.tsx
+- `INVENTORY.INBOUND_STOCK`: "Inbound Stock"
+  - store-inventory/pages/components/stock-navbar.tsx, store-inventory/pages/tables/all-stock.tsx
+- `INVENTORY.LAST_MOVED`: "Last Moved"
+  - store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.LEAD_TIME`: "Lead Time"
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.LOADING_STOCK`: "Loading stock..."
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.LOW_STOCK`: "Low stock"
+  - store-inventory/pages/all-stock/total-asset.tsx
+- `INVENTORY.MOVE_TO_TRASH`: "Move to trash"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.NO_CARRIER_FOUND`: "No carrier found."
+  - store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.NO_CATEGORY_FOUND`: "No category found."
+  - store-inventory/pages/tables/all-stock.tsx
+- `INVENTORY.NO_HANDLER_FOUND`: "No handler found."
+  - store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.NO_REORDER_IN_FOUND`: "No Reorder In found."
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.NO_STATUS_FOUND`: "No status found."
+  - store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.NO_STOCK_LEVELS_FOUND`: "No stock levels found."
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.NO_SUPPLIER_FOUND`: "No supplier found."
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx
+- `INVENTORY.NO_TRENDS_FOUND`: "No trends found."
+  - store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.NORMAL`: "Normal"
+  - store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.NOTIFY`: "Notify"
+  - store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.ONOPENCHANGE_FALSE_CANCEL`: "onOpenChange(false)}> Cancel"
+  - store-inventory/pages/components/receive-stock-sheet.tsx
+- `INVENTORY.OPTIONAL`: "Optional"
+  - store-inventory/pages/components/ship-stock-sheet.tsx
+- `INVENTORY.ORDER_DATE`: "Order Date"
+  - store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.ORDER_REFERENCE`: "Order reference"
+  - store-inventory/pages/components/ship-stock-sheet.tsx
+- `INVENTORY.OUT_OF_STOCK`: "Out of stock"
+  - store-inventory/pages/all-stock/total-asset.tsx
+- `INVENTORY.OUTBOUND_STOCK`: "Outbound Stock"
+  - store-inventory/pages/components/stock-navbar.tsx, store-inventory/pages/tables/all-stock.tsx
+- `INVENTORY.PICK_DATE_RANGE`: "Pick date range"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.PRICE`: "Price"
+  - store-inventory/pages/tables/all-stock.tsx
+- `INVENTORY.PRODUCT`: "Product"
+  - store-inventory/pages/components/receive-stock-sheet.tsx, store-inventory/pages/components/ship-stock-sheet.tsx, store-inventory/pages/tables/inbound-stock.tsx
+- `INVENTORY.PRODUCT_INFO`: "Product Info"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.PRODUCT_MOVED_TO_TRASH`: "Product moved to trash"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.PRODUCT_WAREHOUSE_AND_QUANTITY_ARE_REQUIRED`: "Product, warehouse, and quantity are required"
+  - store-inventory/pages/components/receive-stock-sheet.tsx, store-inventory/pages/components/ship-stock-sheet.tsx
+- `INVENTORY.QTY`: "QTY"
+  - store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.QUANTITY`: "Quantity"
+  - store-inventory/pages/components/receive-stock-sheet.tsx, store-inventory/pages/components/ship-stock-sheet.tsx
+- `INVENTORY.RECEIVE`: "Receive"
+  - store-inventory/pages/components/receive-stock-sheet.tsx
+- `INVENTORY.RECEIVE_STOCK`: "Receive Stock"
+  - store-inventory/pages/components/receive-stock-sheet.tsx, store-inventory/pages/inbound-stock/page.tsx
+- `INVENTORY.REORDER`: "Reorder"
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.REORDER_IN`: "Reorder In"
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.REORDER_QUANTITY`: "Reorder Quantity"
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.REPORTS`: "Reports"
+  - store-inventory/pages/stock-planner/page.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.RESET`: "Reset"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.RSVD`: "Rsvd"
+  - store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.SEARCH_CARRIER`: "Search carrier..."
+  - store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.SEARCH_CATEGORY`: "Search category..."
+  - store-inventory/pages/tables/all-stock.tsx
+- `INVENTORY.SEARCH_HANDLER`: "Search handler..."
+  - store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.SEARCH_REORDER_IN`: "Search Reorder In..."
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.SEARCH_STATUS`: "Search status..."
+  - store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.SEARCH_STOCK_LEVELS`: "Search stock levels..."
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.SEARCH_SUPPLIER`: "Search supplier..."
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx
+- `INVENTORY.SEARCH_TRENDS`: "Search trends..."
+  - store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.SEARCH`: "Search..."
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.SELECT_PRODUCT`: "Select product"
+  - store-inventory/pages/components/receive-stock-sheet.tsx, store-inventory/pages/components/ship-stock-sheet.tsx
+- `INVENTORY.SELECT_WAREHOUSE`: "Select warehouse"
+  - store-inventory/pages/components/ship-stock-sheet.tsx
+- `INVENTORY.SETPRODUCTTODELETE_INFO_ROW_ORIGINAL`: "setProductToDelete(info.row.original)}>"
+  - store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.SETPRODUCTTODELETE_ROW_ORIGINAL`: "setProductToDelete(row.original)}>"
+  - store-inventory/pages/tables/all-stock.tsx
+- `INVENTORY.SETRECEIVEOPEN_TRUE`: "setReceiveOpen(true)}>"
+  - store-inventory/pages/inbound-stock/page.tsx
+- `INVENTORY.SETSHIPOPEN_TRUE`: "setShipOpen(true)}>"
+  - store-inventory/pages/outbound-stock/page.tsx
+- `INVENTORY.SETTINGS`: "Settings"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.SHIP_STOCK`: "Ship Stock"
+  - store-inventory/pages/components/ship-stock-sheet.tsx, store-inventory/pages/outbound-stock/page.tsx
+- `INVENTORY.SHOW`: "Show"
+  - store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.START_NEW_ORDER`: "Start New Order"
+  - store-inventory/pages/stock-planner/page.tsx
+- `INVENTORY.STATUS`: "Status"
+  - store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.STOCK`: "Stock"
+  - store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.STOCK_FLOW`: "Stock Flow"
+  - store-inventory/pages/tables/all-stock.tsx
+- `INVENTORY.STOCK_PLANNER`: "Stock Planner"
+  - store-inventory/pages/stock-planner/page.tsx, store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.STOCK_RECEIVED_INTO_WAREHOUSE`: "Stock received into warehouse"
+  - store-inventory/pages/components/receive-stock-sheet.tsx
+- `INVENTORY.STOCK_SHIPPED_FROM_WAREHOUSE`: "Stock shipped from warehouse"
+  - store-inventory/pages/components/ship-stock-sheet.tsx
+- `INVENTORY.SUM`: "Sum"
+  - store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.SUPPLIER`: "Supplier"
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/inbound-stock.tsx
+- `INVENTORY.T_LVL`: "T-Lvl"
+  - store-inventory/pages/tables/current-stock.tsx, store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.TOTAL_ASSET_VALUE`: "Total Asset Value"
+  - store-inventory/pages/all-stock/total-asset.tsx
+- `INVENTORY.TRACKING`: "Tracking"
+  - store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+- `INVENTORY.TREND`: "Trend"
+  - store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.UNABLE_TO_LOAD_WAREHOUSE_STOCK_CHECK_YOUR_CONNECTION_AND_TRY`: "Unable to load warehouse stock. Check your connection and try again."
+  - store-inventory/pages/tables/all-stock.tsx, store-inventory/pages/tables/current-stock.tsx
+- `INVENTORY.UNDO`: "Undo"
+  - store-inventory/pages/tables/stock-planner.tsx
+- `INVENTORY.UPDATED`: "Updated"
+  - store-inventory/pages/tables/all-stock.tsx
+- `INVENTORY.WAREHOUSE`: "Warehouse"
+  - store-inventory/pages/components/receive-stock-sheet.tsx, store-inventory/pages/components/ship-stock-sheet.tsx, store-inventory/pages/tables/inbound-stock.tsx, store-inventory/pages/tables/outbound-stock.tsx
+
+## LAYOUT
+
+- `LAYOUT.ACCEPT`: "Accept"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.APPS`: "Apps"
+  - store-inventory/layout/components/topbar/apps-dropdown-menu.tsx
+- `LAYOUT.ARCHIVE_ALL`: "Archive all"
+  - store-inventory/layout/components/topbar/notifications-sheet.tsx
+- `LAYOUT.CHAT`: "Chat"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.DARK_MODE`: "Dark mode"
+  - store-inventory/layout/components/topbar/user-dropdown-menu.tsx
+- `LAYOUT.DECLINE`: "Decline"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.DOCS`: "Docs"
+  - store-inventory/layout/components/footer.tsx
+- `LAYOUT.ENABLED`: "Enabled"
+  - store-inventory/layout/components/topbar/apps-dropdown-menu.tsx
+- `LAYOUT.FIND_MEMBERS`: "Find Members"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.GO_TO_APPS`: "Go to Apps"
+  - store-inventory/layout/components/topbar/apps-dropdown-menu.tsx
+- `LAYOUT.GROUP_SETTINGS`: "Group Settings"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.HR_TEAM`: "HR Team"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.INVITE_USERS`: "Invite Users"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.JANE_PEREZ`: "Jane Perez"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.JESSY_IS_TYPING`: "Jessy is typing..."
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.KEENTHEMES_INC`: "Keenthemes Inc."
+  - store-inventory/layout/components/footer.tsx
+- `LAYOUT.KEYBOARD_SHORTCUTS`: "Keyboard shortcuts"
+  - store-inventory/layout/components/topbar/user-dropdown-menu.tsx
+- `LAYOUT.LANGUAGE`: "Language"
+  - store-inventory/layout/components/topbar/user-dropdown-menu.tsx
+- `LAYOUT.LIGHT_MODE`: "Light mode"
+  - store-inventory/layout/components/topbar/user-dropdown-menu.tsx
+- `LAYOUT.LOG_OUT`: "Log out"
+  - store-inventory/layout/components/topbar/user-dropdown-menu.tsx
+- `LAYOUT.MARK_ALL_AS_READ`: "Mark all as read"
+  - store-inventory/layout/components/topbar/notifications-sheet.tsx
+- `LAYOUT.MEETINGS`: "Meetings"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.NAVIGATE_STORE_INVENTORY_SETTINGS_MODAL`: "navigate('/store-inventory/settings-modal')}>"
+  - store-inventory/layout/components/topbar/user-dropdown-menu.tsx
+- `LAYOUT.NAVIGATE_STORE_INVENTORY_USERS`: "navigate('/store-inventory/users')}>"
+  - store-inventory/layout/components/topbar/user-dropdown-menu.tsx
+- `LAYOUT.NOTIFICATIONS`: "Notifications"
+  - store-inventory/layout/components/topbar/notifications-sheet.tsx
+- `LAYOUT.SEARCH_SHOP`: "Search shop"
+  - store-inventory/layout/components/search-shop.tsx
+- `LAYOUT.SEND`: "Send"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.SETTINGS`: "Settings"
+  - store-inventory/layout/components/topbar/user-dropdown-menu.tsx
+- `LAYOUT.SOON`: "Soon"
+  - store-inventory/layout/components/sidebar-menu.tsx
+- `LAYOUT.SUPPORT`: "Support"
+  - store-inventory/layout/components/footer.tsx
+- `LAYOUT.TEAM_SETTINGS`: "Team Settings"
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+- `LAYOUT.USER_MANAGEMENT`: "User management"
+  - store-inventory/layout/components/topbar/user-dropdown-menu.tsx
+- `LAYOUT.WRITE_A_MESSAGE`: "Write a message..."
+  - store-inventory/layout/components/topbar/chat-sheet.tsx
+
+## MENU
+
+- `MENU.ALL_STOCK`: "All Stock"
+  - store-inventory/config/app.config.tsx
+- `MENU.CATEGORIES`: "Categories"
+  - store-inventory/config/app.config.tsx
+- `MENU.CATEGORY_LIST`: "Category List"
+  - store-inventory/config/app.config.tsx
+- `MENU.CREATE_PRODUCT`: "Create Product"
+  - store-inventory/config/app.config.tsx
+- `MENU.CREATE_SHIPPING_LABEL`: "Create Shipping Label"
+  - store-inventory/config/app.config.tsx
+- `MENU.CURRENT_STOCK`: "Current Stock"
+  - store-inventory/config/app.config.tsx
+- `MENU.CUSTOMER`: "Customer"
+  - store-inventory/config/app.config.tsx
+- `MENU.CUSTOMER_DETAILS`: "Customer Details"
+  - store-inventory/config/app.config.tsx
+- `MENU.CUSTOMER_LIST`: "Customer List"
+  - store-inventory/config/app.config.tsx
+- `MENU.DARK_SIDEBAR`: "Dark Sidebar"
+  - store-inventory/config/app.config.tsx
+- `MENU.DASHBOARDS`: "Dashboards"
+  - store-inventory/config/app.config.tsx
+- `MENU.DEFAULT`: "Default"
+  - store-inventory/config/app.config.tsx
+- `MENU.EDIT_PRODUCT`: "Edit Product"
+  - store-inventory/config/app.config.tsx
+- `MENU.INBOUND_STOCK`: "Inbound Stock"
+  - store-inventory/config/app.config.tsx
+- `MENU.INVENTORY`: "Inventory"
+  - store-inventory/config/app.config.tsx
+- `MENU.MANAGE_VARIANTS`: "Manage Variants"
+  - store-inventory/config/app.config.tsx
+- `MENU.ORDER_DETAILS`: "Order Details"
+  - store-inventory/config/app.config.tsx
+- `MENU.ORDER_LIST`: "Order List"
+  - store-inventory/config/app.config.tsx
+- `MENU.ORDER_LIST_PRODUCTS`: "Order List - Products"
+  - store-inventory/config/app.config.tsx
+- `MENU.ORDER_TRACKING`: "Order Tracking"
+  - store-inventory/config/app.config.tsx
+- `MENU.ORDERS`: "Orders"
+  - store-inventory/config/app.config.tsx
+- `MENU.OUTBOUND_STOCK`: "Outbound Stock"
+  - store-inventory/config/app.config.tsx
+- `MENU.PER_PRODUCT_STOCK`: "Per Product Stock"
+  - store-inventory/config/app.config.tsx
+- `MENU.POINT_OF_SALE`: "Point of Sale"
+  - store-inventory/config/app.config.tsx
+- `MENU.PRODUCT_DETAILS`: "Product Details"
+  - store-inventory/config/app.config.tsx
+- `MENU.PRODUCT_LIST`: "Product List"
+  - store-inventory/config/app.config.tsx
+- `MENU.PRODUCTS`: "Products"
+  - store-inventory/config/app.config.tsx
+- `MENU.REGISTER`: "Register"
+  - store-inventory/config/app.config.tsx
+- `MENU.SALE_HISTORY`: "Sale History"
+  - store-inventory/config/app.config.tsx
+- `MENU.SETTINGS`: "Settings"
+  - store-inventory/config/app.config.tsx
+- `MENU.SETTINGS_MODAL_VIEW`: "Settings(Modal View)"
+  - store-inventory/config/app.config.tsx
+- `MENU.STOCK_PLANNER`: "Stock Planner"
+  - store-inventory/config/app.config.tsx
+- `MENU.STORE_INVENTORY`: "Store Inventory"
+  - store-inventory/config/app.config.tsx
+- `MENU.TEAM`: "Team"
+  - store-inventory/config/app.config.tsx
+- `MENU.TRACK_SHIPPING`: "Track Shipping"
+  - store-inventory/config/app.config.tsx
+- `MENU.USER_MANAGEMENT`: "User Management"
+  - store-inventory/config/app.config.tsx
+- `MENU.WAREHOUSE_LIST`: "Warehouse List"
+  - store-inventory/config/app.config.tsx
+- `MENU.WAREHOUSES`: "Warehouses"
+  - store-inventory/config/app.config.tsx
+
+## ORDERS
+
+- `ORDERS.3_5_DAYS`: "3-5 days"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.ACTIONS`: "Actions"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.ADD_AT_LEAST_ONE_PRODUCT_LINE`: "Add at least one product line"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.ADD_LINE`: "Add line"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.ADD_ZONE`: "Add zone"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.ALL`: "All"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.ALL_DATES`: "All dates"
+  - store-inventory/pages/order-list/page.tsx
+- `ORDERS.ALLOW_CUSTOMERS_TO_COLLECT_ORDERS_IN_STORE`: "Allow customers to collect orders in store"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.AMOUNT`: "Amount"
+  - store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.APPLY`: "Apply"
+  - store-inventory/pages/order-list/page.tsx
+- `ORDERS.BUY_SHIPPING_LABEL`: "Buy Shipping Label"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.CANCEL`: "Cancel"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-form-sheet.tsx, store-inventory/pages/order-list/page.tsx
+- `ORDERS.CANCEL_ORDER`: "Cancel Order"
+  - store-inventory/pages/components/order-details-sheet.tsx, store-inventory/pages/components/track-shipping-sheet.tsx, store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.CANCELED`: "Canceled"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.CANCELLED`: "Cancelled"
+  - store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.CARRIER`: "Carrier"
+  - store-inventory/pages/components/order-form-sheet.tsx, store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.CARRIER_PACKAGE`: "Carrier Package"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.CARRIER_USED_UNLESS_A_ZONE_OVERRIDES_IT`: "Carrier used unless a zone overrides it"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.CATEGORY`: "Category"
+  - store-inventory/pages/components/order-form-sheet.tsx, store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.CITY_AND_COUNTRY_PACKAGES_SHIP_FROM`: "City and country packages ship from"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.CLEARANCE`: "Clearance"
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.CLOSE`: "Close"
+  - store-inventory/pages/components/track-shipping-sheet.tsx
+- `ORDERS.COLOR`: "Color"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.COUNTRY`: "Country"
+  - store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.CREATE_SHIPPING_LABEL`: "Create Shipping Label"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.CREATED`: "Created"
+  - store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.CUSTOM_PACKAGE`: "Custom Package"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.CUSTOMER`: "Customer"
+  - store-inventory/pages/components/order-form-sheet.tsx, store-inventory/pages/tables/order-list.tsx, store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.CUSTOMER_IS_REQUIRED`: "Customer is required"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.CUSTOMER`: "Customer:"
+  - store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.DATE`: "Date"
+  - store-inventory/pages/components/order-form-sheet.tsx, store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx, store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.DAYS_NEEDED_TO_PREPARE_AN_ORDER`: "Days needed to prepare an order"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.DEFAULT_CARRIER`: "Default carrier"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.DELIVERED`: "Delivered"
+  - store-inventory/pages/tables/order-list.tsx, store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.DELIVERED_ORDERS`: "Delivered Orders"
+  - store-inventory/pages/components/customers/customer-details-orders.tsx
+- `ORDERS.DELIVERY`: "Delivery"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.DELIVERY_METHOD`: "Delivery Method"
+  - store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.DELIVERY_STATUS`: "Delivery Status"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.DEP_TIME`: "Dep. Time"
+  - store-inventory/pages/components/track-shipping-sheet.tsx
+- `ORDERS.DETAILS`: "Details"
+  - store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.EDIT_ORDER`: "Edit Order"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.ELECTRONICS`: "Electronics"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.EXP_ARRIVAL`: "Exp. Arrival"
+  - store-inventory/pages/components/track-shipping-sheet.tsx
+- `ORDERS.EXPORT_CSV`: "Export CSV"
+  - store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.EXPRESS_SHIPPING`: "Express shipping"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.EXTRA_LARGE_BOX`: "Extra Large Box"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.FAST_MOVING`: "Fast Moving"
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.FILTER`: "Filter..."
+  - store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.FREE_SHIPPING`: "Free shipping"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.HANDLING_DAYS`: "Handling days"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.HEIGHT`: "Height"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.IN_PROGRESS`: "In Progress"
+  - store-inventory/pages/components/customers/customer-details-orders.tsx
+- `ORDERS.IN_TRANSIT`: "In Transit"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.ITEMS`: "Items"
+  - store-inventory/pages/components/order-details-sheet.tsx, store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.KB_8820`: "KB-8820"
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.LARGE_BOX`: "Large Box"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.LENGTH`: "Length"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.LINE_ITEMS`: "Line items"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.LOADING_ORDERS`: "Loading orders..."
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.LOCAL_PICKUP`: "Local pickup"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.LS_1033`: "LS-1033"
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.MEDIUM_BOX`: "Medium Box"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.MINIMUM_ORDER_AMOUNT`: "Minimum order amount"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.NEW_ORDER`: "New Order"
+  - store-inventory/pages/order-list/page.tsx
+- `ORDERS.NO_ORDERS_YET_CREATE_YOUR_FIRST_ORDER_TO_GET_STARTED`: "No orders yet. Create your first order to get started."
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.NO_RECENT_ORDERS`: "No recent orders"
+  - store-inventory/pages/components/customers/components/resent-order.tsx
+- `ORDERS.NO_SHIPPING_ZONES_YET`: "No shipping zones yet."
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.NOTIFY_CUSTOMER`: "Notify Customer"
+  - store-inventory/pages/components/track-shipping-sheet.tsx
+- `ORDERS.OFFER_A_FASTER_PAID_SHIPPING_OPTION`: "Offer a faster paid shipping option"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.OFFER_FREE_SHIPPING_ABOVE_A_MINIMUM_ORDER`: "Offer free shipping above a minimum order"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.ONOPENCHANGE_FALSE_CANCEL`: "onOpenChange(false)}> Cancel"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.ONOPENCHANGE_FALSE_CLOSE`: "onOpenChange(false)}> Close"
+  - store-inventory/pages/components/track-shipping-sheet.tsx
+- `ORDERS.OPENDETAILS_ROW_ORIGINAL`: "openDetails(row.original)}>"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.OPENEDIT_ROW_ORIGINAL`: "openEdit(row.original)}>"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.OPENTRACKING_ROW_ORIGINAL`: "openTracking(row.original)}>"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.ORDER_ACTIONS`: "Order Actions"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.ORDER_CANCELED`: "Order canceled"
+  - store-inventory/pages/components/order-details-sheet.tsx, store-inventory/pages/components/track-shipping-sheet.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.ORDER_DATA`: "Order Data"
+  - store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.ORDER_DETAILS`: "Order Details"
+  - store-inventory/pages/components/order-details-sheet.tsx, store-inventory/pages/order-detials/page.tsx
+- `ORDERS.ORDER_ID`: "Order ID"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/track-shipping-sheet.tsx, store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.ORDER_LIST`: "Order List"
+  - store-inventory/pages/order-list/page.tsx
+- `ORDERS.ORDER_NUMBER`: "Order Number"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.ORDER_STATUS`: "Order Status"
+  - store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.ORDER_TRACKING`: "Order Tracking"
+  - store-inventory/pages/components/order-details-sheet.tsx, store-inventory/pages/order-tracking/page.tsx
+- `ORDERS.ORDERID`: "OrderId"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.ORDERID`: "OrderID"
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.PACKAGE_NAME`: "Package Name"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.PACKAGE_TYPE`: "Package Type"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.PACKAGING`: "Packaging"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.PARIS_FR`: "Paris, FR"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.PAYMENT`: "Payment"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.PAYMENT_METHOD`: "Payment Method"
+  - store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.PAYMENT_ST`: "Payment St."
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.PAYMENT_STATUS`: "Payment Status"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.PENDING`: "Pending"
+  - store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.PLACED`: "Placed"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/track-shipping-sheet.tsx
+- `ORDERS.PRICE`: "Price"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.PRICE_DETAILS`: "Price Details"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.PRINSENGRACHT_24`: "Prinsengracht 24"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.PRODUCT_INFO`: "Product Info"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.PROMO`: "Promo"
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.RATE`: "Rate"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.READ_SHIPPING`: "Read Shipping"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.RECENT_ORDERS`: "Recent Orders"
+  - store-inventory/pages/components/customers/components/resent-order.tsx, store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.REMOVE`: "Remove"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.REMOVEZONE_ZONE_ID`: "removeZone(zone.id)}>"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.RESET`: "Reset"
+  - store-inventory/pages/order-list/page.tsx
+- `ORDERS.RETURNS`: "Returns"
+  - store-inventory/pages/components/customers/customer-details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.RSVD`: "Rsvd"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.SAVE_PACKAGE_FOR_FUTURE`: "Save package for future"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.SAVE_PACKAGE_FOR_FUTURE_ORDERS`: "Save package for future orders"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.SEARCH_BY_ID`: "Search by ID"
+  - store-inventory/pages/tables/recent-orders.tsx
+- `ORDERS.SELECT_A_WAREHOUSE`: "Select a warehouse"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.SELECT_AN_ORDER_TO_FOLLOW_SHIPMENT_STATUS_CARRIER_AND_DELIVE`: "Select an order to follow shipment status, carrier, and delivery log."
+  - store-inventory/pages/order-tracking/page.tsx
+- `ORDERS.SELECT_AN_ORDER_TO_VIEW_ITEMS_SHIPPING_AND_PAYMENT_SUMMARY`: "Select an order to view items, shipping, and payment summary."
+  - store-inventory/pages/order-detials/page.tsx
+- `ORDERS.SELECT_CARRIER`: "Select carrier"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.SELECT_CUSTOMER`: "Select customer"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.SELECT_PRODUCT`: "Select product"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.SELECT_WAREHOUSE`: "Select warehouse"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.SEND`: "Send"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.SETORDERDETAILSSHEETOPEN_TRUE`: "setOrderDetailsSheetOpen(true)}>"
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.SETPRODUCTINFOSHEETOPEN_TRUE`: "setProductInfoSheetOpen(true)}>"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.SETTRACKSHIPPINGSHEETOPEN_TRUE`: "setTrackShippingSheetOpen(true)}>"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.SHIPPING_DATA`: "Shipping Data"
+  - store-inventory/pages/components/track-shipping-sheet.tsx
+- `ORDERS.SHIPPING_DATE`: "Shipping Date"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.SHIPPING_INFO`: "Shipping Info"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.SHIPPING_LOG`: "Shipping Log"
+  - store-inventory/pages/components/track-shipping-sheet.tsx
+- `ORDERS.SHIPPING_OPTIONS`: "Shipping Options"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.SHIPPING_ORIGIN`: "Shipping origin"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.SHIPPING_PRIORITY`: "Shipping Priority"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.SHIPPING_ZONES`: "Shipping Zones"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+- `ORDERS.SLOW_MOVING`: "Slow Moving"
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.SMALL_BOX`: "Small Box"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.STOCK`: "Stock"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.STOCK_PLANNER`: "Stock Planner"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.SUMMARY`: "Summary"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.SUPPLIER`: "Supplier"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.T_LVL`: "T-Lvl"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.TEAM`: "Team"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.TERMS_CONDITIONS`: "Terms & Conditions"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.TOTAL`: "Total"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-details-sheet.tsx, store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.TOTAL_ORDERS`: "Total Orders"
+  - store-inventory/pages/components/customers/customer-details-orders.tsx
+- `ORDERS.TOTAL_PRICE`: "Total Price"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.TOTAL_TIME`: "Total Time"
+  - store-inventory/pages/components/track-shipping-sheet.tsx
+- `ORDERS.TOTAL_WEIGHT`: "Total Weight"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.TRACK_SHIPPING`: "Track Shipping"
+  - store-inventory/pages/components/track-shipping-sheet.tsx, store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.TRACKING_NO`: "Tracking No."
+  - store-inventory/pages/components/track-shipping-sheet.tsx
+- `ORDERS.TRENDS`: "Trends"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.UC_3990`: "UC-3990"
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.UNABLE_TO_LOAD_ORDERS_CHECK_YOUR_CONNECTION_AND_TRY_AGAIN`: "Unable to load orders. Check your connection and try again."
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.VIEW_DETAILS`: "View Details"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.VIEW_ORDER_DETAILS`: "View Order Details"
+  - store-inventory/pages/tables/order-list.tsx
+- `ORDERS.VIEW_PRODUCTS`: "View Products"
+  - store-inventory/pages/tables/details-orders.tsx, store-inventory/pages/tables/order-list.tsx
+- `ORDERS.VIEW_SHIPPING_LABEL`: "View Shipping Label"
+  - store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.VOID_ESLINT_DISABLE_NEXT_LINE_TYPESCRIPT_ESLINT_NO_EXPLICIT_`: "void; // eslint-disable-next-line @typescript-eslint/no-explicit-any data?: Record"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.WAREHOUSE`: "Warehouse"
+  - store-inventory/pages/components/order-form-sheet.tsx
+- `ORDERS.WEIGHT`: "Weight"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx, store-inventory/pages/components/order-details-sheet.tsx
+- `ORDERS.WIDTH`: "Width"
+  - store-inventory/pages/components/create-shipping-label-sheet.tsx
+- `ORDERS.WM_8421`: "WM-8421"
+  - store-inventory/pages/tables/details-orders.tsx
+- `ORDERS.ZONE_NAME`: "Zone name"
+  - store-inventory/pages/components/settings/shipping-delivery.tsx
+
+## POS
+
+- `POS.ACCOUNT_BALANCE`: "Account balance"
+  - store-inventory/pages/pos/page.tsx
+- `POS.ACTIVATE_A_WAREHOUSE_BEFORE_SELLING_STOCK`: "Activate a warehouse before selling stock."
+  - store-inventory/pages/pos/page.tsx
+- `POS.ADD_AT_LEAST_ONE_ITEM`: "Add at least one item"
+  - store-inventory/pages/pos/page.tsx
+- `POS.AFTER_THIS_SALE`: "After this sale"
+  - store-inventory/pages/pos/page.tsx
+- `POS.AMOUNT_TENDERED`: "Amount tendered"
+  - store-inventory/pages/pos/page.tsx
+- `POS.AMOUNT_TENDERED_IS_LESS_THAN_THE_TOTAL`: "Amount tendered is less than the total"
+  - store-inventory/pages/pos/page.tsx
+- `POS.BOUGHT_ON_CREDIT`: "Bought on credit"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx
+- `POS.CANCEL`: "Cancel"
+  - store-inventory/pages/tables/pos-sales.tsx
+- `POS.CART`: "Cart"
+  - store-inventory/pages/pos/page.tsx
+- `POS.CART_IS_EMPTY`: "Cart is empty"
+  - store-inventory/pages/pos/page.tsx
+- `POS.CART_ITEMS_ARE_NOT_AVAILABLE_IN_THEIR_SOURCE_WAREHOUSES`: "Cart items are not available in their source warehouses"
+  - store-inventory/pages/pos/page.tsx
+- `POS.CHANGE`: "Change"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx, store-inventory/pages/pos/page.tsx
+- `POS.CLOSE`: "Close"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx
+- `POS.COMPLETE_SALE`: "Complete sale"
+  - store-inventory/pages/pos/page.tsx
+- `POS.COMPLETED_CHECKOUT_HISTORY_VOIDING_A_SALE_RESTOCKS_THE_WAREH`: "Completed checkout history. Voiding a sale restocks the warehouse."
+  - store-inventory/pages/pos-sales/page.tsx
+- `POS.CUSTOMER`: "Customer"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx, store-inventory/pages/pos/page.tsx, store-inventory/pages/tables/pos-sales.tsx
+- `POS.DATE`: "Date"
+  - store-inventory/pages/tables/pos-sales.tsx
+- `POS.DISCOUNT`: "Discount"
+  - store-inventory/pages/pos/page.tsx
+- `POS.DISCOUNT`: "Discount %"
+  - store-inventory/pages/pos/page.tsx
+- `POS.NOT_ENOUGH_ACCOUNT_BALANCE_FOR_THIS_SALE`: "Not enough account balance for this sale"
+  - store-inventory/pages/pos/page.tsx
+- `POS.NOT_ENOUGH_ACCOUNT_BALANCE_USE_CREDIT_TO_SELL_NOW_AND_COLLEC`: "Not enough account balance. Use Credit to sell now and collect later."
+  - store-inventory/pages/pos/page.tsx
+- `POS.NOT_ENOUGH_STOCK_IN_THIS_WAREHOUSE`: "Not enough stock in this warehouse"
+  - store-inventory/pages/pos/page.tsx
+- `POS.NOTES`: "Notes"
+  - store-inventory/pages/pos/page.tsx
+- `POS.ONOPENCHANGE_FALSE_CLOSE`: "onOpenChange(false)}> Close"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx
+- `POS.OPEN_REGISTER`: "Open register"
+  - store-inventory/pages/pos-sales/page.tsx
+- `POS.PAID_FROM_ACCOUNT`: "Paid from account"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx
+- `POS.PAYMENT`: "Payment"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx, store-inventory/pages/pos/page.tsx, store-inventory/pages/tables/pos-sales.tsx
+- `POS.POINT_OF_SALE`: "Point of Sale"
+  - store-inventory/pages/pos/page.tsx
+- `POS.POS_SALES`: "POS Sales"
+  - store-inventory/pages/pos-sales/page.tsx
+- `POS.PRINT_RECEIPT`: "Print receipt"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx
+- `POS.REASON_OPTIONAL`: "Reason (optional)"
+  - store-inventory/pages/tables/pos-sales.tsx
+- `POS.RECORDED_AS_BOUGHT_ON_CREDIT_THE_CUSTOMER_WILL_PAY_LATER`: "Recorded as bought on credit. The customer will pay later."
+  - store-inventory/pages/pos/page.tsx
+- `POS.SALE`: "Sale"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx, store-inventory/pages/tables/pos-sales.tsx
+- `POS.SALE_HISTORY`: "Sale history"
+  - store-inventory/pages/pos/page.tsx
+- `POS.SALE_VOIDED_AND_STOCK_RESTORED`: "Sale voided and stock restored"
+  - store-inventory/pages/tables/pos-sales.tsx
+- `POS.SEARCH_NAME_SKU_OR_BARCODE`: "Search name, SKU, or barcode"
+  - store-inventory/pages/pos/page.tsx
+- `POS.SEARCH_SALES`: "Search sales..."
+  - store-inventory/pages/tables/pos-sales.tsx
+- `POS.SELECT_A_WAREHOUSE_FIRST`: "Select a warehouse first"
+  - store-inventory/pages/pos/page.tsx
+- `POS.SELL_INVENTORY_FROM_ONE_OR_MORE_WAREHOUSES_IN_A_SINGLE_SALE`: "Sell inventory from one or more warehouses in a single sale."
+  - store-inventory/pages/pos/page.tsx
+- `POS.STATUS`: "Status"
+  - store-inventory/pages/tables/pos-sales.tsx
+- `POS.SUBTOTAL`: "Subtotal"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx, store-inventory/pages/pos/page.tsx
+- `POS.TAX`: "Tax"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx
+- `POS.TENDERED`: "Tendered"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx
+- `POS.THANK_YOU_FOR_YOUR_PURCHASE`: "Thank you for your purchase"
+  - store-inventory/pages/components/pos-receipt-dialog.tsx
+- `POS.THIS_SALE_WILL_PUT_THE_ACCOUNT_IN_THE_RED_THE_CUSTOMER_WILL_`: "This sale will put the account in the red. The customer will owe the shop."
+  - store-inventory/pages/pos/page.tsx
+- `POS.TOTAL`: "Total"
+  - store-inventory/pages/pos/page.tsx, store-inventory/pages/tables/pos-sales.tsx
+- `POS.UPDATEQTY_LINE_PRODUCTID_LINE_WAREHOUSEID_0`: "updateQty(line.productId, line.warehouseId, 0)}>"
+  - store-inventory/pages/pos/page.tsx
+- `POS.UPDATEQTY_LINE_PRODUCTID_LINE_WAREHOUSEID_LINE_QUANTITY_1`: "updateQty(line.productId, line.warehouseId, line.quantity - 1)}>"
+  - store-inventory/pages/pos/page.tsx
+- `POS.UPDATEQTY_LINE_PRODUCTID_LINE_WAREHOUSEID_LINE_QUANTITY_1`: "updateQty(line.productId, line.warehouseId, line.quantity + 1)}>"
+  - store-inventory/pages/pos/page.tsx
+- `POS.VOID_SALE`: "Void sale"
+  - store-inventory/pages/tables/pos-sales.tsx
+- `POS.WALK_IN`: "Walk-in"
+  - store-inventory/pages/pos/page.tsx
+- `POS.WAREHOUSE`: "Warehouse"
+  - store-inventory/pages/tables/pos-sales.tsx
+- `POS.WRONG_ITEMS_CUSTOMER_CANCELLED`: "Wrong items, customer cancelled, …"
+  - store-inventory/pages/tables/pos-sales.tsx
+
+## PRODUCTS
+
+- `PRODUCTS.ACTION_NEEDED`: "Action Needed"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.ACTIONS`: "Actions"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.ACTIVATE_A_WAREHOUSE_FIRST`: "Activate a warehouse first"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.ACTIVE`: "Active"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.ADD_A_NEW_PRODUCT_THEN_MANAGE_ITS_VARIANTS_FROM_THE_LIST`: "Add a new product, then manage its variants from the list."
+  - store-inventory/pages/create-product/page.tsx
+- `PRODUCTS.ADD_NEW_OPTION`: "Add New Option"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.ADD_NEW_VALUE`: "Add New Value"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.ADD_PRODUCT`: "Add Product"
+  - store-inventory/pages/product-list/page.tsx
+- `PRODUCTS.ADD_TAGS_PRESS_ENTER_OR_COMMA`: "Add tags (press Enter or comma)"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.ADD_VARIANT`: "Add Variant"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.ALL`: "All"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.ALL_DATES`: "All dates"
+  - store-inventory/pages/order-list-products/page.tsx
+- `PRODUCTS.APPLY`: "Apply"
+  - store-inventory/pages/order-list-products/page.tsx
+- `PRODUCTS.ARCHIVED`: "Archived"
+  - store-inventory/pages/components/manage-variants.tsx, store-inventory/pages/components/product-form-sheet.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.AUTO_REORDER`: "Auto Reorder"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.AVAILABILITY`: "Availability"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.AVAILABLE`: "Available"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.BARCODE`: "Barcode"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.BASIC_INFO`: "Basic Info"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.BROWSE_FILE`: "Browse File"
+  - store-inventory/pages/components/product-form-image-upload.tsx
+- `PRODUCTS.CANCEL`: "Cancel"
+  - store-inventory/pages/components/manage-variants.tsx, store-inventory/pages/components/per-product-stock-sheet.tsx, store-inventory/pages/components/product-delete-dialogs.tsx, store-inventory/pages/components/product-form-sheet.tsx, store-inventory/pages/order-list-products/page.tsx
+- `PRODUCTS.CATEGORY`: "Category"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx, store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/components/product-info-sheet.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.CATEGORY_BRAND`: "Category & Brand"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.CHOOSE_A_FILE_OR_DRAG_DROP_HERE`: "Choose a file or drag & drop here."
+  - store-inventory/pages/components/product-form-image-upload.tsx
+- `PRODUCTS.CHOOSE_A_PRODUCT_FROM_THE_LIST_TO_EDIT_IT`: "Choose a product from the list to edit it."
+  - store-inventory/pages/edit-product/page.tsx
+- `PRODUCTS.CODE`: "Code:"
+  - store-inventory/pages/components/customers/components/activity/product-webinar.tsx
+- `PRODUCTS.COLOR`: "Color"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.COLORS`: "Colors"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.CREATE_PRODUCT`: "Create Product"
+  - store-inventory/pages/create-product/page.tsx
+- `PRODUCTS.CREATED`: "Created"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx, store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.CURRENT_STOCK`: "Current Stock"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.DELETE_PERMANENTLY`: "Delete permanently"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.DELTA`: "Delta"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.DISPLAY_QTY`: "Display qty"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.DRAFT`: "Draft"
+  - store-inventory/pages/components/manage-variants.tsx, store-inventory/pages/components/product-form-sheet.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.DRAGGED_ITEM`: "Dragged item"
+  - store-inventory/pages/components/product-form-image-upload.tsx
+- `PRODUCTS.EDIT_PRODUCT`: "Edit Product"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/edit-product/page.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.FEATURED`: "Featured"
+  - store-inventory/pages/components/product-form-sheet.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.FILE_UPLOAD_ERROR_S`: "File upload error(s)"
+  - store-inventory/pages/components/product-form-image-upload.tsx
+- `PRODUCTS.FILTER`: "Filter..."
+  - store-inventory/pages/components/product-info-sheet.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.FILTERS`: "Filters"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.GUESTS`: "Guests:"
+  - store-inventory/pages/components/customers/components/activity/product-webinar.tsx
+- `PRODUCTS.HANDLEDELETEPRODUCT_PRODUCT`: "handleDeleteProduct(product)}>"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.HANDLEDELETEVARIANT_VARIANT_ID`: "handleDeleteVariant(variant.id)} >"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.HANDLEEDITPRODUCT_PRODUCT`: "handleEditProduct(product)}>"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.HANDLEEDITVARIANT_VARIANT_ID`: "handleEditVariant(variant.id)} >"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.HANDLEMANAGEVARIANTS_PRODUCT`: "handleManageVariants(product)}>"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.HANDLEVIEWDETAILS_PRODUCT`: "handleViewDetails(product)}>"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.HOW_TO_CREATE_PRODUCT`: "How to Create Product"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.HOW_TO_MANAGE_VARIANTS`: "How to Manage Variants"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.IMPORT`: "Import"
+  - store-inventory/pages/product-list/page.tsx
+- `PRODUCTS.IN_STOCK`: "In Stock"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.INACTIVE`: "Inactive"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.INVENTORY`: "Inventory"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.INVENTORY_RULES`: "Inventory Rules"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.JENNY_ATTENDED_A_WEBINAR_ON_NEW_PRODUCT_FEATURES`: "Jenny attended a webinar on new product features."
+  - store-inventory/pages/components/customers/components/activity/product-webinar.tsx
+- `PRODUCTS.LAST_MOVED`: "Last Moved"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.LAST_UPDATED`: "Last Updated"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx, store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.LEAD_TIME`: "Lead Time"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.LEADERSHIP_DEVELOPMENT_SERIES_PART_1`: "Leadership Development Series: Part 1"
+  - store-inventory/pages/components/customers/components/activity/product-webinar.tsx
+- `PRODUCTS.LIVE`: "Live"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.LOADING_PRODUCTS`: "Loading products..."
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.LOADING_VARIANTS`: "Loading variants..."
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.MAIN_PRODUCT_IMAGE`: "Main product image"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.MANAGE_VARIANTS`: "Manage Variants"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/manage-variants/page.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.MOVE_PRODUCT_TO_TRASH`: "Move product to trash?"
+  - store-inventory/pages/components/product-delete-dialogs.tsx
+- `PRODUCTS.MOVE_TO_TRASH`: "Move to trash"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.NEW_ORDER`: "New Order"
+  - store-inventory/pages/order-list-products/page.tsx
+- `PRODUCTS.NO_OPTIONS_YET_ADD_SIZE_COLOR_OR_ANOTHER_DIMENSION_FOR_THIS_`: "No options yet. Add size, color, or another dimension for this product."
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.NO_PRODUCTS_YET_CREATE_YOUR_FIRST_PRODUCT_TO_GET_STARTED`: "No products yet. Create your first product to get started."
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.NO_VARIANTS_TO_DISPLAY`: "No variants to display"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.NO_VARIANTS_YET`: "No variants yet"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.ON_HAND`: "On Hand"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.ON_HAND_MUST_BE_ZERO_OR_GREATER`: "On hand must be zero or greater"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.ON_HAND_BY_VARIANT`: "On-hand by variant"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.ONOPENCHANGE_FALSE_CANCEL`: "onOpenChange(false)}> Cancel"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.ONOPENCHANGE_FALSE_CANCEL`: "onOpenChange(false)}>Cancel"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.OPTION_NAME`: "Option Name"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.OPTION_VALUE`: "Option Value"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.ORDER_LIST_PRODUCTS`: "Order List - Products"
+  - store-inventory/pages/order-list-products/page.tsx
+- `PRODUCTS.PENDING`: "Pending"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.PER_PRODUCT_STOCK`: "Per Product Stock"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.PERMANENTLY_DELETE_PRODUCT`: "Permanently delete product?"
+  - store-inventory/pages/components/product-delete-dialogs.tsx
+- `PRODUCTS.PRICE`: "Price"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx, store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/components/product-form-sheet.tsx, store-inventory/pages/components/product-form-variants.tsx, store-inventory/pages/components/product-info-sheet.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.PRICE_BY_VARIANT`: "Price by variant"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.PRICE_CANNOT_BE_NEGATIVE`: "Price cannot be negative"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.PRODUCT_BRAND`: "Product Brand"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.PRODUCT_CATEGORY`: "Product Category"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.PRODUCT_DESCRIPTION`: "Product Description"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.PRODUCT_DETAILS`: "Product Details"
+  - store-inventory/pages/product-details/page.tsx
+- `PRODUCTS.PRODUCT_DETAILS_ANALYTICS`: "Product Details & Analytics"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.PRODUCT_INFO`: "Product Info"
+  - store-inventory/pages/components/product-info-sheet.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.PRODUCT_LIST`: "Product List"
+  - store-inventory/pages/product-list/page.tsx
+- `PRODUCTS.PRODUCT_MOVED_TO_TRASH`: "Product moved to trash"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.PRODUCT_NAME`: "Product Name"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.PRODUCT_NAME_AND_SKU_ARE_REQUIRED`: "Product name and SKU are required"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.PRODUCT_PERMANENTLY_DELETED`: "Product permanently deleted"
+  - store-inventory/pages/components/product-delete-dialogs.tsx
+- `PRODUCTS.PRODUCT_RESTORED_AS_DRAFT`: "Product restored as Draft"
+  - store-inventory/pages/components/product-delete-dialogs.tsx
+- `PRODUCTS.PROGRESS`: "Progress:"
+  - store-inventory/pages/components/customers/components/activity/product-webinar.tsx
+- `PRODUCTS.PUBLISHED`: "Published"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.READ_ABOUT`: "Read about"
+  - store-inventory/pages/components/manage-variants.tsx, store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.REMOVE`: "Remove"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.REMOVECARD_CARD_ID`: "removeCard(card.id)} >"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.REMOVEVALUE_CARD_ID_VALUE_ID`: "removeValue(card.id, value.id) } >"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.REORDER_QTY`: "Reorder Qty"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.RESERVED`: "Reserved"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.RESET`: "Reset"
+  - store-inventory/pages/order-list-products/page.tsx
+- `PRODUCTS.RESTORE`: "Restore"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.RESTORE_PRODUCT_ID`: "restore(product.id)}>"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.RSVD`: "Rsvd"
+  - store-inventory/pages/components/product-info-sheet.tsx
+- `PRODUCTS.SAVE`: "Save"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.SEARCH`: "Search..."
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.SELECT_A_PRODUCT_FIRST`: "Select a product first"
+  - store-inventory/pages/components/manage-variants.tsx, store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.SELECT_A_PRODUCT_TO_EDIT`: "Select a product to edit"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.SELECT_A_PRODUCT_TO_EDIT_ITS_OPTION_DIMENSIONS_SUCH_AS_SIZE_`: "Select a product to edit its option dimensions, such as size and color."
+  - store-inventory/pages/manage-variants/page.tsx
+- `PRODUCTS.SELECT_A_PRODUCT_TO_VIEW_DETAILS_INVENTORY_AND_VARIANTS`: "Select a product to view details, inventory, and variants."
+  - store-inventory/pages/product-details/page.tsx
+- `PRODUCTS.SELECT_A_WAREHOUSE_BEFORE_EDITING_QUANTITY`: "Select a warehouse before editing quantity"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.SELECT_A_WAREHOUSE_TO_ADD_THIS_PRODUCT_TO`: "Select a warehouse to add this product to"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.SELECT_BRAND`: "Select Brand"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.SELECT_CATEGORY`: "Select Category"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.SELECT_COLOR`: "Select Color"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.SELECT_SIZE`: "Select Size"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.SELECT_WAREHOUSE`: "Select warehouse"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.SET_UP_DIFFERENT_OPTIONS_FOR_THIS_PRODUCT`: "Set up different options for this product"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.SETACTIVETAB_FORM`: "setActiveTab('form')} >"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.SETHARDDELETETARGET_PRODUCT`: "setHardDeleteTarget(product)}>"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.SIZE`: "Size"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.SIZE_COLOR_ON_HAND_AND_PRICE_ARE_REQUIRED`: "Size, color, on hand, and price are required"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.SIZES`: "Sizes"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx
+- `PRODUCTS.SKU`: "SKU"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx, store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.SKU_OR_BARCODE_ALREADY_EXISTS_ON_ANOTHER_ACTIVE_PRODUCT`: "SKU or barcode already exists on another active product"
+  - store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.STATUS`: "Status"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx, store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.STOCK`: "Stock"
+  - store-inventory/pages/components/product-info-sheet.tsx
+- `PRODUCTS.STOCK_QUANTITY_CANNOT_BE_NEGATIVE`: "Stock quantity cannot be negative"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.STOCK_SETTINGS_SAVED`: "Stock settings saved"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.STOCK_VALUE`: "Stock value"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.SUPPLIER`: "Supplier"
+  - store-inventory/pages/components/product-info-sheet.tsx
+- `PRODUCTS.T_LVL`: "T-Lvl"
+  - store-inventory/pages/components/product-info-sheet.tsx
+- `PRODUCTS.TAGS`: "Tags"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/components/product-form-sheet.tsx
+- `PRODUCTS.THE_FIRST_INSTALLMENT_OF_A_LEADERSHIP_DEVELOPMENT_SERIES`: "The first installment of a leadership development series."
+  - store-inventory/pages/components/customers/components/activity/product-webinar.tsx
+- `PRODUCTS.THIS_WILL_PERMANENTLY_WIPE`: "This will permanently wipe"
+  - store-inventory/pages/components/product-delete-dialogs.tsx
+- `PRODUCTS.THRESHOLD_CANNOT_BE_NEGATIVE`: "Threshold cannot be negative"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.THRESHOLD_QTY`: "Threshold Qty"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.TREND`: "Trend"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.TRENDS`: "Trends"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/components/product-info-sheet.tsx
+- `PRODUCTS.TYPE_THE_SKU_TO_CONFIRM`: "Type the SKU to confirm"
+  - store-inventory/pages/components/product-delete-dialogs.tsx
+- `PRODUCTS.TYPE_VALUE_NAME_AND_PRESS_ENTER`: "Type Value Name and press Enter"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.UNABLE_TO_LOAD_DELETE_IMPACT`: "Unable to load delete impact."
+  - store-inventory/pages/components/product-delete-dialogs.tsx
+- `PRODUCTS.UNABLE_TO_LOAD_PRODUCTS_CHECK_YOUR_CONNECTION_AND_TRY_AGAIN`: "Unable to load products. Check your connection and try again."
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.UPDATED`: "Updated"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.UPDATED_BY`: "Updated By"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx
+- `PRODUCTS.VARIANT_ADDED_SUCCESSFULLY`: "Variant added successfully"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.VARIANT_DELETED_SUCCESSFULLY`: "Variant deleted successfully"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.VARIANT_PRICE_CANNOT_BE_NEGATIVE`: "Variant price cannot be negative"
+  - store-inventory/pages/components/product-form-sheet.tsx, store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.VARIANT_UPDATED_SUCCESSFULLY`: "Variant updated successfully"
+  - store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.VARIANTS`: "Variants"
+  - store-inventory/pages/components/product-details-analytics-sheet.tsx, store-inventory/pages/components/product-form-variants.tsx
+- `PRODUCTS.VARIANTS_SAVED`: "Variants saved"
+  - store-inventory/pages/components/manage-variants.tsx
+- `PRODUCTS.VIEW`: "View"
+  - store-inventory/pages/components/customers/components/activity/product-webinar.tsx
+- `PRODUCTS.VIEW_DETAILS`: "View Details"
+  - store-inventory/pages/tables/product-list.tsx
+- `PRODUCTS.WAREHOUSE`: "Warehouse"
+  - store-inventory/pages/components/per-product-stock-sheet.tsx, store-inventory/pages/components/product-form-sheet.tsx
+
+## SETTINGS
+
+- `SETTINGS.ABANDONED_CART_EMAILS`: "Abandoned cart emails"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.ACCOUNT_SECURITY`: "Account Security"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.ADD_LOCATION`: "Add location"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.ADJUSTS_TIME_ZONE_AUTOMATICALLY`: "Adjusts time zone automatically"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.AI_FEATURES`: "AI Features"
+  - store-inventory/pages/components/settings/components/general-settings/ai-features.tsx
+- `SETTINGS.ALLOW_CUSTOMERS_TO_ORDER_WITHOUT_AN_ACCOUNT`: "Allow customers to order without an account"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.APPLY_PER_CITY`: "Apply per city"
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.APPLY_PER_COUNTRY`: "Apply per country"
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.APPLY_PER_STATE`: "Apply per state"
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.AT_LEAST_ONE_DEFAULT_LOCATION_IS_REQUIRED`: "At least one default location is required"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.AUTOMATIC_INVOICE_GENERATION`: "Automatic Invoice Generation"
+  - store-inventory/pages/components/settings/components/payments/invoices-receipts.tsx
+- `SETTINGS.AUTOMATIC_TIME_ZONE`: "Automatic time zone"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.BASICS`: "Basics"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.BOB_S_SHOES_STORE`: "Bob’s Shoes Store"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.CANCEL`: "Cancel"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.CARD_BANK_PAYMENT_METHODS`: "Card & Bank Payment Methods"
+  - store-inventory/pages/components/settings/components/payments/general-payment-settings.tsx
+- `SETTINGS.CHARACTERS_REQUIRED_FOR_STAFF_PASSWORDS`: "Characters required for staff passwords"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.CHECKOUT`: "Checkout"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.CHECKOUT_OPTIONS`: "Checkout Options"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.CHOOSE_METHODS_AVAILABLE_AT_CHECKOUT`: "Choose methods available at checkout"
+  - store-inventory/pages/components/settings/components/payments/general-payment-settings.tsx
+- `SETTINGS.CITY`: "City"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.CLOSE`: "Close"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.COLLECT_PHONE_NUMBER`: "Collect phone number"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.COMPANY_NAME`: "Company Name"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.CONTACT_CHANNELS`: "Contact Channels"
+  - store-inventory/pages/components/settings/components/general-settings/contact-cannels.tsx
+- `SETTINGS.CONTACT_EMAIL`: "Contact Email"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.COUNTRY`: "Country"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.CREATE_INVOICES_WHEN_AN_ORDER_IS_PAID`: "Create invoices when an order is paid"
+  - store-inventory/pages/components/settings/components/payments/invoices-receipts.tsx
+- `SETTINGS.CUSTOMER_SERVICE_PHONE_NUMBER`: "Customer service phone number"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.CUSTOMERS_MUST_ACCEPT_TERMS_BEFORE_PAYING`: "Customers must accept terms before paying"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.DATE_FORMAT`: "Date format"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.DD_MM_YYYY`: "DD/MM/YYYY"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.DEFAULT`: "Default"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.DEFAULT_CHECKOUT_COUNTRY`: "Default checkout country"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.DEFAULT_CURRENCY_USED_AT_CHECKOUT`: "Default currency used at checkout"
+  - store-inventory/pages/components/settings/components/payments/general-payment-settings.tsx
+- `SETTINGS.DEFAULT_LANGUAGE_FOR_THE_STORE`: "Default language for the store"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.DELETE`: "Delete"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.DIGITAL_WALLETS`: "Digital Wallets"
+  - store-inventory/pages/components/settings/components/payments/general-payment-settings.tsx
+- `SETTINGS.EMAIL_FOR_CUSTOMER_INQUIRIES`: "Email for customer inquiries"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.EMAIL_NOTIFICATIONS`: "Email Notifications"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.EMAIL_STAFF_WHEN_A_NEW_DEVICE_SIGNS_IN`: "Email staff when a new device signs in"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.EMAIL_STAFF_WHEN_INVENTORY_HITS_A_THRESHOLD`: "Email staff when inventory hits a threshold"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.ENABLE_AI_INSIGHT`: "Enable AI Insight"
+  - store-inventory/pages/components/settings/components/general-settings/ai-features.tsx
+- `SETTINGS.ENABLE_AI_SEMANTIC_SEARCH`: "Enable AI Semantic Search"
+  - store-inventory/pages/components/settings/components/general-settings/ai-features.tsx
+- `SETTINGS.ENABLE_OR_DISABLE_WALLET_BASED_PAYMENTS`: "Enable or disable wallet-based payments"
+  - store-inventory/pages/components/settings/components/payments/general-payment-settings.tsx
+- `SETTINGS.ENABLING_NEW_METHODS_MAY_REQUIRE_ACCOUNT_CONFIGURATION`: "Enabling new methods may require account configuration"
+  - store-inventory/pages/components/settings/components/payments/general-payment-settings.tsx
+- `SETTINGS.ENTER_YOUR_SOCIAL_LINK`: "Enter your social link"
+  - store-inventory/pages/components/settings/components/general-settings/contact-cannels.tsx
+- `SETTINGS.ESTABLISHED`: "Established"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.EXPORT_SETTINGS`: "Export Settings"
+  - store-inventory/pages/settings-modal/page.tsx
+- `SETTINGS.FIGMA`: "Figma"
+  - store-inventory/pages/components/settings/components/general-settings/contact-cannels.tsx
+- `SETTINGS.FORMAT_USED_FOR_DISPLAYING_DATES`: "Format used for displaying dates"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.GENERAL_SETTINGS`: "General Settings"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.GITHUB`: "GitHub"
+  - store-inventory/pages/components/settings/components/general-settings/contact-cannels.tsx
+- `SETTINGS.GUEST_CHECKOUT`: "Guest checkout"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.HANDLECLOSE_FALSE_CLOSE`: "handleClose(false)}> Close"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.HELLO_MYSTORE_IO`: "hello@mystore.io"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.HOW_TAX_RATES_ARE_APPLIED_TO_ORDERS`: "How tax rates are applied to orders"
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.IMPROVES_SEARCH_WITH_AI_UNDERSTANDING`: "Improves search with AI understanding"
+  - store-inventory/pages/components/settings/components/general-settings/ai-features.tsx
+- `SETTINGS.INBOX_THAT_RECEIVES_OPERATIONAL_ALERTS`: "Inbox that receives operational alerts"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.INVOICES_RECEIPTS`: "Invoices & Receipts"
+  - store-inventory/pages/components/settings/components/payments/invoices-receipts.tsx
+- `SETTINGS.LANGUAGE`: "Language"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.LAST_ORDER`: "Last order"
+  - store-inventory/pages/settings-modal/page.tsx
+- `SETTINGS.LAST_ORDER`: "Last Order"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.LAST_SAVED`: "Last saved"
+  - store-inventory/pages/settings-modal/page.tsx
+- `SETTINGS.LET_CUSTOMERS_ADD_NOTES_TO_AN_ORDER`: "Let customers add notes to an order"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.LINK_TO_YOUR_ONLINE_STORE`: "Link to your online store"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.LINKEDIN`: "LinkedIn"
+  - store-inventory/pages/components/settings/components/general-settings/contact-cannels.tsx
+- `SETTINGS.LOCATION_NAME`: "Location name"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.LOCATIONS`: "Locations"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.LOGIN_ALERTS`: "Login alerts"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.LOGO_IS_TOO_LARGE_MAX_500KB`: "Logo is too large (max ~500KB)"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.LOW_STOCK_ALERTS`: "Low stock alerts"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.MANAGE_STORE_IDENTITY_PAYMENTS_CHECKOUT_SHIPPING_AND_NOTIFIC`: "Manage store identity, payments, checkout, shipping, and notifications"
+  - store-inventory/pages/settings-modal/page.tsx
+- `SETTINGS.MINIMUM_PASSWORD_LENGTH`: "Minimum password length"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.MINUTES_OF_INACTIVITY_BEFORE_SIGN_OUT`: "Minutes of inactivity before sign-out"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.MM_DD_YYYY`: "MM/DD/YYYY"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.MUST_INCLUDE_LETTERS_NUMBERS_AND_A_SYMBOL`: "Must include letters, numbers, and a symbol"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.NEW_CUSTOMER`: "New customer"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.NEW_POS_SALES_WILL_USE_THIS_TAX_COMPLETED_SALES_KEEP_THEIR_O`: "New POS sales will use this tax. Completed sales keep their original tax snapshot."
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.NO_LOCATIONS_YET`: "No locations yet."
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.NO_REPLY_EMAIL_ADDRESS`: "No-reply Email Address"
+  - store-inventory/pages/components/settings/components/payments/invoices-receipts.tsx
+- `SETTINGS.NO_REPLY_MYSTORE_IO`: "no-reply@mystore.io"
+  - store-inventory/pages/components/settings/components/payments/invoices-receipts.tsx
+- `SETTINGS.NOTIFICATION`: "Notification"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.NOTIFY_CUSTOMERS_WHEN_AN_ORDER_SHIPS`: "Notify customers when an order ships"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.NOTIFY_STAFF_WHEN_A_CUSTOMER_ACCOUNT_IS_CREATED`: "Notify staff when a customer account is created"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.OPEN_SETTINGS`: "Open Settings"
+  - store-inventory/pages/settings-modal/page.tsx
+- `SETTINGS.OPS_MYSTORE_IO`: "ops@mystore.io"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.ORDER_CONFIRMATION`: "Order confirmation"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.ORDER_NOTES`: "Order notes"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.OTHER_NOTIFICATIONS`: "Other Notifications"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.PAYMENTS`: "Payments"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.PHONE`: "Phone"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.PLEASE_UPLOAD_AN_IMAGE_FILE`: "Please upload an image file"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.PRE_SELECTED_COUNTRY_ON_THE_CHECKOUT_FORM`: "Pre-selected country on the checkout form"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.PREFERENCES`: "Preferences"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.PROFILE`: "Profile"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.PROFILE_IMAGE`: "Profile Image"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.PROVIDES_AI_DRIVEN_ANALYTICS_AND_TRENDS`: "Provides AI-driven analytics and trends"
+  - store-inventory/pages/components/settings/components/general-settings/ai-features.tsx
+- `SETTINGS.PUBLIC_LINKS_SHOWN_ON_INVOICES_AND_STORE_PAGES`: "Public links shown on invoices and store pages"
+  - store-inventory/pages/components/settings/components/general-settings/contact-cannels.tsx
+- `SETTINGS.REMOVE`: "Remove"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.REMOVELOCATION_LOCATION_ID`: "removeLocation(location.id)}>"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.REQUIRE_2FA_FOR_STAFF_SIGN_IN`: "Require 2FA for staff sign-in"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.REQUIRE_A_PHONE_NUMBER_AT_CHECKOUT`: "Require a phone number at checkout"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.REQUIRE_STRONG_PASSWORDS`: "Require strong passwords"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.REQUIRE_TERMS_ACCEPTANCE`: "Require terms acceptance"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.SECURITY`: "Security"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.SELECT_ANOTHER_LOCATION_AS_DEFAULT_FIRST`: "Select another location as default first"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.SELECT_COUNTRY`: "Select country"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.SELECT_DATE_FORMAT`: "Select date format"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.SELECT_LANGUAGE`: "Select language"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+- `SETTINGS.SEND_A_REMINDER_WHEN_CHECKOUT_IS_LEFT_INCOMPLETE`: "Send a reminder when checkout is left incomplete"
+  - store-inventory/pages/components/settings/checkout.tsx
+- `SETTINGS.SEND_CUSTOMERS_A_RECEIPT_AFTER_CHECKOUT`: "Send customers a receipt after checkout"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.SEND_SHIPPING_UPDATES_BY_TEXT_MESSAGE`: "Send shipping updates by text message"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.SENDER_ADDRESS_FOR_RECEIPTS_AND_INVOICES`: "Sender address for receipts and invoices"
+  - store-inventory/pages/components/settings/components/payments/invoices-receipts.tsx
+- `SETTINGS.SESSION_TIMEOUT`: "Session timeout"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.SETSETTINGSSHEETOPEN_TRUE`: "setSettingsSheetOpen(true)}>"
+  - store-inventory/pages/settings-modal/page.tsx
+- `SETTINGS.SETTINGS`: "Settings"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.SHIPPING_DELIVERY`: "Shipping & Delivery"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.SHIPPING_UPDATES`: "Shipping updates"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.SLACK`: "Slack"
+  - store-inventory/pages/components/settings/components/general-settings/contact-cannels.tsx
+- `SETTINGS.SMS_ORDER_UPDATES`: "SMS order updates"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.SOCIAL_PROFILES`: "Social profiles"
+  - store-inventory/pages/components/settings/components/general-settings/contact-cannels.tsx
+- `SETTINGS.STAFF_NOTIFY_EMAIL`: "Staff notify email"
+  - store-inventory/pages/components/settings/notification.tsx
+- `SETTINGS.START_TYPING_TAGS`: "Start typing tags"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.STORE_CURRENCY`: "Store Currency"
+  - store-inventory/pages/components/settings/components/payments/general-payment-settings.tsx
+- `SETTINGS.STORE_ID`: "Store ID:"
+  - store-inventory/pages/components/settings-sheet.tsx
+- `SETTINGS.STORE_LOCATIONS`: "Store Locations"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.STORE_LOGO_OR_BRAND_ICON`: "Store logo or brand icon"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.STORE_NAME_SHOWN_ACROSS_THE_APP`: "Store name shown across the app"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.STORE_PHONE`: "Store Phone"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.STORE_SETTINGS`: "Store Settings"
+  - store-inventory/pages/settings-modal/page.tsx
+- `SETTINGS.STORE_URL`: "Store URL"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.STREET_ADDRESS`: "Street address"
+  - store-inventory/pages/components/settings/locations.tsx
+- `SETTINGS.TAGS_DESCRIBING_STORE_PRODUCTS`: "Tags describing store products"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.TAX_CALCULATION`: "Tax Calculation"
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.TAX_PERCENT`: "Tax Percent"
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.TAX_RATES`: "Tax Rates"
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.TAX_SETTINGS`: "Tax Settings"
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.TWITCH`: "Twitch"
+  - store-inventory/pages/components/settings/components/general-settings/contact-cannels.tsx
+- `SETTINGS.TWO_FACTOR_AUTHENTICATION`: "Two-factor authentication"
+  - store-inventory/pages/components/settings/security.tsx
+- `SETTINGS.UPLOAD`: "Upload"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.USED_AT_POS_CHECKOUT`: "Used at POS checkout"
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.WHAT_DO_YOU_DO`: "What do you do?"
+  - store-inventory/pages/components/settings/components/general-settings/basics.tsx
+- `SETTINGS.WHETHER_PRICES_ALREADY_INCLUDE_TAX`: "Whether prices already include tax"
+  - store-inventory/pages/components/settings/components/payments/tax-settings.tsx
+- `SETTINGS.YYYY_MM_DD`: "YYYY-MM-DD"
+  - store-inventory/pages/components/settings/components/general-settings/preferences.tsx
+
+## STATUS
+
+- `STATUS.ACCOUNT`: "Account"
+  - store-inventory/lib/payment-methods.ts
+- `STATUS.BANK_TRANSFER`: "Bank Transfer"
+  - store-inventory/lib/payment-methods.ts
+- `STATUS.CASH`: "Cash"
+  - store-inventory/lib/payment-methods.ts
+- `STATUS.CREDIT`: "Credit"
+  - store-inventory/lib/payment-methods.ts
+- `STATUS.EDIT`: "Edit"
+  - store-inventory/pages/components/customers/components/payment-methods.tsx
+- `STATUS.MTN_MOBILE_MONEY`: "MTN Mobile Money"
+  - store-inventory/lib/payment-methods.ts
+- `STATUS.ORANGE_MONEY`: "Orange Money"
+  - store-inventory/lib/payment-methods.ts
+- `STATUS.PAYMENT_METHODS`: "Payment Methods"
+  - store-inventory/pages/components/customers/components/payment-methods.tsx
+- `STATUS.PRIMARY`: "Primary"
+  - store-inventory/pages/components/customers/components/payment-methods.tsx
+
+## TOASTS/ERRORS
+
+- `TOASTS.ERRORS.A_CATEGORY_WITH_THIS_CODE_ALREADY_EXISTS_TRY_A_DIFFERENT_NAM`: "A category with this code already exists. Try a different name."
+  - store-inventory/lib/category-errors.ts
+- `TOASTS.ERRORS.A_CATEGORY_WITH_THIS_NAME_ALREADY_EXISTS`: "A category with this name already exists"
+  - store-inventory/lib/category-errors.ts
+- `TOASTS.ERRORS.A_CATEGORY_WITH_THIS_NAME_OR_CODE_ALREADY_EXISTS`: "A category with this name or code already exists"
+  - store-inventory/lib/category-errors.ts
+- `TOASTS.ERRORS.A_CUSTOMER_WITH_THIS_CODE_ALREADY_EXISTS`: "A customer with this code already exists"
+  - store-inventory/lib/customer-errors.ts
+- `TOASTS.ERRORS.A_CUSTOMER_WITH_THIS_EMAIL_ALREADY_EXISTS`: "A customer with this email already exists"
+  - store-inventory/lib/customer-errors.ts
+- `TOASTS.ERRORS.A_SETTINGS_CONFLICT_OCCURRED_REFRESH_AND_TRY_AGAIN`: "A settings conflict occurred. Refresh and try again."
+  - store-inventory/lib/settings-errors.ts
+- `TOASTS.ERRORS.A_WAREHOUSE_WITH_THIS_CODE_ALREADY_EXISTS`: "A warehouse with this code already exists"
+  - store-inventory/lib/warehouse-errors.ts
+- `TOASTS.ERRORS.ADD_AT_LEAST_ONE_PRODUCT_LINE`: "Add at least one product line"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.ARCHIVE_THE_CUSTOMER_BEFORE_PERMANENTLY_DELETING_IT`: "Archive the customer before permanently deleting it"
+  - store-inventory/lib/customer-errors.ts
+- `TOASTS.ERRORS.CANCEL_THE_ORDER_INSTEAD_OF_DELETING_IT`: "Cancel the order instead of deleting it"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.CANCELED`: "Canceled"
+  - store-inventory/hooks/use-inventory.ts
+- `TOASTS.ERRORS.CANCELLED`: "Cancelled"
+  - store-inventory/hooks/use-inventory.ts
+- `TOASTS.ERRORS.CHOOSE_A_VALID_STATUS_ACTIVE_INACTIVE_DRAFT_OR_ARCHIVED`: "Choose a valid status: Active, Inactive, Draft, or Archived"
+  - store-inventory/lib/category-errors.ts
+- `TOASTS.ERRORS.CURRENCY_MUST_BE_XAF`: "Currency must be XAF"
+  - store-inventory/lib/settings-errors.ts
+- `TOASTS.ERRORS.CUSTOMER_MUST_BE_ACTIVE_FOR_THIS_ACTION`: "Customer must be Active for this action"
+  - store-inventory/lib/customer-errors.ts
+- `TOASTS.ERRORS.EACH_LINE_ITEM_NEEDS_A_PRODUCT`: "Each line item needs a product"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.LOGO_IS_TOO_LARGE_MAX_500KB`: "Logo is too large (max ~500KB)"
+  - store-inventory/lib/settings-errors.ts, store-inventory/lib/settings-validation.ts
+- `TOASTS.ERRORS.NOT_ENOUGH_STOCK_FOR_THIS_ORDER`: "Not enough stock for this order"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.ONLY_ONE_DEFAULT_WAREHOUSE_IS_ALLOWED_REFRESH_AND_TRY_AGAIN`: "Only one default warehouse is allowed. Refresh and try again."
+  - store-inventory/lib/warehouse-errors.ts
+- `TOASTS.ERRORS.ORDER_IS_ALREADY_CANCELED`: "Order is already canceled"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.ORDER_NOT_FOUND`: "Order not found"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.ORDER_NUMBER_ALREADY_EXISTS_RETRY_WITH_A_NEW_NUMBER`: "Order number already exists — retry with a new number"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.ORDER_STOCK_IS_ALREADY_FULFILLED`: "Order stock is already fulfilled"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.PASSWORD_MINIMUM_LENGTH_MUST_BE_BETWEEN_6_AND_128`: "Password minimum length must be between 6 and 128"
+  - store-inventory/lib/settings-errors.ts
+- `TOASTS.ERRORS.PASSWORD_UPDATED`: "Password updated"
+  - store-inventory/hooks/use-users.ts
+- `TOASTS.ERRORS.PRODUCT_IS_UNAVAILABLE_FOR_ORDERING`: "Product is unavailable for ordering"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.QUANTITY_MUST_BE_AT_LEAST_1`: "Quantity must be at least 1"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.RESERVE_STOCK_BEFORE_MARKING_THE_ORDER_SHIPPED`: "Reserve stock before marking the order shipped"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.SELECT_A_WAREHOUSE_OR_SET_A_DEFAULT_WAREHOUSE`: "Select a warehouse or set a default warehouse"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.SESSION_TIMEOUT_MUST_BE_BETWEEN_5_AND_1440_MINUTES`: "Session timeout must be between 5 and 1440 minutes"
+  - store-inventory/lib/settings-errors.ts
+- `TOASTS.ERRORS.SETTINGS_VALUES_ARE_OUTSIDE_THE_ALLOWED_RANGE`: "Settings values are outside the allowed range"
+  - store-inventory/lib/settings-errors.ts
+- `TOASTS.ERRORS.SETTLE_THE_ACCOUNT_BALANCE_BEFORE_ARCHIVING_THIS_CUSTOMER`: "Settle the account balance before archiving this customer"
+  - store-inventory/lib/customer-errors.ts
+- `TOASTS.ERRORS.STORE_CODE_MUST_BE_UNIQUE`: "Store code must be unique"
+  - store-inventory/lib/settings-errors.ts
+- `TOASTS.ERRORS.STORE_NAME_IS_REQUIRED`: "Store name is required"
+  - store-inventory/lib/settings-errors.ts
+- `TOASTS.ERRORS.STORE_SCOPE_IS_REQUIRED_FOR_THIS_ORDER`: "Store scope is required for this order"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.TAX_PERCENT_MUST_BE_BETWEEN_0_AND_100`: "Tax percent must be between 0 and 100"
+  - store-inventory/lib/settings-errors.ts
+- `TOASTS.ERRORS.THAT_DELIVERY_STATUS_CHANGE_IS_NOT_ALLOWED`: "That delivery status change is not allowed"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.THAT_PAYMENT_STATUS_CHANGE_IS_NOT_ALLOWED`: "That payment status change is not allowed"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.THIS_CUSTOMER_HAS_HISTORY_AND_CANNOT_BE_PERMANENTLY_DELETED_`: "This customer has history and cannot be permanently deleted. Keep them archived."
+  - store-inventory/lib/customer-errors.ts
+- `TOASTS.ERRORS.THIS_CUSTOMER_IS_ARCHIVED`: "This customer is archived"
+  - store-inventory/lib/customer-errors.ts
+- `TOASTS.ERRORS.THIS_CUSTOMER_IS_LINKED_TO_SALES_OR_ORDERS_AND_CANNOT_BE_DEL`: "This customer is linked to sales or orders and cannot be deleted"
+  - store-inventory/lib/customer-errors.ts
+- `TOASTS.ERRORS.THIS_WAREHOUSE_HAS_POS_SALES_HISTORY_AND_CANNOT_BE_DELETED`: "This warehouse has POS sales history and cannot be deleted"
+  - store-inventory/lib/warehouse-errors.ts
+- `TOASTS.ERRORS.TOAST_MESSAGE_SELECT_A_CATEGORY_ROW_THEN_CLICK_EDIT`: "toast.message('Select a category row, then click Edit')} >"
+  - store-inventory/pages/edit-category/page.tsx
+- `TOASTS.ERRORS.UNABLE_TO_SAVE_SETTINGS`: "Unable to save settings"
+  - store-inventory/lib/settings-errors.ts
+- `TOASTS.ERRORS.UNABLE_TO_UPDATE_CATEGORY`: "Unable to update category"
+  - store-inventory/lib/category-errors.ts
+- `TOASTS.ERRORS.UNABLE_TO_UPDATE_CUSTOMER`: "Unable to update customer"
+  - store-inventory/lib/customer-errors.ts
+- `TOASTS.ERRORS.UNABLE_TO_UPDATE_ORDER`: "Unable to update order"
+  - store-inventory/lib/order-errors.ts
+- `TOASTS.ERRORS.UNABLE_TO_UPDATE_WAREHOUSE`: "Unable to update warehouse"
+  - store-inventory/lib/warehouse-errors.ts
+- `TOASTS.ERRORS.USER_CREATED`: "User created"
+  - store-inventory/hooks/use-users.ts
+- `TOASTS.ERRORS.USER_DELETED`: "User deleted"
+  - store-inventory/hooks/use-users.ts
+
+## USERS
+
+- `USERS.ACTIVE`: "Active"
+  - store-inventory/pages/users/page.tsx
+- `USERS.ADD_STAFF_USER`: "Add staff user"
+  - store-inventory/pages/users/page.tsx
+- `USERS.ADD_USER`: "Add user"
+  - store-inventory/pages/users/page.tsx
+- `USERS.ALL_ROLES`: "All roles"
+  - store-inventory/pages/users/page.tsx
+- `USERS.CANCEL`: "Cancel"
+  - store-inventory/pages/users/page.tsx, store-inventory/pages/users/user-permissions-dialog.tsx
+- `USERS.CREATE_USER`: "Create user"
+  - store-inventory/pages/users/page.tsx
+- `USERS.CREATED`: "Created"
+  - store-inventory/pages/users/page.tsx
+- `USERS.CREATES_A_SUPABASE_AUTH_USER_WITH_ONE_OF_THE_THREE_STORE_ROL`: "Creates a Supabase Auth user with one of the three store roles."
+  - store-inventory/pages/users/page.tsx
+- `USERS.DELETE_USER`: "Delete user"
+  - store-inventory/pages/users/page.tsx
+- `USERS.EDIT_DETAILS`: "Edit details"
+  - store-inventory/pages/users/page.tsx
+- `USERS.EDIT_USER`: "Edit user"
+  - store-inventory/pages/users/page.tsx
+- `USERS.EMAIL`: "Email"
+  - store-inventory/pages/users/page.tsx
+- `USERS.FIRST_NAME`: "First name"
+  - store-inventory/pages/users/page.tsx
+- `USERS.INACTIVE`: "Inactive"
+  - store-inventory/pages/users/page.tsx
+- `USERS.INVITED`: "Invited"
+  - store-inventory/pages/users/page.tsx
+- `USERS.LAST_NAME`: "Last name"
+  - store-inventory/pages/users/page.tsx
+- `USERS.MANAGE_PERMISSIONS`: "Manage permissions"
+  - store-inventory/pages/users/page.tsx
+- `USERS.MEMBER`: "Member"
+  - store-inventory/pages/users/page.tsx
+- `USERS.NEW_PASSWORD`: "New password"
+  - store-inventory/pages/users/page.tsx
+- `USERS.ONLY_ADMINS_CAN_MANAGE_STAFF_USERS`: "Only Admins can manage staff users."
+  - store-inventory/pages/users/page.tsx
+- `USERS.PERMISSIONS`: "Permissions"
+  - store-inventory/pages/users/page.tsx
+- `USERS.RESET_PASSWORD`: "Reset password"
+  - store-inventory/pages/users/page.tsx
+- `USERS.RESET_TO_ROLE_DEFAULTS`: "Reset to role defaults"
+  - store-inventory/pages/users/user-permissions-dialog.tsx
+- `USERS.ROLE`: "Role"
+  - store-inventory/pages/users/page.tsx
+- `USERS.SAVE`: "Save"
+  - store-inventory/pages/users/page.tsx
+- `USERS.SAVE_PERMISSIONS`: "Save permissions"
+  - store-inventory/pages/users/user-permissions-dialog.tsx
+- `USERS.SEARCH_USERS`: "Search users"
+  - store-inventory/pages/users/page.tsx
+- `USERS.SETCREATEOPEN_FALSE_CANCEL`: "setCreateOpen(false)}> Cancel"
+  - store-inventory/pages/users/page.tsx
+- `USERS.SETEDITUSER_NULL_CANCEL`: "setEditUser(null)}> Cancel"
+  - store-inventory/pages/users/page.tsx
+- `USERS.SETPASSWORDUSER_ITEM_RESET_PASSWORD`: "setPasswordUser(item)}> Reset password"
+  - store-inventory/pages/users/page.tsx
+- `USERS.SETPASSWORDUSER_NULL_CANCEL`: "setPasswordUser(null)}> Cancel"
+  - store-inventory/pages/users/page.tsx
+- `USERS.SETPERMISSIONSUSER_ITEM_MANAGE_PERMISSIONS`: "setPermissionsUser(item)}> Manage permissions"
+  - store-inventory/pages/users/page.tsx
+- `USERS.SETQUERY`: "setQuery('')} >"
+  - store-inventory/pages/users/page.tsx
+- `USERS.STATUS`: "Status"
+  - store-inventory/pages/users/page.tsx
+- `USERS.TEMPORARY_PASSWORD`: "Temporary password"
+  - store-inventory/pages/users/page.tsx
+- `USERS.UPDATE_PASSWORD`: "Update password"
+  - store-inventory/pages/users/page.tsx
+- `USERS.USER_SETSELECTED_PERMISSIONSFORROLE_USER_ROLE_RESET_TO_ROLE_`: "user && setSelected(permissionsForRole(user.role))} > Reset to role defaults"
+  - store-inventory/pages/users/user-permissions-dialog.tsx
+- `USERS.USER_MANAGEMENT`: "User Management"
+  - store-inventory/pages/users/page.tsx
+- `USERS.USER_PERMISSIONS`: "User permissions"
+  - store-inventory/pages/users/user-permissions-dialog.tsx
+- `USERS.USERS`: "Users"
+  - store-inventory/pages/users/page.tsx
+
+## WAREHOUSES
+
+- `WAREHOUSES.ACTIVE`: "Active"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.ADD_WAREHOUSE`: "Add Warehouse"
+  - store-inventory/pages/warehouse-list/page.tsx
+- `WAREHOUSES.ADDRESS`: "Address"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.ALL_WAREHOUSES`: "All warehouses"
+  - store-inventory/pages/components/warehouse-select.tsx
+- `WAREHOUSES.CANCEL`: "Cancel"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx, store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.CITY`: "City"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.CODE`: "Code"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.CODE_AND_NAME_ARE_REQUIRED`: "Code and name are required"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.COUNTRY`: "Country"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.CREATE_YOUR_FIRST_WAREHOUSE_TO_START_TRACKING_INVENTORY_BY_L`: "Create your first warehouse to start tracking inventory by location."
+  - store-inventory/pages/warehouse-list/page.tsx
+- `WAREHOUSES.DEFAULT`: "Default"
+  - store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.DEFAULT_WAREHOUSE`: "Default warehouse"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.DEFAULT_WAREHOUSE_MUST_BE_ACTIVE`: "Default warehouse must be Active"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.DELETE`: "Delete"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx, store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.DELETE_WAREHOUSE`: "Delete warehouse"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx, store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.DESTINATION_WAREHOUSE`: "Destination warehouse"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx, store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.FR`: "FR"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.INACTIVE`: "Inactive"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.LOCATION`: "Location"
+  - store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.MAIN`: "MAIN"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.MAIN_WAREHOUSE`: "Main Warehouse"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.MOVE_ALL_STOCK`: "Move all stock"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx, store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.MOVE_ALL_STOCK_TO`: "Move all stock to"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx, store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.MOVE_STOCK`: "Move stock"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.NAME`: "Name"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.NO_ACTIVE_WAREHOUSES_ACTIVATE_A_WAREHOUSE_BEFORE_RECEIVING_S`: "No Active warehouses. Activate a warehouse before receiving stock, creating products, or using POS."
+  - store-inventory/pages/warehouse-list/page.tsx
+- `WAREHOUSES.NO_WAREHOUSES_YET`: "No warehouses yet"
+  - store-inventory/pages/warehouse-list/page.tsx
+- `WAREHOUSES.ON_HAND`: "On Hand"
+  - store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.ONOPENCHANGE_FALSE_CANCEL`: "onOpenChange(false)}> Cancel"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.PHONE`: "Phone"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.SEARCH_WAREHOUSES`: "Search warehouses..."
+  - store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.SELECT_A_DESTINATION_WAREHOUSE`: "Select a destination warehouse"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx, store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.SET_ANOTHER_WAREHOUSE_AS_DEFAULT_BEFORE_UNCHECKING_THIS_ONE`: "Set another warehouse as default before unchecking this one"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.SETCREATEOPEN_TRUE`: "setCreateOpen(true)}>"
+  - store-inventory/pages/warehouse-list/page.tsx
+- `WAREHOUSES.SKUS`: "SKUs"
+  - store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.STATUS`: "Status"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx, store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.WAREHOUSE`: "Warehouse"
+  - store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.WAREHOUSE_CREATED`: "Warehouse created"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.WAREHOUSE_DELETED`: "Warehouse deleted"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx, store-inventory/pages/tables/warehouse-list.tsx
+- `WAREHOUSES.WAREHOUSE_UPDATED`: "Warehouse updated"
+  - store-inventory/pages/components/warehouse-form-sheet.tsx
+- `WAREHOUSES.WAREHOUSES`: "Warehouses"
+  - store-inventory/pages/warehouse-list/page.tsx
+
+Total unique strings: 1183

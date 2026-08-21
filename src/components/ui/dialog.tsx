@@ -5,6 +5,7 @@ import { cva, VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
 import { Dialog as DialogPrimitive } from 'radix-ui';
 import { cn } from '@/lib/utils';
+import { useT } from '@/i18n/use-t';
 
 const dialogContentVariants = cva(
   'flex flex-col fixed outline-0 z-50 border border-border bg-background p-6 shadow-lg shadow-black/5 duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-lg',
@@ -74,6 +75,7 @@ function DialogContent({
     showCloseButton?: boolean;
     overlay?: boolean;
   }) {
+  const t = useT();
   return (
     <DialogPortal>
       {overlay && <DialogOverlay />}
@@ -86,7 +88,7 @@ function DialogContent({
         {showCloseButton && (
           <DialogClose className="cursor-pointer outline-0 absolute end-5 top-5 rounded-sm opacity-60 ring-offset-background transition-opacity hover:opacity-100 focus:outline-hidden disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground">
             <X className="size-4" />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{t('Close')}</span>
           </DialogClose>
         )}
       </DialogPrimitive.Content>

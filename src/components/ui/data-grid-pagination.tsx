@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useT } from '@/i18n/use-t';
 
 interface DataGridPaginationProps {
   sizes?: number[];
@@ -27,15 +28,16 @@ interface DataGridPaginationProps {
 
 function DataGridPagination(props: DataGridPaginationProps) {
   const { table, recordCount, isLoading } = useDataGrid();
+  const t = useT();
 
   const defaultProps: Partial<DataGridPaginationProps> = {
     sizes: [5, 10, 25, 50, 100],
-    sizesLabel: 'Show',
-    sizesDescription: 'per page',
+    sizesLabel: t('Show'),
+    sizesDescription: t('per page'),
     sizesSkeleton: <Skeleton className="h-8 w-44" />,
     moreLimit: 5,
     more: false,
-    info: '{from} - {to} of {count}',
+    info: t('{from} - {to} of {count}'),
     infoSkeleton: <Skeleton className="h-8 w-60" />,
   };
 
@@ -143,7 +145,7 @@ function DataGridPagination(props: DataGridPaginationProps) {
           mergedProps?.sizesSkeleton
         ) : (
           <>
-            <div className="text-sm text-muted-foreground">Rows per page</div>
+            <div className="text-sm text-muted-foreground">{t('Rows per page')}</div>
             <Select
               value={`${pageSize}`}
               indicatorPosition="right"
@@ -184,7 +186,7 @@ function DataGridPagination(props: DataGridPaginationProps) {
                   onClick={() => table.previousPage()}
                   disabled={!table.getCanPreviousPage()}
                 >
-                  <span className="sr-only">Go to previous page</span>
+                  <span className="sr-only">{t('Go to previous page')}</span>
                   <ChevronLeftIcon className="size-4" />
                 </Button>
 
@@ -202,7 +204,7 @@ function DataGridPagination(props: DataGridPaginationProps) {
                   onClick={() => table.nextPage()}
                   disabled={!table.getCanNextPage()}
                 >
-                  <span className="sr-only">Go to next page</span>
+                  <span className="sr-only">{t('Go to next page')}</span>
                   <ChevronRightIcon className="size-4" />
                 </Button>
               </div>

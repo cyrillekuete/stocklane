@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardToolbar } from '@/compone
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { CartesianGrid, ComposedChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { useT } from '@/i18n/use-t';
 import { formatMoney, APP_CURRENCY } from '@/store-inventory/lib/format';
 
 // E-commerce data for different periods with balanced patterns
@@ -79,16 +80,17 @@ const ChartLabel = ({ label, color }: { label: string; color: string }) => {
 };
 
 const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
+  const t = useT();
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border bg-background p-3 shadow-sm shadow-black/5 min-w-[150px]">
-        <div className="text-xs font-medium text-muted-foreground tracking-wide mb-2.5">{label}</div>
+        <div className="text-xs font-medium text-muted-foreground tracking-wide mb-2.5">{t(label ?? '')}</div>
         <div className="space-y-2">
           {payload.map((entry, index) => {
-            const label = entry.dataKey === 'sales' ? 'Sales' : 'Views';
+            const seriesLabel = entry.dataKey === 'sales' ? t('Sales') : t('Views');
             return (
               <div key={index} className="flex items-center gap-2 text-xs">
-                <ChartLabel label={label + ':'} color={entry.color} />
+                <ChartLabel label={seriesLabel + ':'} color={entry.color} />
                 <span className="font-semibold text-foreground">
                   {entry.dataKey === 'sales'
                     ? formatMoney(entry.value)
@@ -107,10 +109,14 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
 };
 
 export function ProductStock() {
+  const t = useT();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('30d');
 
   // Get data for selected period
-  const currentData = salesViewsData[selectedPeriod];
+  const currentData = salesViewsData[selectedPeriod].map((item) => ({
+    ...item,
+    period: t(item.period),
+  }));
 
   // Calculate totals and percentages
   const totalSales = currentData.reduce((sum, item) => sum + item.sales, 0);
@@ -123,7 +129,7 @@ export function ProductStock() {
     <Card className="h-full">
       <CardHeader>
         <CardTitle>
-          Sales Activity
+          {t('Sales Activity')}
         </CardTitle>
 
         <CardToolbar>
@@ -135,7 +141,7 @@ export function ProductStock() {
             <SelectContent align="end">
               {Object.values(PERIODS).map((period) => (
                 <SelectItem key={period.key} value={period.key}>
-                  {period.label}
+                  {t(period.label)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -147,7 +153,7 @@ export function ProductStock() {
         {/* Stats Section */}
         <div className="flex items-center flex-wrap gap-3.5 md:gap-10 px-5 pt-6 mb-8 text-sm">
           <div className="flex items-center gap-3.5">
-            <ChartLabel label="Sales" color="#f59e0b" />
+            <ChartLabel label={t('Sales')} color="#f59e0b" />
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold">{formatMoney(totalSales)}</span>
               <Badge variant={salesChange >= 0 ? 'success' : 'destructive'} appearance="light">
@@ -157,7 +163,7 @@ export function ProductStock() {
             </div>
           </div>
           <div className="flex items-center gap-3.5">
-            <ChartLabel label="Views" color="#8b5cf6" />
+            <ChartLabel label={t('Views')} color="#8b5cf6" />
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold">{totalViews.toLocaleString()}</span>
               <Badge variant={viewsChange <= 0 ? 'success' : 'destructive'} appearance="light">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,21 +42,23 @@ export function ProductSoftDeleteDialog({
   onConfirm: () => void;
   confirming?: boolean;
 }) {
+  const t = useT();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Move product to trash?</AlertDialogTitle>
+          <AlertDialogTitle>{t('Move product to trash?')}</AlertDialogTitle>
           <AlertDialogDescription>
-            <strong>{product?.title}</strong> ({product?.sku}) will be archived and hidden from
-            catalogs and stock lists. You can restore it later from the Archived tab, or permanently
-            delete it.
+            {t(
+              '{title} ({sku}) will be archived and hidden from catalogs and stock lists. You can restore it later from the Archived tab, or permanently delete it.',
+              { title: product?.title ?? '', sku: product?.sku ?? '' },
+            )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={confirming}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={confirming}>{t('Cancel')}</AlertDialogCancel>
           <AlertDialogAction variant="destructive" disabled={confirming || !product} onClick={onConfirm}>
-            {confirming ? 'Moving…' : 'Move to trash'}
+            {confirming ? t('Moving…') : t('Move to trash')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -72,6 +75,7 @@ export function ProductHardDeleteDialog({
   onOpenChange: (open: boolean) => void;
   product: HardDeleteTarget | null;
 }) {
+  const t = useT();
   const [skuConfirm, setSkuConfirm] = useState('');
   const hardDelete = useHardDeleteProduct();
   const { data: impact, isLoading, isError } = useProductDeleteImpact(product?.id, open && Boolean(product?.id));
@@ -92,11 +96,11 @@ export function ProductHardDeleteDialog({
     if (!product || !canDelete) return;
     hardDelete.mutate(product.id, {
       onSuccess: () => {
-        toast.success('Product permanently deleted');
+        toast.success(t('Product permanently deleted'));
         onOpenChange(false);
       },
       onError: (error) => {
-        toast.error(error instanceof Error ? error.message : 'Unable to permanently delete product');
+        toast.error(error instanceof Error ? error.message : t('Unable to permanently delete product'));
       },
     });
   };
@@ -105,40 +109,43 @@ export function ProductHardDeleteDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Permanently delete product?</AlertDialogTitle>
+          <AlertDialogTitle>{t('Permanently delete product?')}</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-3 text-sm text-muted-foreground">
               <p>
-                This will permanently wipe <strong className="text-foreground">{product?.title}</strong>{' '}
-                and related inventory records. This cannot be undone.
+                {t(
+                  'This will permanently wipe {title} and related inventory records. This cannot be undone.',
+                  { title: product?.title ?? '' },
+                )}
               </p>
-              {isLoading && <p>Loading impact…</p>}
-              {isError && <p className="text-destructive">Unable to load delete impact.</p>}
+              {isLoading && <p>{t('Loading impact…')}</p>}
+              {isError && <p className="text-destructive">{t('Unable to load delete impact.')}</p>}
               {impact && !impact.can_hard_delete ? (
                 <p className="text-destructive">
-                  This product still has stock, shipments, sales history, or stock movements. Keep it
-                  archived instead of permanently deleting it.
+                  {t(
+                    'This product still has stock, shipments, sales history, or stock movements. Keep it archived instead of permanently deleting it.',
+                  )}
                 </p>
               ) : null}
               {impact && (
                 <ul className="list-disc ps-5 space-y-1">
-                  <li>{impact.variants} variants</li>
-                  <li>{impact.options} option groups</li>
-                  <li>{impact.warehouse_stock} warehouse stock rows</li>
-                  <li>{impact.inbound_shipments} inbound shipments</li>
-                  <li>{impact.outbound_shipments} outbound shipments</li>
-                  <li>{impact.order_items} order line items</li>
-                  <li>{impact.pos_sale_items} POS line items</li>
-                  <li>{impact.stock_movements} stock movement ledger rows</li>
+                  <li>{t('{count} variants', { count: impact.variants })}</li>
+                  <li>{t('{count} option groups', { count: impact.options })}</li>
+                  <li>{t('{count} warehouse stock rows', { count: impact.warehouse_stock })}</li>
+                  <li>{t('{count} inbound shipments', { count: impact.inbound_shipments })}</li>
+                  <li>{t('{count} outbound shipments', { count: impact.outbound_shipments })}</li>
+                  <li>{t('{count} order line items', { count: impact.order_items })}</li>
+                  <li>{t('{count} POS line items', { count: impact.pos_sale_items })}</li>
+                  <li>{t('{count} stock movement ledger rows', { count: impact.stock_movements })}</li>
                 </ul>
               )}
               <div className="space-y-2 pt-1">
-                <Label htmlFor="hard-delete-sku">Type the SKU to confirm</Label>
+                <Label htmlFor="hard-delete-sku">{t('Type the SKU to confirm')}</Label>
                 <Input
                   id="hard-delete-sku"
                   value={skuConfirm}
                   onChange={(e) => setSkuConfirm(e.target.value)}
-                  placeholder={product?.sku ?? 'SKU'}
+                  placeholder={product?.sku ?? t('SKU')}
                   autoComplete="off"
                   disabled={!impact?.can_hard_delete}
                 />
@@ -147,13 +154,13 @@ export function ProductHardDeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={hardDelete.isPending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={hardDelete.isPending}>{t('Cancel')}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             disabled={!canDelete}
             onClick={handleConfirm}
           >
-            {hardDelete.isPending ? 'Deleting…' : 'Delete permanently'}
+            {hardDelete.isPending ? t('Deleting…') : t('Delete permanently')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -163,16 +170,17 @@ export function ProductHardDeleteDialog({
 
 export function useProductRestoreAction() {
   const restoreProduct = useRestoreProduct();
+  const t = useT();
   return {
     restoreProduct,
     restore: (id: string, onSuccess?: () => void) => {
       restoreProduct.mutate(id, {
         onSuccess: () => {
-          toast.success('Product restored as Draft');
+          toast.success(t('Product restored as Draft'));
           onSuccess?.();
         },
         onError: (error) => {
-          toast.error(error instanceof Error ? error.message : 'Unable to restore product');
+          toast.error(error instanceof Error ? error.message : t('Unable to restore product'));
         },
       });
     },

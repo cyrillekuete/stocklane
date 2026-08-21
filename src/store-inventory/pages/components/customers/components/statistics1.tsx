@@ -4,6 +4,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { TrendingDown, TrendingUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useT } from '@/i18n/use-t';
 import { formatMoney } from '@/store-inventory/lib/format';
 
 export type StatisticItem = {
@@ -25,6 +26,7 @@ const defaultItems: StatisticItem[] = [
 ];
 
 export function Statistics1({ items = defaultItems }: { items?: StatisticItem[] }) {
+  const t = useT();
   return (
     <Card className="rounded-md mb-5 bg-accent/70 p-1">
       <CardContent className="rounded-md p-0 bg-background border border-border">
@@ -36,13 +38,13 @@ export function Statistics1({ items = defaultItems }: { items?: StatisticItem[] 
                   {item.total}
                   <span className="text-xl lg:text-2xl font-semibold text-secondary-foreground/30">{item.number}</span>
                 </span>
-                <span className="text-xs font-normal text-secondary-foreground/70">{item.label}</span>
+                <span className="text-xs font-normal text-secondary-foreground/70">{t(item.label)}</span>
               </div>
               <div className="flex items-center flex-wrap gap-1.5">
                 <Badge variant={item.badgeColor as any} size="sm" appearance="light" className="w-fit">
                   {item.icon === 'down' ? <TrendingDown /> : <TrendingUp />} {item.badgeLabel}%
                 </Badge>
-                <span className="text-xs font-normal text-secondary-foreground">{item.text}</span>
+                <span className="text-xs font-normal text-secondary-foreground">{t(item.text)}</span>
               </div>
             </div>
           ))}

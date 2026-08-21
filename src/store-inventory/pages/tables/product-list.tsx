@@ -24,6 +24,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { resolveProductImageSrc } from '@/store-inventory/lib/format';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
@@ -93,6 +94,7 @@ export function ProductListTable({
   displaySheet,
   selectedProductId,
 }: ProductListProps) {
+  const t = useT();
   const activeData = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
   const { data: deletedProducts = [] } = useDeletedProducts();
   const data = useMemo(() => {
@@ -164,18 +166,18 @@ export function ProductListTable({
     if (!softDeleteTarget) return;
     deleteProduct.mutate(softDeleteTarget.id, {
       onSuccess: () => {
-        toast.custom((t) => (
-          <Alert variant="mono" icon="success" onClose={() => toast.dismiss(t)}>
+        toast.custom((toastId) => (
+          <Alert variant="mono" icon="success" onClose={() => toast.dismiss(toastId)}>
             <AlertIcon>
               <Info />
             </AlertIcon>
-            <AlertTitle>Product moved to trash</AlertTitle>
+            <AlertTitle>{t('Product moved to trash')}</AlertTitle>
           </Alert>
         ));
         setSoftDeleteTarget(null);
       },
       onError: (error) => {
-        toast.error(error instanceof Error ? error.message : 'Unable to delete product');
+        toast.error(error instanceof Error ? error.message : t('Unable to delete product'));
       },
     });
   };
@@ -183,7 +185,7 @@ export function ProductListTable({
   const ColumnInputFilter = <TData, TValue>({ column }: IColumnFilterProps<TData, TValue>) => {
     return (
       <Input
-        placeholder="Filter..."
+        placeholder={t('Filter...')}
         value={(column.getFilterValue() as string) ?? ''}
         onChange={(event) => column.setFilterValue(event.target.value)}
         variant="sm"
@@ -240,7 +242,7 @@ export function ProductListTable({
                   {productInfo.title}
                 </span>
                 <span className="text-xs text-muted-foreground uppercase">
-                  sku:{' '}
+                  {t('SKU')}:{' '}
                   <span className="text-xs font-medium text-secondary-foreground">{productInfo.label}</span>
                 </span>
               </div>
@@ -274,7 +276,7 @@ export function ProductListTable({
           const status = info.row.original.status;
           return (
             <Badge variant={status.variant as BadgeProps['variant']} appearance="light">
-              {info.row.original.deletedAt ? 'Trashed' : status.label}
+              {t(info.row.original.deletedAt ? 'Trashed' : status.label)}
             </Badge>
           );
         },
@@ -330,19 +332,19 @@ export function ProductListTable({
                     <>
                       <DropdownMenuItem onClick={() => handleEditProduct(product)}>
                         <Settings className="size-4" />
-                        Edit Product
+                        {t('Edit Product')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleManageVariants(product)}>
                         <Layers className="size-4" />
-                        Manage Variants
+                        {t('Manage Variants')}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleViewDetails(product)}>
                         <Info className="size-4" />
-                        View Details
+                        {t('View Details')}
                       </DropdownMenuItem>
                       <DropdownMenuItem variant="destructive" onClick={() => handleDeleteProduct(product)}>
                         <Trash className="size-4" />
-                        Move to trash
+                        {t('Move to trash')}
                       </DropdownMenuItem>
                     </>
                   )}
@@ -350,11 +352,11 @@ export function ProductListTable({
                     <>
                       <DropdownMenuItem onClick={() => restore(product.id)}>
                         <RotateCcw className="size-4" />
-                        Restore
+                        {t('Restore')}
                       </DropdownMenuItem>
                       <DropdownMenuItem variant="destructive" onClick={() => setHardDeleteTarget(product)}>
                         <Trash2 className="size-4" />
-                        Delete permanently
+                        {t('Delete permanently')}
                       </DropdownMenuItem>
                     </>
                   )}
@@ -366,7 +368,7 @@ export function ProductListTable({
         size: 80,
       },
     ],
-    [restore],
+    [restore, t],
   );
 
   const filteredData = useMemo(() => {
@@ -425,21 +427,21 @@ export function ProductListTable({
 
   const activeOnly = data.filter((item) => !item.deletedAt);
   const tabs = [
-    { id: 'all', label: 'All', badge: activeOnly.length },
+    { id: 'all', label: t('All'), badge: activeOnly.length },
     {
       id: 'live',
-      label: 'Live',
+      label: t('Live'),
       badge: activeOnly.filter((item) => item.status.label === 'Live' && !item.needsAction).length,
     },
-    { id: 'draft', label: 'Draft', badge: activeOnly.filter((item) => item.status.label === 'Draft').length },
+    { id: 'draft', label: t('Draft'), badge: activeOnly.filter((item) => item.status.label === 'Draft').length },
     {
       id: 'archived',
-      label: 'Archived',
+      label: t('Archived'),
       badge: data.filter((item) => item.deletedAt || item.status.label === 'Archived').length,
     },
     {
       id: 'actionNeeded',
-      label: 'Action Needed',
+      label: t('Action Needed'),
       badge: activeOnly.filter((item) => item.needsAction || item.status.label === 'Must Act').length,
     },
   ];
@@ -458,11 +460,11 @@ export function ProductListTable({
   return (
     <div className="space-y-3">
       {isError && (
-        <p className="text-sm text-destructive">Unable to load products. Check your connection and try again.</p>
+        <p className="text-sm text-destructive">{t('Unable to load products. Check your connection and try again.')}</p>
       )}
-      {isLoading && <p className="text-sm text-muted-foreground">Loading products...</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">{t('Loading products...')}</p>}
       {!isLoading && !isError && activeData.length === 0 && deletedProducts.length === 0 && (
-        <p className="text-sm text-muted-foreground">No products yet. Create your first product to get started.</p>
+        <p className="text-sm text-muted-foreground">{t('No products yet. Create your first product to get started.')}</p>
       )}
       <Card>
         <CardHeader className="py-3 flex-nowrap">
@@ -502,7 +504,7 @@ export function ProductListTable({
               <InputWrapper>
                 <Search />
                 <Input
-                  placeholder="Search..."
+                  placeholder={t('Search...')}
                   ref={inputRef}
                   value={inputValue}
                   onChange={(e) => {
@@ -522,7 +524,7 @@ export function ProductListTable({
               trigger={
                 <Button variant="outline">
                   <Filter className="size-3.5" />
-                  Filters
+                  {t('Filters')}
                 </Button>
               }
             />

@@ -52,6 +52,7 @@ async function main() {
     'prisma/migrations/order_edge_case_hardening.sql',
     'prisma/migrations/order_rpc_security_notes.sql',
     'prisma/migrations/auth_profiles_and_roles.sql',
+    'prisma/migrations/user_permissions.sql',
   ];
 
   const client = new Client({

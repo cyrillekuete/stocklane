@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { PlusIcon, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useT } from '@/i18n/use-t';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { productListMockData } from '@/store-inventory/data/products';
 import { useProducts } from '@/store-inventory/hooks/use-inventory';
@@ -8,6 +9,7 @@ import { ProductFormSheet } from '../components/product-form-sheet';
 import { ProductListTable } from '../tables/product-list';
 
 export function ProductList() {
+  const t = useT();
   const [isCreateProductOpen, setIsCreateProductOpen] = useState(false);
   const { data, isLoading, isError } = useProducts();
   const products = isSupabaseConfigured ? (data ?? []) : (data ?? productListMockData);
@@ -23,15 +25,18 @@ export function ProductList() {
     <div className="container-fluid space-y-5 lg:space-y-9">
       <div className="flex items-center flex-wrap gap-2.5 justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-bold text-foreground">Product List</h1>
+          <h1 className="text-xl font-bold text-foreground">{t('Product List')}</h1>
           <span className="text-sm text-muted-foreground">
-            {summary.total} products found. {summary.livePct}% are Live.
+            {t('{total} products found. {livePct}% are Live.', {
+              total: summary.total,
+              livePct: summary.livePct,
+            })}
           </span>
         </div>
         <div className="flex items-center gap-3">
           <Button variant="outline" className="gap-2">
             <Upload className="h-4 w-4" />
-            Import
+            {t('Import')}
           </Button>
           <Button
             variant="mono"
@@ -39,7 +44,7 @@ export function ProductList() {
             onClick={() => setIsCreateProductOpen(true)}
           >
             <PlusIcon className="h-4 w-4" />
-            Add Product
+            {t('Add Product')}
           </Button>
         </div>
       </div>

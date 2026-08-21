@@ -13,6 +13,7 @@ import {
 import { EllipsisVertical, Info, SquareMinus, SquarePlus, Trash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -187,6 +188,7 @@ const orderItemsMockData: OrderItemData[] = [
 const mockData: DetailsOrdersData[] = detailsOrdersMockData;
 // ---- MAIN TABLE COMPONENT ----
 export function DetailsOrdersTable({ mockData: propsMockData, displayProducts = false }: DetailsOrdersProps & { displayProducts?: boolean }) {
+  const t = useT();
   const rawData = propsMockData || mockData;
 
   const [pagination, setPagination] = useState<PaginationState>({
@@ -266,7 +268,7 @@ export function DetailsOrdersTable({ mockData: propsMockData, displayProducts = 
           const ps = info.row.original.paymentStatus;
           return (
             <Badge variant={ps.variant} appearance="light">
-              {ps.label}
+              {t(ps.label)}
             </Badge>
           );
         },
@@ -284,7 +286,7 @@ export function DetailsOrdersTable({ mockData: propsMockData, displayProducts = 
             className="cursor-pointer hover:text-primary transition-colors"
             onClick={() => info.row.getToggleExpandedHandler()()}
           >
-            {info.row.original.items} items
+            {t('{count} items', { count: info.row.original.items })}
           </div>
         ),
         enableSorting: true,
@@ -337,30 +339,30 @@ export function DetailsOrdersTable({ mockData: propsMockData, displayProducts = 
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="bottom">
-                <DropdownMenuLabel>Order Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('Order Actions')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setOrderDetailsSheetOpen(true)}>
                   <Info />
-                  View Details
+                  {t('View Details')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTrackShippingSheetOpen(true)}>
                   <Pencil />
-                  Track Shipping
+                  {t('Track Shipping')}
                 </DropdownMenuItem>
                 {displayProducts && (
                   <DropdownMenuItem onClick={() => setProductInfoSheetOpen(true)}>
                     <SquarePlus />
-                    View Products
+                    {t('View Products')}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Settings />
-                  Edit Order
+                  {t('Edit Order')}
                 </DropdownMenuItem>
                 <DropdownMenuItem variant="destructive">
                   <Trash />
-                  Cancel Order
+                  {t('Cancel Order')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -372,25 +374,25 @@ export function DetailsOrdersTable({ mockData: propsMockData, displayProducts = 
          },
       },
     ],
-    [displayProducts],
+    [displayProducts, t],
   );
 
   useEffect(() => {
     const selectedRowIds = Object.keys(rowSelection);
     if (selectedRowIds.length > 0) {
       toast.custom(
-        (t) => (
+        (toastId) => (
           <Alert
             variant="mono"
             icon="success"
             close={true}
-            onClose={() => toast.dismiss(t)}
+            onClose={() => toast.dismiss(toastId)}
           >
             <AlertIcon>
               <Info />
             </AlertIcon>
             <AlertTitle>
-              Selected row IDs: {selectedRowIds.join(', ')}
+              {t('Selected row IDs: {ids}', { ids: selectedRowIds.join(', ') })}
             </AlertTitle>
           </Alert>
         ),
@@ -399,7 +401,7 @@ export function DetailsOrdersTable({ mockData: propsMockData, displayProducts = 
         },
       );
     }
-  }, [rowSelection]);
+  }, [rowSelection, t]);
 
   const table = useReactTable({ 
     data: filteredData,
@@ -488,6 +490,7 @@ interface OrderListTableProps {
 }
 
 function OrderListTable({}: OrderListTableProps) {
+  const t = useT();
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns = useMemo<ColumnDef<OrderItemData>[]>(
@@ -541,7 +544,7 @@ function OrderListTable({}: OrderListTableProps) {
                   </span>
                 )}
                 <span className="text-xs text-muted-foreground uppercase">
-                  sku:{' '}
+                  {t('SKU')}:{' '}
                   <span className="text-xs font-medium text-secondary-foreground">
                     {productInfo.label}
                   </span>
@@ -583,7 +586,7 @@ function OrderListTable({}: OrderListTableProps) {
           const trends = info.row.original.trends;
           return (
             <Badge variant={trends.variant} appearance="light">
-              {trends.label}
+              {t(trends.label)}
             </Badge>
           );
         },
@@ -646,7 +649,7 @@ function OrderListTable({}: OrderListTableProps) {
         size: 160,
       },
     ],
-    [],
+    [t],
   );
 
   const table = useReactTable({

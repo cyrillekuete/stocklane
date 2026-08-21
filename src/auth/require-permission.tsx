@@ -1,6 +1,12 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from './context/auth-context';
-import { permissionForPath, type AppPermission } from './lib/roles';
+import {
+  firstAllowedPath,
+  permissionForPath,
+  resolveUserPermissions,
+  type AppPermission,
+} from './lib/roles';
+import { useT } from '@/i18n/use-t';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { ScreenLoader } from '@/components/screen-loader';
 
@@ -11,7 +17,8 @@ type RequirePermissionProps = {
 };
 
 export function RequirePermission({ permission }: RequirePermissionProps) {
-  const { hasPermission, loading, role } = useAuth();
+  const t = useT();
+  const { hasPermission, loading, role, user } = useAuth();
   const location = useLocation();
 
   if (!isSupabaseConfigured) {
@@ -31,13 +38,21 @@ export function RequirePermission({ permission }: RequirePermissionProps) {
     return <Navigate to="/auth/signin" replace />;
   }
 
-  // Send unauthorized users to the first area their role can open.
-  const fallback =
-    role === 'cashier'
-      ? '/store-inventory/pos'
-      : role === 'store_keeper'
-        ? '/store-inventory/all-stock'
-        : '/store-inventory/dashboard';
+  const fallback = firstAllowedPath(resolveUserPermissions(role, user?.permissions));
+  if (fallback && fallback !== location.pathname) {
+    const fallbackPermission = permissionForPath(fallback);
+    if (!fallbackPermission || hasPermission(fallbackPermission)) {
+      return <Navigate to={fallback} replace />;
+    }
+  }
 
-  return <Navigate to={fallback} replace />;
+  return (
+    <div className="container-fluid py-10">
+      <div className="mx-auto max-w-lg rounded-lg border bg-card p-6 text-sm text-muted-foreground">
+        {t(
+          'You do not have access to this area. Ask an Admin to update your permissions in User Management.',
+        )}
+      </div>
+    </div>
+  );
 }

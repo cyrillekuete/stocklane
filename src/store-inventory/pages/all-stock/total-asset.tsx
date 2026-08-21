@@ -1,6 +1,7 @@
 import { BadgeDot } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { useT } from '@/i18n/use-t';
 import { formatMoney } from '@/store-inventory/lib/format';
 import { useStockSummary } from '@/store-inventory/hooks/use-inventory';
 
@@ -14,6 +15,7 @@ type InventoryItems = Array<InventoryItem>;
 type InventoryProps = object;
 
 const Inventory = ({}: InventoryProps) => {
+  const t = useT();
   const { data: summary } = useStockSummary();
   const inStock = summary?.inStock ?? 0;
   const lowStock = summary?.lowStock ?? 0;
@@ -45,7 +47,7 @@ const Inventory = ({}: InventoryProps) => {
       <div key={index} className="flex items-center gap-1.5">
         <BadgeDot className={item.badgeColor} />
         <span className="text-sm font-normal text-secondary-foreground">
-          {item.label}:
+          {t(item.label)}:
           <span className="text-sm font-semibold text-foreground ms-1">
             {item.total}
           </span>
@@ -59,7 +61,7 @@ const Inventory = ({}: InventoryProps) => {
       <CardContent className="flex gap-2 lg:gap-6 p-5 lg:p-7.5">
         <div className="flex flex-col gap-2">
           <span className="text-sm font-normal text-muted-foreground">
-            Total Asset Value
+            {t('Total Asset Value')}
           </span>
           <span className="text-3xl font-semibold text-foreground">
             {formatMoney(totalValue)}
@@ -74,7 +76,7 @@ const Inventory = ({}: InventoryProps) => {
               {productCount}
             </span>
             <span className="text-sm font-medium text-muted-foreground">
-              products
+              {t('products')}
             </span>
           </div>
           <div className="flex items-center gap-1 mb-2.5">

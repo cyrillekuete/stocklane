@@ -4,6 +4,7 @@ import React from 'react';
 import { Circle, CircleCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { Badge, BadgeDot } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,6 +61,7 @@ export function OrderDetailsSheet({
   onTrackShipping,
   onViewShippingLabel,
 }: OrderDetailsSheetProps) {
+  const t = useT();
   const { data: remoteOrder } = useOrder(isSupabaseConfigured ? orderId : undefined);
   const { data: remoteItems } = useOrderItems(isSupabaseConfigured ? orderId : undefined);
   const cancelOrder = useCancelOrder();
@@ -84,11 +86,11 @@ export function OrderDetailsSheet({
       { id: detail.id, reason: 'Canceled from order details' },
       {
         onSuccess: () => {
-          toast.success('Order canceled');
+          toast.success(t('Order canceled'));
           onOpenChange(false);
         },
         onError: (error) => {
-          toast.error(error instanceof Error ? error.message : 'Unable to cancel order');
+          toast.error(error instanceof Error ? error.message : t('Unable to cancel order'));
         },
       },
     );
@@ -98,7 +100,7 @@ export function OrderDetailsSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="gap-0 lg:w-[1080px] sm:max-w-none inset-5 border start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b py-3.5 px-5 border-border">
-          <SheetTitle className="font-medium">Order Details</SheetTitle>
+          <SheetTitle className="font-medium">{t('Order Details')}</SheetTitle>
         </SheetHeader>
 
         <SheetBody className="p-0 grow">
@@ -106,24 +108,24 @@ export function OrderDetailsSheet({
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-2.5">
                 <span className="lg:text-[22px] font-semibold text-foreground leading-none">
-                  Order:  {detail.order}
+                  {t('Order')}:  {detail.order}
                 </span>
                 <Badge size="sm" variant={detail.deliveryStatus.variant as 'success'} appearance="light">
-                  {detail.deliveryStatus.label}
+                  {t(detail.deliveryStatus.label)}
                 </Badge>
               </div>
               <div className="flex items-center flex-wrap gap-1.5 text-2sm">
-                <span className="font-normal text-muted-foreground">Created</span>
+                <span className="font-normal text-muted-foreground">{t('Created')}</span>
                 <span className="font-medium text-foreground/80">{detail.date}</span>
                 <BadgeDot className="bg-muted-foreground/60 size-1 mx-1" />
-                <span className="font-normal text-muted-foreground">Customer:</span>
+                <span className="font-normal text-muted-foreground">{t('Customer')}:</span>
                 <span className="font-medium text-foreground/80">{detail.customer}</span>
               </div>
             </div>
             <div className="flex items-center gap-2.5">
-              <Button variant="ghost" onClick={handleDelete}>Cancel Order</Button>
-              <Button variant="outline" onClick={onTrackShipping}>Order Tracking</Button>
-              <Button variant="mono" onClick={onViewShippingLabel}>View Shipping Label</Button>
+              <Button variant="ghost" onClick={handleDelete}>{t('Cancel Order')}</Button>
+              <Button variant="outline" onClick={onTrackShipping}>{t('Order Tracking')}</Button>
+              <Button variant="mono" onClick={onViewShippingLabel}>{t('View Shipping Label')}</Button>
             </div>
           </div>
           <ScrollArea
@@ -134,15 +136,15 @@ export function OrderDetailsSheet({
               <div className="grow lg:border-e border-border lg:pe-5 space-y-5 pt-5">
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Order Data</CardTitle>
+                    <CardTitle className="text-2sm">{t('Order Data')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start flex-wrap lg:gap-10 gap-5">
                       {[
-                        { label: 'Items', value: `${items.length} Items` },
-                        { label: 'Total Price', value: detail.subtotal },
-                        { label: 'Shipping Priority', value: detail.shippingPriority },
-                        { label: 'Delivery Method', value: detail.deliveryMethod },
+                        { label: t('Items'), value: t('{count} Items', { count: items.length }) },
+                        { label: t('Total Price'), value: detail.subtotal },
+                        { label: t('Shipping Priority'), value: detail.shippingPriority },
+                        { label: t('Delivery Method'), value: detail.deliveryMethod },
                       ].map((item) => (
                         <div key={item.label} className="flex flex-col gap-1.5">
                           <span className="text-2sm font-normal text-secondary-foreground">{item.label}</span>
@@ -155,7 +157,7 @@ export function OrderDetailsSheet({
 
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Team</CardTitle>
+                    <CardTitle className="text-2sm">{t('Team')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {items.map((item, index) => (
@@ -176,12 +178,12 @@ export function OrderDetailsSheet({
                                 </Link>
                                 <div className="flex items-center gap-2.5">
                                   <span className="text-xs font-normal text-secondary-foreground">
-                                    SKU:{' '}
+                                    {t('SKU')}:{' '}
                                     <span className="text-xs font-medium text-foreground">{item.sku}</span>
                                   </span>
                                   <BadgeDot className="bg-muted-foreground size-1 shrink-0" />
                                   <span className="text-xs font-normal text-secondary-foreground">
-                                    Color
+                                    {t('Color')}
                                     <span className="text-xs font-medium text-secondary-foreground ms-1">
                                       {item.color}
                                     </span>
@@ -190,7 +192,7 @@ export function OrderDetailsSheet({
                               </div>
                             </div>
                             <div className="flex flex-col text-end gap-2.5">
-                              <span className="text-xs font-medium text-dark">Weight</span>
+                              <span className="text-xs font-medium text-dark">{t('Weight')}</span>
                               <InputWrapper className="w-[66px] h-[28px]">
                                 <Input type="text" defaultValue={item.weight} readOnly />
                                 <span className="text-2sm font-normal text-muted-foreground">kg</span>
@@ -262,7 +264,7 @@ export function OrderDetailsSheet({
                                       <Circle className="text-muted-foreground border-background border-2" size={18} />
                                     )}
                                   </div>
-                                  <span className="font-medium text-secondary-foreground/80 text-2sm">{step.title}</span>
+                                  <span className="font-medium text-secondary-foreground/80 text-2sm">{t(step.title)}</span>
                                 </div>
                               </StepperTrigger>
                             </StepperItem>
@@ -277,7 +279,7 @@ export function OrderDetailsSheet({
               <div className="w-full shrink-0 lg:w-[320px] py-5 lg:ps-5">
                 <Card className="rounded-md">
                   <CardHeader className="min-h-[34px] bg-accent/50">
-                    <CardTitle className="text-2sm">Summary</CardTitle>
+                    <CardTitle className="text-2sm">{t('Summary')}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-col gap-2">
@@ -287,12 +289,12 @@ export function OrderDetailsSheet({
                     </div>
                     <Separator className="mb-4 mt-4.5" />
                     <div className="flex flex-col gap-2">
-                      <span className="text-sm font-medium text-foreground">Price Details</span>
+                      <span className="text-sm font-medium text-foreground">{t('Price Details')}</span>
                       {[
-                        ['Subtotal', detail.subtotal],
-                        ['Shipping', detail.shippingCost],
-                        ['Tax', detail.tax],
-                        ['Total', detail.total],
+                        [t('Subtotal'), detail.subtotal],
+                        [t('Shipping'), detail.shippingCost],
+                        [t('Tax'), detail.tax],
+                        [t('Total'), detail.total],
                       ].map(([key, value]) => (
                         <div key={key} className="flex items-center justify-between">
                           <span className="text-2sm font-normal text-secondary-foreground">{key}</span>
@@ -302,7 +304,7 @@ export function OrderDetailsSheet({
                     </div>
                     <Separator className="my-4" />
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-normal text-secondary-foreground">Total</span>
+                      <span className="text-sm font-normal text-secondary-foreground">{t('Total')}</span>
                       <span className="text-sm font-semibold text-foreground">{detail.total}</span>
                     </div>
                   </CardContent>
@@ -314,15 +316,15 @@ export function OrderDetailsSheet({
 
         <SheetFooter className="flex items-center not-only-of-type:justify-between border-t py-5 px-5 border-border gap-2">
           <div className="text-xs font-medium text-secondary-foreground">
-            Read Shipping
+            {t('Read Shipping')}
             <Link to="#" className="hover:text-primary text-xs font-medium text-primary ms-1">
-              Terms & Conditions
+              {t('Terms & Conditions')}
             </Link>
           </div>
           <div className="flex items-center gap-2.5">
-            <Button variant="ghost" onClick={handleDelete}>Cancel Order</Button>
-            <Button variant="outline" onClick={onTrackShipping}>Order Tracking</Button>
-            <Button variant="mono" onClick={onViewShippingLabel}>View Shipping Label</Button>
+            <Button variant="ghost" onClick={handleDelete}>{t('Cancel Order')}</Button>
+            <Button variant="outline" onClick={onTrackShipping}>{t('Order Tracking')}</Button>
+            <Button variant="mono" onClick={onViewShippingLabel}>{t('View Shipping Label')}</Button>
           </div>
         </SheetFooter>
       </SheetContent>

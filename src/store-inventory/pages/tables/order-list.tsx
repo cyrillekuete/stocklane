@@ -13,6 +13,7 @@ import {
 import { EllipsisVertical, Info, SquareMinus, SquarePlus, Trash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -148,6 +149,7 @@ export function OrderListTable({
   displaySheet,
   selectedOrderId,
 }: OrderListProps) {
+  const t = useT();
   const rawData = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
   const cancelOrder = useCancelOrder();
 
@@ -182,9 +184,10 @@ export function OrderListTable({
     () =>
       tabDefs.map((tab) => ({
         ...tab,
+        label: t(tab.label),
         badge: rawData.filter((row) => matchesTab(row, tab.id)).length,
       })),
-    [rawData],
+    [rawData, t],
   );
 
   const filteredData = useMemo(
@@ -310,7 +313,7 @@ export function OrderListTable({
           const ps = info.row.original.paymentStatus;
           return (
             <Badge variant={ps.variant} appearance="light">
-              {ps.label}
+              {t(ps.label)}
             </Badge>
           );
         },
@@ -328,7 +331,7 @@ export function OrderListTable({
             className="cursor-pointer hover:text-primary transition-colors"
             onClick={() => info.row.getToggleExpandedHandler()()}
           >
-            {info.row.original.items} items
+            {t('{count} items', { count: info.row.original.items })}
           </div>
         ),
         enableSorting: true,
@@ -344,7 +347,7 @@ export function OrderListTable({
           const ds = info.row.original.deliveryStatus;
           return (
             <Badge variant={ds.variant} appearance="light">
-              {ds.label}
+              {t(ds.label)}
             </Badge>
           );
         },
@@ -398,26 +401,26 @@ export function OrderListTable({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="bottom">
-                <DropdownMenuLabel>Order Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('Order Actions')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => openDetails(row.original)}>
                   <Info />
-                  View Details
+                  {t('View Details')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => openTracking(row.original)}>
                   <Pencil />
-                  Track Shipping
+                  {t('Track Shipping')}
                 </DropdownMenuItem>
                 {displayProducts && (
                   <DropdownMenuItem onClick={() => setProductInfoSheetOpen(true)}>
                     <SquarePlus />
-                    View Products
+                    {t('View Products')}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => openEdit(row.original)}>
                   <Settings />
-                  Edit Order
+                  {t('Edit Order')}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   variant="destructive"
@@ -425,15 +428,15 @@ export function OrderListTable({
                     cancelOrder.mutate(
                       { id: row.original.id, reason: 'Canceled from order list' },
                       {
-                        onSuccess: () => toast.success('Order canceled'),
+                        onSuccess: () => toast.success(t('Order canceled')),
                         onError: (error) =>
-                          toast.error(error instanceof Error ? error.message : 'Unable to cancel order'),
+                          toast.error(error instanceof Error ? error.message : t('Unable to cancel order')),
                       },
                     )
                   }
                 >
                   <Trash />
-                  Cancel Order
+                  {t('Cancel Order')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -445,7 +448,7 @@ export function OrderListTable({
          },
       },
     ],
-    [displayProducts, openDetails, openTracking, openEdit, cancelOrder],
+    [displayProducts, openDetails, openTracking, openEdit, cancelOrder, t],
   );
 
   useEffect(() => {
@@ -551,13 +554,13 @@ export function OrderListTable({
       />
 
       {isError && (
-        <p className="text-sm text-destructive">Unable to load orders. Check your connection and try again.</p>
+        <p className="text-sm text-destructive">{t('Unable to load orders. Check your connection and try again.')}</p>
       )}
       {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading orders...</p>
+        <p className="text-sm text-muted-foreground">{t('Loading orders...')}</p>
       )}
       {!isLoading && !isError && rawData.length === 0 && (
-        <p className="text-sm text-muted-foreground">No orders yet. Create your first order to get started.</p>
+        <p className="text-sm text-muted-foreground">{t('No orders yet. Create your first order to get started.')}</p>
       )}
 
       <Card>
@@ -603,7 +606,7 @@ export function OrderListTable({
               asChild
             >
               <Link to="/store-inventory/order-details">
-                View Order Details
+                {t('View Order Details')}
               </Link>
             </Button>
             <Button
@@ -611,7 +614,7 @@ export function OrderListTable({
               asChild
             >
               <Link to="/store-inventory/stock-planner">
-                Stock Planner
+                {t('Stock Planner')}
               </Link>
             </Button>
           </CardToolbar>
@@ -637,6 +640,7 @@ interface OrderItemsSubTableProps {
 }
 
 function OrderItemsSubTable({ rowData }: OrderItemsSubTableProps) {
+  const t = useT();
   const [sorting, setSorting] = useState<SortingState>([]);
   const { data: remoteItems } = useOrderItems(rowData?.id);
   const items = isSupabaseConfigured ? (remoteItems ?? []) : (remoteItems ?? sharedOrderItemsMockData);
@@ -692,7 +696,7 @@ function OrderItemsSubTable({ rowData }: OrderItemsSubTableProps) {
                   </span>
                 )}
                 <span className="text-xs text-muted-foreground uppercase">
-                  sku:{' '}
+                  {t('SKU')}:{' '}
                   <span className="text-xs font-medium text-secondary-foreground">
                     {productInfo.label}
                   </span>
@@ -734,7 +738,7 @@ function OrderItemsSubTable({ rowData }: OrderItemsSubTableProps) {
           const trends = info.row.original.trends;
           return (
             <Badge variant={trends.variant} appearance="light">
-              {trends.label}
+              {t(trends.label)}
             </Badge>
           );
         },
@@ -797,7 +801,7 @@ function OrderItemsSubTable({ rowData }: OrderItemsSubTableProps) {
         size: 160,
       },
     ],
-    [],
+    [t],
   );
 
   const table = useReactTable({

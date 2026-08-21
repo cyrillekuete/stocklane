@@ -27,6 +27,7 @@ import {
 import { DateRange } from 'react-day-picker';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
@@ -129,6 +130,7 @@ const AllStockTable = ({
   isLoading = false,
   isError = false,
 }: AllStockProps) => {
+  const t = useT();
   const data = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
   const deleteProduct = useDeleteProduct();
   const [productToDelete, setProductToDelete] = useState<IData | null>(null);
@@ -350,7 +352,7 @@ const AllStockTable = ({
   }: IColumnFilterProps<TData, TValue>) => {
     return (
       <Input
-        placeholder="Filter..."
+        placeholder={t('Filter...')}
         value={(column.getFilterValue() as string) ?? ''}
         onChange={(event) => column.setFilterValue(event.target.value)}
         variant="sm"
@@ -399,7 +401,7 @@ const AllStockTable = ({
                     `/media/store/client/1200x1200/${productInfo.image}`,
                   )}
                   className="cursor-pointer h-[40px]"
-                  alt="image"
+                  alt={t('image')}
                 />
               </Card>
 
@@ -434,7 +436,7 @@ const AllStockTable = ({
 
                 <span className="inline-flex items-center gap-0.5">
                   <span className="text-xs text-muted-foreground uppercase">
-                    sku:
+                    {t('sku:')}
                   </span>{' '}
                   <span className="text-xs font-medium text-secondary-foreground">
                     {productInfo.label}
@@ -475,7 +477,7 @@ const AllStockTable = ({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Current Stock</p>
+                    <p>{t('Current Stock')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -492,7 +494,7 @@ const AllStockTable = ({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Inbound Stock</p>
+                    <p>{t('Inbound Stock')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -508,7 +510,7 @@ const AllStockTable = ({
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Outbound Stock</p>
+                    <p>{t('Outbound Stock')}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -586,7 +588,7 @@ const AllStockTable = ({
                   `/media/brand-logos/${info.row.original.supplier.logo}`,
                 )}
                 className="h-6 rounded-full"
-                alt="image"
+                alt={t('image')}
               />
               <span className="leading-none text-secondary-foreground">
                 {info.row.original.supplier.name}
@@ -627,20 +629,20 @@ const AllStockTable = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuLabel>{t('Actions')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <Settings />
-                Settings
+                {t('Settings')}
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <Pencil />
-                Edit
+                {t('Edit')}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={() => setProductToDelete(row.original)}>
                 <Trash />
-                Move to trash
+                {t('Move to trash')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -648,7 +650,7 @@ const AllStockTable = ({
         size: 60,
       },
     ],
-    [],
+    [t],
   );
 
   useEffect(() => {
@@ -656,18 +658,18 @@ const AllStockTable = ({
 
     if (selectedRowIds.length > 0) {
       toast.custom(
-        (t) => (
+        (toastId) => (
           <Alert
             variant="mono"
             icon="success"
             close={true}
-            onClose={() => toast.dismiss(t)}
+            onClose={() => toast.dismiss(toastId)}
           >
             <AlertIcon>
               <Info />
             </AlertIcon>
             <AlertTitle>
-              Selected row IDs: {selectedRowIds.join(', ')}
+              {t('Selected row IDs: {ids}', { ids: selectedRowIds.join(', ') })}
             </AlertTitle>
           </Alert>
         ),
@@ -676,7 +678,7 @@ const AllStockTable = ({
         },
       );
     }
-  }, [rowSelection]);
+  }, [rowSelection, t]);
 
   const table = useReactTable({
     data: filteredData,
@@ -698,10 +700,10 @@ const AllStockTable = ({
   return (
     <div className="space-y-3">
       {isError && (
-        <p className="text-sm text-destructive">Unable to load warehouse stock. Check your connection and try again.</p>
+        <p className="text-sm text-destructive">{t('Unable to load warehouse stock. Check your connection and try again.')}</p>
       )}
       {isLoading && (
-        <p className="text-sm text-muted-foreground">Loading stock...</p>
+        <p className="text-sm text-muted-foreground">{t('Loading stock...')}</p>
       )}
     <DataGrid
       table={table}
@@ -721,7 +723,7 @@ const AllStockTable = ({
               <InputWrapper>
                 <Search />
                 <Input
-                  placeholder="Search..."
+                  placeholder={t('Search...')}
                   ref={inputRef}
                   value={inputValue}
                   onChange={(e) => {
@@ -769,7 +771,7 @@ const AllStockTable = ({
                       format(dateRange.from, 'MMM dd, yyyy')
                     )
                   ) : (
-                    <span>Pick date range</span>
+                    <span>{t('Pick date range')}</span>
                   )}
                   <ChevronDown className="size-4 ml-1" />
                 </Button>
@@ -786,13 +788,13 @@ const AllStockTable = ({
                 />
                 <div className="flex items-center justify-between border-t border-border p-3">
                   <Button variant="outline" onClick={handleDateRangeReset}>
-                    Reset
+                    {t('Reset')}
                   </Button>
                   <div className="flex items-center gap-1.5">
                     <Button variant="outline" onClick={handleDateRangeCancel}>
-                      Cancel
+                      {t('Cancel')}
                     </Button>
-                    <Button onClick={handleDateRangeApply}>Apply</Button>
+                    <Button onClick={handleDateRangeApply}>{t('Apply')}</Button>
                   </div>
                 </div>
               </PopoverContent>
@@ -802,7 +804,7 @@ const AllStockTable = ({
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="relative">
-                  Category
+                  {t('Category')}
                   {selectedCategories.length > 0 && (
                     <Badge variant="outline" size="sm">
                       {selectedCategories.length}
@@ -813,9 +815,9 @@ const AllStockTable = ({
               </PopoverTrigger>
               <PopoverContent className="w-56 p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Search category..." />
+                  <CommandInput placeholder={t('Search category...')} />
                   <CommandList>
-                    <CommandEmpty>No category found.</CommandEmpty>
+                    <CommandEmpty>{t('No category found.')}</CommandEmpty>
                     <CommandGroup>
                       {uniqueCategories.map((category) => {
                         const count = categoryCounts[category.id] || 0;
@@ -860,7 +862,7 @@ const AllStockTable = ({
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="relative">
-                  Supplier
+                  {t('Supplier')}
                   {selectedSuppliers.length > 0 && (
                     <Badge variant="outline" size="sm">
                       {selectedSuppliers.length}
@@ -871,9 +873,9 @@ const AllStockTable = ({
               </PopoverTrigger>
               <PopoverContent className="w-56 p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Search supplier..." />
+                  <CommandInput placeholder={t('Search supplier...')} />
                   <CommandList>
-                    <CommandEmpty>No supplier found.</CommandEmpty>
+                    <CommandEmpty>{t('No supplier found.')}</CommandEmpty>
                     <CommandGroup>
                       {uniqueSuppliers.map((supplier) => {
                         const count = supplierCounts[supplier.id] || 0;
@@ -924,7 +926,7 @@ const AllStockTable = ({
           </CardHeading>
           <CardToolbar>
             <Link to="/store-inventory/stock-planner">
-              <Button variant="mono">Stock Planner</Button>
+              <Button variant="mono">{t('Stock Planner')}</Button>
             </Link>
           </CardToolbar>
         </CardHeader>
@@ -964,11 +966,11 @@ const AllStockTable = ({
           if (!productToDelete) return;
           deleteProduct.mutate(productToDelete.id, {
             onSuccess: () => {
-              toast.success('Product moved to trash');
+              toast.success(t('Product moved to trash'));
               setProductToDelete(null);
             },
             onError: (error) => {
-              toast.error(error instanceof Error ? error.message : 'Unable to delete product');
+              toast.error(error instanceof Error ? t(error.message) : t('Unable to delete product'));
             },
           });
         }}

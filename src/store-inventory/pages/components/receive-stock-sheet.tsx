@@ -21,6 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useT } from '@/i18n/use-t';
 import { useCreateInboundShipment, useProducts } from '@/store-inventory/hooks/use-inventory';
 import { useActiveWarehouses } from '@/store-inventory/hooks/use-warehouses';
 import { parseMoney } from '@/store-inventory/lib/format';
@@ -32,6 +33,7 @@ export function ReceiveStockSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useT();
   const { data: products } = useProducts();
   const { data: warehouses } = useActiveWarehouses();
   const createInbound = useCreateInboundShipment();
@@ -45,11 +47,11 @@ export function ReceiveStockSheet({
   const handleSave = async () => {
     const quantity = Number(qty);
     if (!(warehouses ?? []).length) {
-      toast.error('Activate a warehouse first');
+      toast.error(t('Activate a warehouse first'));
       return;
     }
     if (!productId || !selectedWarehouse || !Number.isFinite(quantity) || quantity < 1) {
-      toast.error('Product, warehouse, and quantity are required');
+      toast.error(t('Product, warehouse, and quantity are required'));
       return;
     }
     const product = products?.find((row) => row.id === productId);
@@ -61,12 +63,12 @@ export function ReceiveStockSheet({
         stockValue: parseMoney(product?.price) * quantity,
         orderDate: format(new Date(), 'd MMM, yyyy'),
       });
-      toast.success('Stock received into warehouse');
+      toast.success(t('Stock received into warehouse'));
       setProductId('');
       setQty('1');
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Unable to receive stock');
+      toast.error(error instanceof Error ? t(error.message) : t('Unable to receive stock'));
     }
   };
 
@@ -74,14 +76,14 @@ export function ReceiveStockSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="sm:w-[420px] inset-5 start-auto h-auto rounded-lg p-0 [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="border-b border-border p-5">
-          <SheetTitle>Receive Stock</SheetTitle>
+          <SheetTitle>{t('Receive Stock')}</SheetTitle>
         </SheetHeader>
         <SheetBody className="p-5 space-y-4">
           <div className="space-y-2">
-            <Label>Product</Label>
+            <Label>{t('Product')}</Label>
             <Select value={productId} onValueChange={setProductId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select product" />
+                <SelectValue placeholder={t('Select product')} />
               </SelectTrigger>
               <SelectContent>
                 {(products ?? []).map((product) => (
@@ -93,10 +95,10 @@ export function ReceiveStockSheet({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Warehouse</Label>
+            <Label>{t('Warehouse')}</Label>
             <Select value={selectedWarehouse} onValueChange={setWarehouseId} disabled={!(warehouses ?? []).length}>
               <SelectTrigger>
-                <SelectValue placeholder={(warehouses ?? []).length ? 'Select warehouse' : 'Activate a warehouse first'} />
+                <SelectValue placeholder={(warehouses ?? []).length ? t('Select warehouse') : t('Activate a warehouse first')} />
               </SelectTrigger>
               <SelectContent>
                 {(warehouses ?? []).map((warehouse) => (
@@ -108,16 +110,16 @@ export function ReceiveStockSheet({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Quantity</Label>
+            <Label>{t('Quantity')}</Label>
             <Input type="number" min={1} value={qty} onChange={(e) => setQty(e.target.value)} />
           </div>
         </SheetBody>
         <SheetFooter className="border-t border-border p-5">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button variant="mono" onClick={handleSave} disabled={createInbound.isPending || !(warehouses ?? []).length}>
-            Receive
+            {t('Receive')}
           </Button>
         </SheetFooter>
       </SheetContent>

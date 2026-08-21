@@ -3,6 +3,7 @@
 import { Card } from "@/components/ui/card";
 import { toAbsoluteUrl } from "@/lib/helpers";
 import { Circle, CircleCheck } from "lucide-react";
+import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "../../../settings-form-context";
 
 const paymentMethods = [
@@ -14,6 +15,7 @@ const paymentMethods = [
 ];
 
 export function CardPayment() {
+  const t = useT();
   const { draft, updateDraft } = useSettingsForm();
 
   const toggleMethod = (methodId: string) => {
@@ -53,7 +55,7 @@ export function CardPayment() {
           </div>
           <div>
             <h3 className="font-medium text-2sm text-foreground">{method.name}</h3>
-            <span className="text-xs text-muted-foreground font-normal">{method.description}</span>
+            <span className="text-xs text-muted-foreground font-normal">{t(method.description)}</span>
           </div>
         </Card>
       ))}

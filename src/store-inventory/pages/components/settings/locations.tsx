@@ -7,21 +7,23 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "./settings-form-context";
 import type { StoreLocation } from "@/store-inventory/types";
 
 export function Locations() {
+  const t = useT();
   const { draft, updateDraft } = useSettingsForm();
 
   const updateLocation = (id: string, patch: Partial<StoreLocation>) => {
     if (patch.isDefault === false) {
       const current = draft.locations.find((location) => location.id === id);
       if (current?.isDefault && draft.locations.length > 1) {
-        toast.error('Select another location as default first');
+        toast.error(t('Select another location as default first'));
         return;
       }
       if (current?.isDefault && draft.locations.length === 1) {
-        toast.error('At least one default location is required');
+        toast.error(t('At least one default location is required'));
         return;
       }
     }
@@ -66,15 +68,15 @@ export function Locations() {
       <Card className="bg-accent/70 rounded-md shadow-none flex flex-col">
         <CardContent className="p-0 flex flex-col">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">Store Locations</h3>
+            <h3 className="text-sm font-medium text-foreground py-2.5 ps-2">{t('Store Locations')}</h3>
             <Button variant="outline" size="sm" className="me-2" onClick={addLocation}>
               <Plus className="size-4" />
-              Add location
+              {t('Add location')}
             </Button>
           </div>
           <div className="bg-background rounded-md m-1 mt-0 border border-input p-5 space-y-4">
             {draft.locations.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No locations yet.</p>
+              <p className="text-sm text-muted-foreground">{t('No locations yet.')}</p>
             ) : (
               draft.locations.map((location) => (
                 <div key={location.id} className="space-y-3 rounded-md border border-border p-4">
@@ -82,7 +84,7 @@ export function Locations() {
                     <Input
                       value={location.name}
                       onChange={(e) => updateLocation(location.id, { name: e.target.value })}
-                      placeholder="Location name"
+                      placeholder={t('Location name')}
                     />
                     <div className="flex items-center gap-2 shrink-0">
                       <Switch
@@ -90,34 +92,34 @@ export function Locations() {
                         checked={location.isDefault}
                         onCheckedChange={(isDefault) => updateLocation(location.id, { isDefault })}
                       />
-                      <Label className="text-xs">Default</Label>
+                      <Label className="text-xs">{t('Default')}</Label>
                     </div>
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
                     <Input
                       value={location.address}
                       onChange={(e) => updateLocation(location.id, { address: e.target.value })}
-                      placeholder="Street address"
+                      placeholder={t('Street address')}
                     />
                     <Input
                       value={location.city}
                       onChange={(e) => updateLocation(location.id, { city: e.target.value })}
-                      placeholder="City"
+                      placeholder={t('City')}
                     />
                     <Input
                       value={location.country}
                       onChange={(e) => updateLocation(location.id, { country: e.target.value })}
-                      placeholder="Country"
+                      placeholder={t('Country')}
                     />
                     <Input
                       value={location.phone}
                       onChange={(e) => updateLocation(location.id, { phone: e.target.value })}
-                      placeholder="Phone"
+                      placeholder={t('Phone')}
                     />
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => removeLocation(location.id)}>
                     <Trash2 className="size-4" />
-                    Remove
+                    {t('Remove')}
                   </Button>
                 </div>
               ))

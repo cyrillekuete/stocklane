@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { mapCategoryError } from '@/store-inventory/lib/category-errors';
+import { useT } from '@/i18n/use-t';
 import {
   getCategoriesDeleteInfo,
   getCategoryDeleteInfo,
@@ -46,6 +47,7 @@ export function CategoryDeleteDialog({
   pending?: boolean;
   onConfirm: (reassignToCategoryId: string | null) => Promise<void> | void;
 }) {
+  const t = useT();
   const bulkIds = useMemo(
     () => [...new Set((categoryIds ?? []).filter(Boolean))],
     [categoryIds],
@@ -115,7 +117,7 @@ export function CategoryDeleteDialog({
     await onConfirm(reassignToCategoryId);
   };
 
-  const title = isBulk || bulkIds.length > 1 ? 'Delete categories' : 'Delete category';
+  const title = isBulk || bulkIds.length > 1 ? t('Delete categories') : t('Delete category');
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -125,19 +127,19 @@ export function CategoryDeleteDialog({
           <AlertDialogDescription asChild>
             <div className="space-y-3 text-sm text-muted-foreground">
               {loadingInfo ? (
-                <p>Checking linked products…</p>
+                <p>{t('Checking linked products…')}</p>
               ) : (
-                messages.map((message) => <p key={message}>{message}</p>)
+                messages.map((message) => <p key={message}>{t(message)}</p>)
               )}
               {productCount > 0 ? (
                 <div className="space-y-2 pt-1">
-                  <Label>Reassign products to</Label>
+                  <Label>{t('Reassign products to')}</Label>
                   <Select value={reassignValue} onValueChange={setReassignValue}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Leave Uncategorized" />
+                      <SelectValue placeholder={t('Leave Uncategorized')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={UNCATEGORIZE_VALUE}>Leave Uncategorized</SelectItem>
+                      <SelectItem value={UNCATEGORIZE_VALUE}>{t('Leave Uncategorized')}</SelectItem>
                       {reassignTargets.map((row) => (
                         <SelectItem key={row.id} value={row.id}>
                           {row.productInfo.title}
@@ -151,7 +153,7 @@ export function CategoryDeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending}>{t('Cancel')}</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             onClick={(event) => {
@@ -160,7 +162,7 @@ export function CategoryDeleteDialog({
             }}
             disabled={pending || loadingInfo || (!category?.id && !bulkIds.length)}
           >
-            Delete
+            {t('Delete')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

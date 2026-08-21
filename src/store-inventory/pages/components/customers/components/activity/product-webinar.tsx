@@ -8,16 +8,18 @@ import { Progress } from '@/components/ui/progress';
 import { AvatarGroup } from '@/components/ui/avatar-group';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { TimelineItem } from './timeline-item';
+import { useT } from '@/i18n/use-t';
 
 const ActivitiesProductWebinar = () => {
+  const t = useT();
   return (
     <TimelineItem icon={CalendarClock} className="text-yellow-500" line={true}>
       <div className="flex flex-col pb-2.5">
         <span className="text-sm text-foreground font-normal">
-          Jenny attended a webinar on new product features.
+          {t('Jenny attended a webinar on new product features.')}
         </span>
         <span className="text-xs text-muted-foreground/80 font-normal">
-          3 days ago, 11:45 AM
+          {t('3 days ago, 11:45 AM')}
         </span>
       </div>
       <Card className="shadow-none p-4">
@@ -30,26 +32,26 @@ const ActivitiesProductWebinar = () => {
             <div className="flex flex-wrap items-center justify-between">
               <div className="flex flex-col gap-0.5">
                 <span className="text-base font-medium text-foreground cursor-pointer hover:text-primary mb-1 leading-4">
-                  Leadership Development Series: Part 1
+                  {t('Leadership Development Series: Part 1')}
                 </span>
                 <span className="text-xs text-muted-foreground/80 font-normal">
-                  The first installment of a leadership development series.
+                  {t('The first installment of a leadership development series.')}
                 </span>
               </div>
               <Button mode="link" underlined="dashed">
-                <Link to="/account/members/teams">View</Link>
+                <Link to="/account/members/teams">{t('View')}</Link>
               </Button>
             </div>
             <div className="flex flex-wrap gap-7.5">
               <div className="flex items-center gap-1.5">
                 <span className="text-2sm font-normal text-muted-foreground/80">
-                  Code:
+                  {t('Code')}:
                 </span>
                 <span className="text-2sm text-primary medium">#leaderdev-1</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="text-2sm font-normal text-muted-foreground/80">
-                  Progress:
+                  {t('Progress')}:
                 </span>
                 <Progress
                   value={80}
@@ -59,7 +61,7 @@ const ActivitiesProductWebinar = () => {
               </div>
               <div className="flex items-center gap-1.5 lg:min-w-24 shrink-0 max-w-auto">
                 <span className="text-2sm font-normal text-muted-foreground/80">
-                  Guests:
+                  {t('Guests')}:
                 </span>
                 <AvatarGroup>
                   <Avatar className="size-7">

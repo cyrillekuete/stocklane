@@ -9,8 +9,10 @@ import { defaultCustomerReviews } from '@/store-inventory/data/customer-profile'
 import type { CustomerReviewGroup } from '@/store-inventory/types';
 import { Rating } from "@/components/ui/rating";
 import { Separator } from "@/components/ui/separator";
+import { useT } from '@/i18n/use-t';
 
 export function CardDate({ reviews }: { reviews?: CustomerReviewGroup[] }) {
+  const t = useT();
   const cardData = reviews?.length ? reviews : defaultCustomerReviews;  
   return (
     <div className="grid xl:grid-cols-2 gap-5">
@@ -58,7 +60,7 @@ export function CardDate({ reviews }: { reviews?: CustomerReviewGroup[] }) {
 
                           <span className="inline-flex items-center gap-0.5">
                             <span className="text-xs text-muted-foreground uppercase">
-                              SKU:
+                              {t('SKU')}:
                             </span>{' '}
                             <span className="text-xs font-medium text-secondary-foreground">
                               {order.sku}

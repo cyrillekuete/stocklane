@@ -1,6 +1,7 @@
 import { Fragment } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ChevronRight } from 'lucide-react';
+import { useT } from '@/i18n/use-t';
 import { MENU_SIDEBAR } from '@/store-inventory/config/app.config';
 import { MenuItem } from '@/store-inventory/config/types';
 import { cn } from '@/lib/utils';
@@ -9,6 +10,7 @@ import { useMenu } from '@/hooks/use-menu';
 export function Breadcrumb() {
   const { pathname } = useLocation();
   const { getBreadcrumb, isActive } = useMenu(pathname);
+  const t = useT();
   const items: MenuItem[] = getBreadcrumb(MENU_SIDEBAR);
 
   if (items.length === 0) {
@@ -27,7 +29,7 @@ export function Breadcrumb() {
               className={cn(active ? 'text-mono' : 'text-muted-foreground')}
               key={`item-${index}`}
             >
-              {item.title}
+              {item.title ? t(item.title) : ''}
             </span>
             {!last && (
               <ChevronRight

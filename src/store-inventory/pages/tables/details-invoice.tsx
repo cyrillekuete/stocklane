@@ -12,6 +12,7 @@ import {
 import { Download, EllipsisVertical, Info, Trash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -64,6 +65,7 @@ interface DetailsInvoiceProps {
 const mockData: DetailsInvoiceData[] = detailsInvoiceMockData;
 // ---- MAIN TABLE COMPONENT ----
 export function DetailsInvoiceTable({ mockData: propsMockData, displayProducts = false }: DetailsInvoiceProps & { displayProducts?: boolean }) {
+  const t = useT();
   const rawData = propsMockData || mockData;
 
   const [pagination, setPagination] = useState<PaginationState>({
@@ -142,7 +144,7 @@ export function DetailsInvoiceTable({ mockData: propsMockData, displayProducts =
           const ps = info.row.original.paymentStatus;
           return (
             <Badge variant={ps.variant} appearance="light">
-              {ps.label}
+              {t(ps.label)}
             </Badge>
           );
         },
@@ -161,7 +163,7 @@ export function DetailsInvoiceTable({ mockData: propsMockData, displayProducts =
                  variant="ghost"
                  size="sm"
                  onClick={handleView}
-                 title="View category"
+                 title={t('View category')}
                >
                  <Download />
                </Button>
@@ -172,24 +174,24 @@ export function DetailsInvoiceTable({ mockData: propsMockData, displayProducts =
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="bottom">
-                <DropdownMenuLabel>Order Actions</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('Order Actions')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setOrderDetailsSheetOpen(true)}>
                   <Info />
-                  View Details
+                  {t('View Details')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setTrackShippingSheetOpen(true)}>
                   <Pencil />
-                  Track Shipping
+                  {t('Track Shipping')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Settings />
-                  Edit Order
+                  {t('Edit Order')}
                 </DropdownMenuItem>
                 <DropdownMenuItem variant="destructive">
                   <Trash />
-                  Cancel Order
+                  {t('Cancel Order')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -198,25 +200,25 @@ export function DetailsInvoiceTable({ mockData: propsMockData, displayProducts =
         size: 60,
       },
     ],
-    [displayProducts],
+    [displayProducts, t],
   );
 
   useEffect(() => {
     const selectedRowIds = Object.keys(rowSelection);
     if (selectedRowIds.length > 0) {
       toast.custom(
-        (t) => (
+        (toastId) => (
           <Alert
             variant="mono"
             icon="success"
             close={true}
-            onClose={() => toast.dismiss(t)}
+            onClose={() => toast.dismiss(toastId)}
           >
             <AlertIcon>
               <Info />
             </AlertIcon>
             <AlertTitle>
-              Selected row IDs: {selectedRowIds.join(', ')}
+              {t('Selected row IDs: {ids}', { ids: selectedRowIds.join(', ') })}
             </AlertTitle>
           </Alert>
         ),
@@ -225,7 +227,7 @@ export function DetailsInvoiceTable({ mockData: propsMockData, displayProducts =
         },
       );
     }
-  }, [rowSelection]);
+  }, [rowSelection, t]);
 
   const table = useReactTable({ 
     data: filteredData,

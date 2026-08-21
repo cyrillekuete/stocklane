@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-table';
 import { Archive, Eye, Info, PlusIcon, Search, SquarePen, Trash, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useT } from '@/i18n/use-t';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
@@ -69,6 +70,7 @@ export function CategoryListTable({
   createOpen,
   onCreateOpenChange,
 }: CategoryListProps) {
+  const t = useT();
   const data = propsMockData ?? (isSupabaseConfigured ? [] : categoryListMockData);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -120,20 +122,20 @@ export function CategoryListTable({
       {
         onSuccess: () => {
           toast.custom(
-            (t) => (
+            (toastId) => (
               <Alert
                 variant="mono"
                 icon="success"
                 close={true}
-                onClose={() => toast.dismiss(t)}
+                onClose={() => toast.dismiss(toastId)}
               >
                 <AlertIcon>
                   <Info />
                 </AlertIcon>
                 <AlertTitle>
                   {checked
-                    ? 'Category marked as featured successfully.'
-                    : 'Category removed from featured status.'}
+                    ? t('Category marked as featured successfully.')
+                    : t('Category removed from featured status.')}
                 </AlertTitle>
               </Alert>
             ),
@@ -164,7 +166,11 @@ export function CategoryListTable({
     if (!selectedIds.length) return;
     try {
       const result = await archiveCategories.mutateAsync(selectedIds);
-      toast.success(`Archived ${result.count} ${result.count === 1 ? 'category' : 'categories'}`);
+      toast.success(
+        result.count === 1
+          ? t('Archived {count} category', { count: result.count })
+          : t('Archived {count} categories', { count: result.count }),
+      );
       setRowSelection({});
     } catch {
       // toasted by mutation hook
@@ -186,10 +192,13 @@ export function CategoryListTable({
           reassignToCategoryId,
         });
         const title = result.reassigned
-          ? `Deleted ${result.count} categories and reassigned products`
+          ? t('Deleted {count} categories and reassigned products', { count: result.count })
           : result.productCount > 0
-            ? `Deleted ${result.count} categories. ${result.productCount} product(s) Uncategorized.`
-            : `Deleted ${result.count} categories`;
+            ? t('Deleted {count} categories. {products} product(s) Uncategorized.', {
+                count: result.count,
+                products: result.productCount,
+              })
+            : t('Deleted {count} categories', { count: result.count });
         toast.success(title);
         setRowSelection({});
         setBulkDeleteIds([]);
@@ -199,10 +208,10 @@ export function CategoryListTable({
           reassignToCategoryId,
         });
         const title = result.reassigned
-          ? 'Category deleted and products reassigned'
+          ? t('Category deleted and products reassigned')
           : result.productCount > 0
-            ? `Category deleted. ${result.productCount} product(s) Uncategorized.`
-            : 'Category deleted';
+            ? t('Category deleted. {count} product(s) Uncategorized.', { count: result.productCount })
+            : t('Category deleted');
         toast.success(title);
         setCategoryPendingDelete(undefined);
       }
@@ -265,7 +274,7 @@ export function CategoryListTable({
                   {productInfo.title}
                 </button>
                 <span className="text-xs text-muted-foreground">
-                  Code:{' '}
+                  {t('Code')}:{' '}
                   <span className="text-xs font-medium text-foreground">{productInfo.label || '—'}</span>
                 </span>
               </div>
@@ -290,7 +299,7 @@ export function CategoryListTable({
           <DataGridColumnHeader title="Earnings" column={column} />
         ),
         cell: () => (
-          <span className="text-muted-foreground" title="Live sales earnings are not tracked yet">
+          <span className="text-muted-foreground" title={t('Live sales earnings are not tracked yet')}>
             —
           </span>
         ),
@@ -306,7 +315,7 @@ export function CategoryListTable({
           const variant = status.variant as BadgeProps['variant'];
           return (
             <Badge variant={variant} appearance="light">
-              {status.label}
+              {t(status.label)}
             </Badge>
           );
         },
@@ -348,7 +357,7 @@ export function CategoryListTable({
                   setSelectedCategory(category);
                   setIsCategoryDetailsEditOpen(true);
                 }}
-                title="View category"
+                title={t('View category')}
               >
                 <Eye />
               </Button>
@@ -360,7 +369,7 @@ export function CategoryListTable({
                   setSelectedCategory(category);
                   setIsEditCategoryOpen(true);
                 }}
-                title="Edit category"
+                title={t('Edit category')}
               >
                 <SquarePen />
               </Button>
@@ -369,7 +378,7 @@ export function CategoryListTable({
                 mode="icon"
                 size="sm"
                 onClick={() => openDeleteConfirm(category)}
-                title="Delete category"
+                title={t('Delete category')}
               >
                 <Trash />
               </Button>
@@ -379,7 +388,7 @@ export function CategoryListTable({
         size: 60,
       },
     ],
-    [deleteCategory, updateCategory],
+    [deleteCategory, updateCategory, t],
   );
 
   const filteredData = useMemo(() => {
@@ -430,7 +439,7 @@ export function CategoryListTable({
               <InputWrapper className="w-full lg:w-[200px]">
                 <Search />
                 <Input
-                  placeholder="Search..."
+                  placeholder={t('Search...')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -447,13 +456,13 @@ export function CategoryListTable({
               </InputWrapper>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="Status" />
+                  <SelectValue placeholder={t('Status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="all">{t('All statuses')}</SelectItem>
                   {CATEGORY_STATUSES.map((status) => (
                     <SelectItem key={status} value={status.toLowerCase()}>
-                      {status}
+                      {t(status)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -461,7 +470,7 @@ export function CategoryListTable({
               {selectedIds.length > 0 ? (
                 <div className="flex items-center gap-2 ms-auto">
                   <span className="text-sm text-muted-foreground">
-                    {selectedIds.length} selected
+                    {t('{count} selected', { count: selectedIds.length })}
                   </span>
                   <Button
                     variant="outline"
@@ -470,7 +479,7 @@ export function CategoryListTable({
                     disabled={bulkPending}
                   >
                     <Archive />
-                    Archive
+                    {t('Archive')}
                   </Button>
                   <Button
                     variant="destructive"
@@ -479,7 +488,7 @@ export function CategoryListTable({
                     disabled={bulkPending}
                   >
                     <Trash />
-                    Delete
+                    {t('Delete')}
                   </Button>
                 </div>
               ) : null}
@@ -490,17 +499,17 @@ export function CategoryListTable({
               {filteredData.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-3 py-16 px-6 text-center">
                   <p className="text-sm font-medium text-foreground">
-                    {data.length === 0 ? 'No categories yet' : 'No categories match your filters'}
+                    {data.length === 0 ? t('No categories yet') : t('No categories match your filters')}
                   </p>
                   <p className="text-sm text-muted-foreground max-w-sm">
                     {data.length === 0
-                      ? 'Create a category to organize products in inventory and POS.'
-                      : 'Try a different search or status filter.'}
+                      ? t('Create a category to organize products in inventory and POS.')
+                      : t('Try a different search or status filter.')}
                   </p>
                   {data.length === 0 ? (
                     <Button variant="mono" onClick={() => setIsCreateCategoryOpen(true)}>
                       <PlusIcon />
-                      Add Category
+                      {t('Add Category')}
                     </Button>
                   ) : null}
                 </div>

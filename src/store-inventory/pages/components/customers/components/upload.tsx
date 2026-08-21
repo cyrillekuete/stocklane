@@ -1,6 +1,7 @@
 'use client';
 
 import { toAbsoluteUrl } from '@/lib/helpers';
+import { useT } from '@/i18n/use-t';
 import { isRemoteAsset } from '@/store-inventory/lib/format';
 import { timezoneLabel } from '@/store-inventory/data/customer-profile';
 import { Separator } from '@/components/ui/separator';
@@ -15,13 +16,14 @@ function avatarSrc(image?: string) {
 }
 
 export function Upload({ customer }: { customer?: CustomerListRow }) {
+  const t = useT();
   const image = avatarSrc(customer?.customerInfo.image);
   const items = [
-    { label: 'Company', value: customer?.company || '—' },
-    { label: 'Email', value: customer?.customerInfo.label || '—' },
-    { label: 'Phone No.', value: customer?.phone || '—' },
+    { label: t('Company'), value: customer?.company || '—' },
+    { label: t('Email'), value: customer?.customerInfo.label || '—' },
+    { label: t('Phone No.'), value: customer?.phone || '—' },
     {
-      label: 'Country',
+      label: t('Country'),
       value: customer?.location.name ? (
         <div className="flex items-center gap-1.5">
           <img
@@ -29,13 +31,13 @@ export function Upload({ customer }: { customer?: CustomerListRow }) {
             alt={customer.location.name}
             className="w-4 h-4"
           />
-          <span>{customer.location.name}</span>
+          <span>{t(customer.location.name)}</span>
         </div>
       ) : (
         '—'
       ),
     },
-    { label: 'Time Zone', value: timezoneLabel(customer?.timezone, customer?.location.name) },
+    { label: t('Time Zone'), value: timezoneLabel(customer?.timezone, customer?.location.name) },
   ];
 
   return (
@@ -54,7 +56,7 @@ export function Upload({ customer }: { customer?: CustomerListRow }) {
           <div key={item.label}>
             <div className="flex justify-between items-center">
               <span className="text-xs font-normal text-secondary-foreground/80">{item.label}</span>
-              {item.label === 'Email' && customer?.customerInfo.label ? (
+              {item.label === t('Email') && customer?.customerInfo.label ? (
                 <Link to={`mailto:${customer.customerInfo.label}`} className="text-2sm font-normal text-foreground hover:text-primary">
                   {item.value}
                 </Link>
