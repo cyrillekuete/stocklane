@@ -102,7 +102,7 @@ AS $$
 DECLARE
   v TEXT := inventory_normalize_delivery_status(p_status);
 BEGIN
-  IF v IN ('Delivered', 'Returned') THEN RETURN 4; END IF;
+  IF v = 'Delivered' THEN RETURN 4; END IF;
   IF v = 'Shipped' THEN RETURN 3; END IF;
   IF v = 'Packed' THEN RETURN 2; END IF;
   RETURN 1;
@@ -315,7 +315,7 @@ BEGIN
     v_max_sort := v_max_sort + 1;
   END IF;
 
-  IF v_step >= 4 AND NOT EXISTS (
+  IF inventory_normalize_delivery_status(p_delivery_status) = 'Delivered' AND NOT EXISTS (
     SELECT 1 FROM inventory_order_tracking_events
     WHERE order_id = p_order_id AND title = 'Delivered'
   ) THEN
@@ -325,6 +325,7 @@ BEGIN
       COALESCE(v_date, to_char(now(), 'FMDD Mon, YYYY')) || ' 16:40',
       'Package delivered to recipient', NULL, v_max_sort + 1
     );
+    v_max_sort := v_max_sort + 1;
   END IF;
 
   IF inventory_normalize_delivery_status(p_delivery_status) = 'Returned' AND NOT EXISTS (
@@ -663,6 +664,9 @@ DECLARE
   v_warehouse_id TEXT := NULLIF(payload->>'warehouse_id', '');
   v_old_total NUMERIC(12, 2);
   v_new_total NUMERIC(12, 2);
+  v_old_delivery TEXT;
+  v_old_customer_id TEXT;
+  v_new_customer_id TEXT;
 BEGIN
   SELECT * INTO v_order FROM inventory_orders WHERE id = p_order_id FOR UPDATE;
   IF NOT FOUND THEN
@@ -691,6 +695,13 @@ BEGIN
   END IF;
 
   v_old_total := v_order.total;
+  v_old_delivery := inventory_normalize_delivery_status(v_order.delivery_status);
+  v_old_customer_id := v_order.customer_id;
+  IF payload ? 'customer_id' THEN
+    v_new_customer_id := NULLIF(payload->>'customer_id', '');
+  ELSE
+    v_new_customer_id := v_order.customer_id;
+  END IF;
 
   IF v_items IS NOT NULL THEN
     IF v_order.inventory_state = 'reserved' THEN
@@ -744,8 +755,22 @@ BEGIN
   PERFORM inventory_apply_order_inventory(p_order_id, v_delivery, v_warehouse_id);
 
   v_new_total := (v_pricing->>'total')::NUMERIC;
-  IF v_order.customer_id IS NOT NULL AND v_new_total <> v_old_total THEN
-    PERFORM inventory_apply_customer_spend(v_order.customer_id, v_new_total - v_old_total, 0);
+  IF v_old_delivery <> 'Canceled' AND v_delivery = 'Canceled' THEN
+    -- Match inventory_cancel_order: reverse spend for the customer who currently holds it.
+    IF v_old_customer_id IS NOT NULL THEN
+      PERFORM inventory_apply_customer_spend(v_old_customer_id, -v_old_total, -1);
+    END IF;
+  ELSIF v_old_delivery <> 'Canceled' AND v_delivery <> 'Canceled' THEN
+    IF v_old_customer_id IS DISTINCT FROM v_new_customer_id THEN
+      IF v_old_customer_id IS NOT NULL THEN
+        PERFORM inventory_apply_customer_spend(v_old_customer_id, -v_old_total, -1);
+      END IF;
+      IF v_new_customer_id IS NOT NULL THEN
+        PERFORM inventory_apply_customer_spend(v_new_customer_id, v_new_total, 1);
+      END IF;
+    ELSIF v_new_total <> v_old_total AND v_new_customer_id IS NOT NULL THEN
+      PERFORM inventory_apply_customer_spend(v_new_customer_id, v_new_total - v_old_total, 0);
+    END IF;
   END IF;
 
   RETURN jsonb_build_object('id', p_order_id, 'delivery_status', v_delivery, 'payment_status', v_payment);
@@ -842,7 +867,8 @@ BEGIN
     PERFORM inventory_release_order(p_order_id);
   END IF;
 
-  IF v_order.customer_id IS NOT NULL THEN
+  IF v_order.customer_id IS NOT NULL
+     AND inventory_normalize_delivery_status(v_order.delivery_status) <> 'Canceled' THEN
     PERFORM inventory_apply_customer_spend(v_order.customer_id, -v_order.total, -1);
   END IF;
 

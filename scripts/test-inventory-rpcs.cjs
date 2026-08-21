@@ -184,6 +184,43 @@ async function main() {
     assert(movements.rows[0].count > 0, 'movement ledger should have rows');
     passed += 1;
 
+    // Full-warehouse move must transfer available units even when some qty is reserved.
+    const productMove = `test_prod_move_${suffix}`;
+    await client.query(
+      `INSERT INTO inventory_products (id, sku, name, status)
+       VALUES ($1, $2, 'Move Reserved Product', 'Live')`,
+      [productMove, `SKU-MV-${suffix}`],
+    );
+    await client.query(`SELECT inventory_set_warehouse_qty($1, $2, 10, NULL, 'test')`, [
+      warehouseA,
+      productMove,
+    ]);
+    await client.query(`SELECT inventory_reserve_warehouse_qty($1, $2, 4, 'test', $3)`, [
+      warehouseA,
+      productMove,
+      productMove,
+    ]);
+    const moved = await client.query(
+      `SELECT inventory_move_warehouse_stock($1, $2) AS moved`,
+      [warehouseA, warehouseB],
+    );
+    assert(Number(moved.rows[0].moved) >= 6, 'move should transfer unreserved units');
+    const fromStock = (
+      await client.query(
+        `SELECT qty, reserved FROM inventory_warehouse_stock WHERE warehouse_id = $1 AND product_id = $2`,
+        [warehouseA, productMove],
+      )
+    ).rows[0];
+    const toStock = (
+      await client.query(
+        `SELECT qty, reserved FROM inventory_warehouse_stock WHERE warehouse_id = $1 AND product_id = $2`,
+        [warehouseB, productMove],
+      )
+    ).rows[0];
+    assert(Number(fromStock.qty) === 4 && Number(fromStock.reserved) === 4, 'reserved units stay at source');
+    assert(Number(toStock.qty) === 6 && Number(toStock.reserved) === 0, 'available units arrive at destination');
+    passed += 1;
+
     // --- Store settings upsert edge cases ---
     const settingsId = 'settings_default';
     const baseSettings = {

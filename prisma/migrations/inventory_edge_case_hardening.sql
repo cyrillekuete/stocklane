@@ -982,6 +982,81 @@ BEGIN
 END;
 $$;
 
+-- Move all unreserved stock between warehouses. Reserved units stay at the source
+-- so open order reservations are not aborted or transferred to the wrong location.
+CREATE OR REPLACE FUNCTION inventory_move_warehouse_stock(
+  p_from_warehouse_id TEXT,
+  p_to_warehouse_id TEXT
+)
+RETURNS INTEGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  v_from_status TEXT;
+  v_to_status TEXT;
+  v_row RECORD;
+  v_moved INTEGER := 0;
+BEGIN
+  IF p_from_warehouse_id IS NULL OR p_to_warehouse_id IS NULL THEN
+    RAISE EXCEPTION 'Source and destination warehouses are required'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF p_from_warehouse_id = p_to_warehouse_id THEN
+    RAISE EXCEPTION 'Source and destination warehouses must differ'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT status INTO v_from_status
+  FROM inventory_warehouses
+  WHERE id = p_from_warehouse_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Source warehouse not found'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT status INTO v_to_status
+  FROM inventory_warehouses
+  WHERE id = p_to_warehouse_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Destination warehouse not found'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  IF lower(v_to_status) <> 'active' THEN
+    RAISE EXCEPTION 'Destination warehouse must be Active'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  FOR v_row IN
+    SELECT
+      product_id,
+      qty,
+      GREATEST(qty - COALESCE(reserved, 0), 0) AS available
+    FROM inventory_warehouse_stock
+    WHERE warehouse_id = p_from_warehouse_id
+      AND qty > 0
+    FOR UPDATE
+  LOOP
+    IF v_row.available > 0 THEN
+      PERFORM inventory_adjust_warehouse_qty(
+        p_from_warehouse_id, v_row.product_id, -v_row.available,
+        'warehouse_move_out', 'warehouse', p_to_warehouse_id
+      );
+      PERFORM inventory_adjust_warehouse_qty(
+        p_to_warehouse_id, v_row.product_id, v_row.available,
+        'warehouse_move_in', 'warehouse', p_from_warehouse_id
+      );
+      v_moved := v_moved + v_row.available;
+    END IF;
+  END LOOP;
+
+  RETURN v_moved;
+END;
+$$;
+
 -- ---------------------------------------------------------------------------
 -- Grants (drop old 3-arg set if present already handled above)
 -- ---------------------------------------------------------------------------
@@ -1004,6 +1079,7 @@ GRANT EXECUTE ON FUNCTION inventory_delete_inbound_shipment(TEXT) TO anon, authe
 GRANT EXECUTE ON FUNCTION inventory_create_outbound_shipment(JSONB) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION inventory_delete_outbound_shipment(TEXT) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION inventory_transfer_warehouse_qty(TEXT, TEXT, TEXT, INTEGER) TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION inventory_move_warehouse_stock(TEXT, TEXT) TO anon, authenticated;
 
 -- Also grant 3-arg adjust overload used by older clients via DEFAULT args.
 -- Postgres resolves calls with fewer args when DEFAULTs exist on the same function.

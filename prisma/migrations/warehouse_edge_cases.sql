@@ -85,15 +85,21 @@ BEGIN
   END IF;
 
   FOR v_row IN
-    SELECT product_id, qty
+    SELECT
+      product_id,
+      qty,
+      GREATEST(qty - COALESCE(reserved, 0), 0) AS available
     FROM inventory_warehouse_stock
     WHERE warehouse_id = p_from_warehouse_id
       AND qty > 0
     FOR UPDATE
   LOOP
-    PERFORM inventory_adjust_warehouse_qty(p_from_warehouse_id, v_row.product_id, -v_row.qty);
-    PERFORM inventory_adjust_warehouse_qty(p_to_warehouse_id, v_row.product_id, v_row.qty);
-    v_moved := v_moved + v_row.qty;
+    -- Move unreserved units only; reserved stock stays with open orders at the source.
+    IF v_row.available > 0 THEN
+      PERFORM inventory_adjust_warehouse_qty(p_from_warehouse_id, v_row.product_id, -v_row.available);
+      PERFORM inventory_adjust_warehouse_qty(p_to_warehouse_id, v_row.product_id, v_row.available);
+      v_moved := v_moved + v_row.available;
+    END IF;
   END LOOP;
 
   RETURN v_moved;

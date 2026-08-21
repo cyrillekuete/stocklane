@@ -900,6 +900,7 @@ order_agg AS (
     MAX(created_at) AS last_at
   FROM inventory_orders
   WHERE customer_id IS NOT NULL
+    AND lower(btrim(COALESCE(delivery_status, ''))) NOT IN ('canceled', 'cancelled')
   GROUP BY customer_id
 ),
 combined AS (

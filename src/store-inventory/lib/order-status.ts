@@ -100,7 +100,7 @@ export function canTransitionDelivery(from: string, to: string) {
 
 export function deliveryStep(status?: string | null) {
   const normalized = normalizeDeliveryStatus(status);
-  if (normalized === 'Delivered' || normalized === 'Returned') return 4;
+  if (normalized === 'Delivered') return 4;
   if (normalized === 'Shipped') return 3;
   if (normalized === 'Packed') return 2;
   return 1;

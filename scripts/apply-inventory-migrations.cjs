@@ -42,6 +42,7 @@ async function main() {
     'prisma/migrations/pos_account_credit_payments.sql',
     'prisma/migrations/warehouse_edge_cases.sql',
     'prisma/migrations/inventory_edge_case_hardening.sql',
+    'prisma/migrations/products_edge_cases.sql',
     'prisma/migrations/pos_edge_case_hardening.sql',
     'prisma/migrations/pos_rpc_security_notes.sql',
     'prisma/migrations/category_edge_cases.sql',

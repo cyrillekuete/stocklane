@@ -134,10 +134,21 @@ async function main() {
       productId,
     ]);
 
+    const customerBId = `ord_cust_b_${suffix}`;
     await client.query(
       `INSERT INTO inventory_customers (id, code, name, email, status)
-       VALUES ($1, $2, $3, $4, 'Active')`,
-      [customerId, `C${suffix}`.slice(0, 10), `Order Cust ${suffix}`, `ord_${suffix}@example.com`],
+       VALUES ($1, $2, $3, $4, 'Active'),
+              ($5, $6, $7, $8, 'Active')`,
+      [
+        customerId,
+        `C${suffix}`.slice(0, 10),
+        `Order Cust ${suffix}`,
+        `ord_${suffix}@example.com`,
+        customerBId,
+        `CB${suffix}`.slice(0, 10),
+        `Order Cust B ${suffix}`,
+        `ord_b_${suffix}@example.com`,
+      ],
     );
 
     // Empty items rejected
@@ -290,6 +301,129 @@ async function main() {
       },
       'must be reserved',
     );
+    passed += 1;
+
+    const steps = await client.query(
+      `SELECT inventory_delivery_step('Returned') AS returned_step,
+              inventory_delivery_step('Delivered') AS delivered_step`,
+    );
+    assert(Number(steps.rows[0].returned_step) === 1, 'returned is not a delivered step');
+    assert(Number(steps.rows[0].delivered_step) === 4, 'delivered stays step 4');
+    passed += 1;
+
+    // Return from Shipped must not fabricate a Delivered tracking event.
+    const orderReturn = `${orderId}_ret`;
+    await client.query(`SELECT inventory_create_order($1::jsonb)`, [
+      JSON.stringify({
+        id: orderReturn,
+        order_number: `${orderNumber}-R`,
+        date: '20 Aug, 2026',
+        customer_id: customerId,
+        customer_name: 'Cust',
+        warehouse_id: warehouseId,
+        delivery_status: 'Pending',
+        payment_status: 'Unpaid',
+        items: [{ product_id: productId, price: 1000, quantity: 1 }],
+      }),
+    ]);
+    await client.query(`SELECT inventory_update_order($1, $2::jsonb)`, [
+      orderReturn,
+      JSON.stringify({ delivery_status: 'Shipped' }),
+    ]);
+    await client.query(`SELECT inventory_update_order($1, $2::jsonb)`, [
+      orderReturn,
+      JSON.stringify({ delivery_status: 'Returned' }),
+    ]);
+    const tracking = await client.query(
+      `SELECT title FROM inventory_order_tracking_events WHERE order_id = $1 ORDER BY sort_order, title`,
+      [orderReturn],
+    );
+    const titles = tracking.rows.map((row) => row.title);
+    assert(titles.includes('Shipped'), 'return from shipped keeps shipped event');
+    assert(titles.includes('Returned'), 'return inserts returned event');
+    assert(!titles.includes('Delivered'), 'return from shipped must not insert delivered');
+    passed += 1;
+
+    async function customerSpend(id) {
+      const row = (
+        await client.query(`SELECT order_count, total_spent FROM inventory_customers WHERE id = $1`, [id])
+      ).rows[0];
+      return { count: Number(row.order_count), spent: Number(row.total_spent) };
+    }
+
+    // Cancel via inventory_update_order_status must reverse spend like inventory_cancel_order.
+    const orderStatusCancel = `${orderId}_sc`;
+    const spendBeforeStatusCancel = await customerSpend(customerId);
+    await client.query(`SELECT inventory_create_order($1::jsonb)`, [
+      JSON.stringify({
+        id: orderStatusCancel,
+        order_number: `${orderNumber}-SC`,
+        date: '20 Aug, 2026',
+        customer_id: customerId,
+        customer_name: 'Cust',
+        warehouse_id: warehouseId,
+        delivery_status: 'Pending',
+        payment_status: 'Unpaid',
+        items: [{ product_id: productId, price: 1000, quantity: 1 }],
+      }),
+    ]);
+    const statusCancelTotal = Number(
+      (await client.query(`SELECT total FROM inventory_orders WHERE id = $1`, [orderStatusCancel])).rows[0].total,
+    );
+    const spendAfterCreate = await customerSpend(customerId);
+    assert(spendAfterCreate.count === spendBeforeStatusCancel.count + 1, 'create increments order count');
+    assert(
+      spendAfterCreate.spent === spendBeforeStatusCancel.spent + statusCancelTotal,
+      'create adds order total to spend',
+    );
+    await client.query(`SELECT inventory_update_order_status($1, $2, $3)`, [
+      orderStatusCancel,
+      'Cancelled',
+      'Canceled',
+    ]);
+    const spendAfterStatusCancel = await customerSpend(customerId);
+    assert(spendAfterStatusCancel.count === spendBeforeStatusCancel.count, 'status cancel reverses order count');
+    assert(spendAfterStatusCancel.spent === spendBeforeStatusCancel.spent, 'status cancel reverses spend');
+    passed += 1;
+
+    // Reassigning customer_id must move spend to the new customer.
+    const orderReassign = `${orderId}_re`;
+    await client.query(`SELECT inventory_create_order($1::jsonb)`, [
+      JSON.stringify({
+        id: orderReassign,
+        order_number: `${orderNumber}-RE`,
+        date: '20 Aug, 2026',
+        customer_id: customerId,
+        customer_name: 'Cust',
+        warehouse_id: warehouseId,
+        delivery_status: 'Pending',
+        payment_status: 'Unpaid',
+        items: [{ product_id: productId, price: 1000, quantity: 1 }],
+      }),
+    ]);
+    const reassignTotal = Number(
+      (await client.query(`SELECT total FROM inventory_orders WHERE id = $1`, [orderReassign])).rows[0].total,
+    );
+    const spendABefore = await customerSpend(customerId);
+    const spendBBefore = await customerSpend(customerBId);
+    await client.query(`SELECT inventory_update_order($1, $2::jsonb)`, [
+      orderReassign,
+      JSON.stringify({ customer_id: customerBId, customer_name: 'Cust B' }),
+    ]);
+    const spendAAfter = await customerSpend(customerId);
+    const spendBAfter = await customerSpend(customerBId);
+    assert(spendAAfter.count === spendABefore.count - 1, 'old customer loses order count');
+    assert(spendAAfter.spent === spendABefore.spent - reassignTotal, 'old customer loses spend');
+    assert(spendBAfter.count === spendBBefore.count + 1, 'new customer gains order count');
+    assert(spendBAfter.spent === spendBBefore.spent + reassignTotal, 'new customer gains spend');
+    passed += 1;
+
+    // Archive-then-delete must not subtract spend twice.
+    const spendBeforeDelete = await customerSpend(customerId);
+    await client.query(`SELECT inventory_delete_order($1)`, [orderId]);
+    const spendAfterDelete = await customerSpend(customerId);
+    assert(spendAfterDelete.count === spendBeforeDelete.count, 'delete after cancel keeps order count');
+    assert(spendAfterDelete.spent === spendBeforeDelete.spent, 'delete after cancel keeps spend');
     passed += 1;
 
     await client.query('ROLLBACK');
