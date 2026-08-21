@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { resolveProductImageSrc } from '@/store-inventory/lib/format';
+import { resolveProductWarehouseStock } from '@/store-inventory/lib/warehouse-stock-edit';
 import { Badge, BadgeDot } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,7 +30,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useT } from '@/i18n/use-t';
 import { useUpdateStockLevel } from '@/store-inventory/hooks/use-inventory';
-import { useActiveWarehouses } from '@/store-inventory/hooks/use-warehouses';
+import { useActiveWarehouses, useWarehouseStock } from '@/store-inventory/hooks/use-warehouses';
 
 interface CurrentStockData {
   id: string;
@@ -65,12 +66,15 @@ interface PerProductStockSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   data?: CurrentStockData;
+  /** Warehouse currently filtered in the parent table (preferred on open). */
+  initialWarehouseId?: string | null;
 }
 
 export function PerProductStockSheet({
   open,
   onOpenChange,
   data,
+  initialWarehouseId,
 }: PerProductStockSheetProps) {
   const t = useT();
   const { data: warehouses } = useActiveWarehouses();
@@ -79,21 +83,45 @@ export function PerProductStockSheet({
 
   const [warehouseId, setWarehouseId] = useState('');
   const [stockQty, setStockQty] = useState('0');
+  const [expectedQty, setExpectedQty] = useState(0);
+  const [reservedQty, setReservedQty] = useState(0);
   const [threshold, setThreshold] = useState('0');
   const [reorderQty, setReorderQty] = useState('0');
   const [leadTimeDays, setLeadTimeDays] = useState('0');
   const [autoReorder, setAutoReorder] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const warehouseStockQuery = useWarehouseStock(warehouseId || null);
+  const warehouseStockReady = Boolean(warehouseId) && warehouseStockQuery.isSuccess;
+
   useEffect(() => {
     if (!open) return;
-    setStockQty(String(data?.stock ?? 0));
+    const preferred =
+      (initialWarehouseId &&
+        warehouses?.some((row) => row.id === initialWarehouseId) &&
+        initialWarehouseId) ||
+      defaultWarehouse?.id ||
+      '';
+    setWarehouseId(preferred);
     setThreshold(String(data?.tlvl ?? 0));
     setReorderQty(String(data?.reorderQty ?? 0));
     setLeadTimeDays(String(data?.leadTimeDays ?? 0));
     setAutoReorder(Boolean(data?.autoReorder));
-    setWarehouseId(defaultWarehouse?.id ?? '');
-  }, [open, data, defaultWarehouse?.id]);
+  }, [open, data, defaultWarehouse?.id, initialWarehouseId, warehouses]);
+
+  useEffect(() => {
+    if (!open || !data?.id || !warehouseId || !warehouseStockReady) return;
+    const resolved = resolveProductWarehouseStock(warehouseStockQuery.data, data.id);
+    setStockQty(String(resolved.qty));
+    setExpectedQty(resolved.qty);
+    setReservedQty(resolved.reserved);
+  }, [
+    open,
+    data?.id,
+    warehouseId,
+    warehouseStockReady,
+    warehouseStockQuery.data,
+  ]);
 
   const imageSrc = resolveProductImageSrc(data?.productInfo?.image);
   const resolvedImage =
@@ -114,8 +142,8 @@ export function PerProductStockSheet({
       toast.error(t('Stock quantity cannot be negative'));
       return;
     }
-    if (data.rsvd > 0 && qty < data.rsvd) {
-      toast.error(t('Quantity cannot be below reserved amount ({rsvd})', { rsvd: data.rsvd }));
+    if (reservedQty > 0 && qty < reservedQty) {
+      toast.error(t('Quantity cannot be below reserved amount ({rsvd})', { rsvd: reservedQty }));
       return;
     }
     if (!Number.isFinite(thresholdQty) || thresholdQty < 0) {
@@ -126,13 +154,17 @@ export function PerProductStockSheet({
       toast.error(t('Select a warehouse before editing quantity'));
       return;
     }
+    if (!warehouseStockReady) {
+      toast.error(t('Warehouse stock is still loading. Try again.'));
+      return;
+    }
     setSaving(true);
     try {
       await updateStockLevel.mutateAsync({
         productId: data.id,
         input: {
           warehouseId,
-          expectedQty: data.stock,
+          expectedQty,
           qty,
           threshold: thresholdQty,
           reorder_qty: Number.isFinite(reorder) ? Math.max(0, Math.trunc(reorder)) : 0,
@@ -207,12 +239,13 @@ export function PerProductStockSheet({
                         value={stockQty}
                         onChange={(e) => setStockQty(e.target.value)}
                         className="w-full"
+                        disabled={!warehouseStockReady}
                       />
-                      {(data?.rsvd ?? 0) > 0 && (
+                      {reservedQty > 0 && (
                         <span className="text-xs text-muted-foreground">
                           {t('Reserved: {rsvd}. Available: {available}.', {
-                            rsvd: data?.rsvd ?? 0,
-                            available: Math.max((data?.stock ?? 0) - (data?.rsvd ?? 0), 0),
+                            rsvd: reservedQty,
+                            available: Math.max(expectedQty - reservedQty, 0),
                           })}
                         </span>
                       )}
@@ -249,7 +282,7 @@ export function PerProductStockSheet({
                       </div>
                       <div className="flex flex-col gap-2.5">
                         <Label className="text-xs">{t('Reserved')}</Label>
-                        <Input type="number" value={String(data?.rsvd ?? 0)} disabled />
+                        <Input type="number" value={String(reservedQty)} disabled />
                       </div>
                       <div className="flex flex-col gap-2.5">
                         <Label className="text-xs">{t('Reorder Qty')}</Label>
@@ -277,7 +310,7 @@ export function PerProductStockSheet({
 
                     <div className="flex items-center flex-wrap lg:gap-10 gap-5">
                       {[
-                        { label: t('Status'), value: (data?.stock ?? 0) > 0 ? t('In Stock') : t('Out of Stock'), isStatus: true },
+                        { label: t('Status'), value: expectedQty > 0 ? t('In Stock') : t('Out of Stock'), isStatus: true },
                         { label: t('Delta'), value: data?.delta?.label || '0' },
                         { label: t('Trend'), value: data?.trend?.label ? t(data.trend.label) : t('Steady') },
                         { label: t('Last Moved'), value: data?.lastMoved || '—' },
@@ -288,7 +321,7 @@ export function PerProductStockSheet({
                           <span className="text-2sm font-medium text-foreground shrink-0">
                             {item.isStatus ? (
                               <Badge
-                                variant={(data?.stock ?? 0) > 0 ? 'success' : 'destructive'}
+                                variant={expectedQty > 0 ? 'success' : 'destructive'}
                                 appearance="light"
                                 className="shrink-0"
                               >
@@ -344,7 +377,11 @@ export function PerProductStockSheet({
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
               {t('Cancel')}
             </Button>
-            <Button variant="mono" onClick={handleSave} disabled={saving || !data?.id}>
+            <Button
+              variant="mono"
+              onClick={handleSave}
+              disabled={saving || !data?.id || !warehouseStockReady}
+            >
               {saving ? t('Saving…') : t('Save')}
             </Button>
           </div>

@@ -10,7 +10,12 @@ export function CurrentStock() {
     <>
       <StockNavbar />
       <div className="container-fluid">
-        <CurrentStockTable mockData={data} isLoading={isLoading} isError={isError} />
+        <CurrentStockTable
+          mockData={data}
+          isLoading={isLoading}
+          isError={isError}
+          warehouseId={warehouseId}
+        />
       </div>
     </>
   );

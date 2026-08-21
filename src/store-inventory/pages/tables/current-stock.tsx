@@ -115,6 +115,7 @@ interface CurrentStockProps {
   mockData?: IData[];
   isLoading?: boolean;
   isError?: boolean;
+  warehouseId?: string | null;
 }
 
 const mockData: IData[] = currentStockMockData;
@@ -123,6 +124,7 @@ const CurrentStockTable = ({
   mockData: propsMockData,
   isLoading = false,
   isError = false,
+  warehouseId = null,
 }: CurrentStockProps) => {
   const t = useT();
   const data = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
@@ -917,6 +919,7 @@ const CurrentStockTable = ({
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         data={selectedProduct}
+        initialWarehouseId={warehouseId}
       />
 
       <ProductSoftDeleteDialog

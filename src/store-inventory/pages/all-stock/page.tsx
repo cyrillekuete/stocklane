@@ -13,7 +13,12 @@ export function AllStock() {
       <div className="container-fluid">
         <div className="grid gap-5 lg:gap-7.5">
           <Inventory />
-          <AllStockTable mockData={data} isLoading={isLoading} isError={isError} />
+          <AllStockTable
+            mockData={data}
+            isLoading={isLoading}
+            isError={isError}
+            warehouseId={warehouseId}
+          />
         </div>
       </div>
     </>
