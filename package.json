@@ -25,7 +25,8 @@
     "test:user-permissions": "node scripts/test-user-permissions.cjs",
     "test:category-validation": "tsx scripts/test-category-validation.ts",
     "test:category-edge-cases": "node scripts/test-category-edge-cases.cjs",
-    "test:warehouse-stock-edit": "tsx scripts/test-warehouse-stock-edit.ts"
+    "test:warehouse-stock-edit": "tsx scripts/test-warehouse-stock-edit.ts",
+    "test:warehouse-fetch-split": "tsx scripts/test-warehouse-fetch-split.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

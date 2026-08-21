@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { mapWarehouseError } from '../lib/warehouse-errors';
+import { aggregateWarehouseStockStats } from '../lib/warehouse-stock-stats';
 import type { WarehouseListRow, WarehouseStockRow } from '../types';
 
 export type InventoryWarehouseRow = {
@@ -129,7 +130,7 @@ async function countActiveWarehouses(exceptId?: string) {
   return count ?? 0;
 }
 
-export async function fetchWarehouses() {
+async function fetchWarehouseRows() {
   const client = requireClient();
   const { data, error } = await client
     .from('inventory_warehouses')
@@ -137,8 +138,25 @@ export async function fetchWarehouses() {
     .order('is_default', { ascending: false })
     .order('name');
   if (error) throw mapWarehouseError(error, 'Unable to load warehouses');
+  return (data ?? []) as InventoryWarehouseRow[];
+}
 
-  const warehouses = (data ?? []) as InventoryWarehouseRow[];
+/**
+ * Lightweight warehouse list for filters/selects/layout hygiene.
+ * Does not scan inventory_warehouse_stock — skuCount/onHand are 0.
+ */
+export async function fetchWarehouses() {
+  const warehouses = await fetchWarehouseRows();
+  return warehouses.map((row) => mapWarehouse(row));
+}
+
+/**
+ * Full warehouse list including skuCount/onHand for the warehouses admin page.
+ * Scans inventory_warehouse_stock once; avoid on hot layout paths.
+ */
+export async function fetchWarehousesWithStats() {
+  const client = requireClient();
+  const warehouses = await fetchWarehouseRows();
   if (!warehouses.length) return [];
 
   const { data: stockRows, error: stockError } = await client
@@ -146,14 +164,7 @@ export async function fetchWarehouses() {
     .select('warehouse_id, qty');
   if (stockError) throw mapWarehouseError(stockError, 'Unable to load warehouse stock');
 
-  const counts = new Map<string, { skuCount: number; onHand: number }>();
-  for (const row of stockRows ?? []) {
-    const current = counts.get(row.warehouse_id) ?? { skuCount: 0, onHand: 0 };
-    if (row.qty > 0) current.skuCount += 1;
-    current.onHand += row.qty ?? 0;
-    counts.set(row.warehouse_id, current);
-  }
-
+  const counts = aggregateWarehouseStockStats(stockRows ?? []);
   return warehouses.map((row) => mapWarehouse(row, counts.get(row.id)));
 }
 

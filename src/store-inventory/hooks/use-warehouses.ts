@@ -18,6 +18,7 @@ import {
   deleteWarehouse,
   fetchWarehouseStock,
   fetchWarehouses,
+  fetchWarehousesWithStats,
   moveWarehouseStock,
   updateWarehouse,
   type WarehouseInput,
@@ -25,6 +26,19 @@ import {
 import type { WarehouseListRow } from '../types';
 import { useMutation } from '@tanstack/react-query';
 
+const warehouseCacheKeys = [
+  inventoryKeys.warehouses(),
+  inventoryKeys.warehousesWithStats(),
+] as const;
+
+function patchWarehouseCaches(
+  queryClient: ReturnType<typeof useQueryClient>,
+  apply: (key: (typeof warehouseCacheKeys)[number]) => void,
+) {
+  for (const key of warehouseCacheKeys) apply(key);
+}
+
+/** Metadata-only warehouses (no stock table scan). Prefer for filters/selects/layout. */
 export function useWarehouses() {
   return useQuery({
     queryKey: inventoryKeys.warehouses(),
@@ -34,8 +48,14 @@ export function useWarehouses() {
   });
 }
 
+/** Warehouses with skuCount/onHand — warehouse admin list only. */
 export function useWarehouseList() {
-  const query = useWarehouses();
+  const query = useQuery({
+    queryKey: inventoryKeys.warehousesWithStats(),
+    queryFn: fetchWarehousesWithStats,
+    enabled: isSupabaseConfigured,
+    staleTime: REFERENCE_STALE_TIME,
+  });
   return {
     ...query,
     data: isSupabaseConfigured ? query.data : (query.data ?? warehouseListMockData),
@@ -43,10 +63,13 @@ export function useWarehouseList() {
 }
 
 export function useActiveWarehouses() {
-  const query = useWarehouseList();
+  const query = useWarehouses();
+  const data = isSupabaseConfigured
+    ? query.data
+    : (query.data ?? warehouseListMockData);
   return {
     ...query,
-    data: (query.data ?? []).filter((row) => row.status.label.toLowerCase() === 'active'),
+    data: (data ?? []).filter((row) => row.status.label.toLowerCase() === 'active'),
   };
 }
 
@@ -64,6 +87,7 @@ function useWarehouseMutation<TData, TVariables>(options: {
   onSuccess?: (data: TData, variables: TVariables, extras: unknown) => void;
 }) {
   const queryClient = useQueryClient();
+  // Prefix `warehouses()` also covers `warehousesWithStats` via React Query partial matching.
   const keys = [inventoryKeys.warehouses(), inventoryKeys.stock(), inventoryKeys.warehouseStock()];
   return useMutation({
     mutationFn: options.mutationFn,
@@ -92,11 +116,13 @@ export function useCreateWarehouse() {
     apply: (input: WarehouseInput) => {
       const tempId = crypto.randomUUID();
       if (input.isDefault) {
-        queryClient.setQueryData<WarehouseListRow[]>(inventoryKeys.warehouses(), (current) =>
-          (current ?? []).map((item) => ({ ...item, isDefault: false })),
-        );
+        patchWarehouseCaches(queryClient, (key) => {
+          queryClient.setQueryData<WarehouseListRow[]>(key, (current) =>
+            (current ?? []).map((item) => ({ ...item, isDefault: false })),
+          );
+        });
       }
-      prependToList<WarehouseListRow>(queryClient, inventoryKeys.warehouses(), {
+      const row: WarehouseListRow = {
         id: tempId,
         code: input.code.toUpperCase(),
         name: input.name,
@@ -110,12 +136,19 @@ export function useCreateWarehouse() {
         onHand: 0,
         created: 'Just now',
         updated: 'Just now',
+      };
+      patchWarehouseCaches(queryClient, (key) => {
+        prependToList<WarehouseListRow>(queryClient, key, row);
       });
       return { tempId };
     },
     onSuccess: (id, _input, extras) => {
       const tempId = (extras as { tempId?: string } | null)?.tempId;
-      if (tempId) replaceListItemId(queryClient, inventoryKeys.warehouses(), tempId, id);
+      if (tempId) {
+        patchWarehouseCaches(queryClient, (key) => {
+          replaceListItemId(queryClient, key, tempId, id);
+        });
+      }
     },
   });
 }
@@ -127,27 +160,31 @@ export function useUpdateWarehouse() {
       updateWarehouse(id, input),
     apply: ({ id, input }) => {
       if (input.isDefault) {
-        queryClient.setQueryData<WarehouseListRow[]>(inventoryKeys.warehouses(), (current) =>
-          (current ?? []).map((item) => ({
-            ...item,
-            isDefault: item.id === id,
-          })),
-        );
+        patchWarehouseCaches(queryClient, (key) => {
+          queryClient.setQueryData<WarehouseListRow[]>(key, (current) =>
+            (current ?? []).map((item) => ({
+              ...item,
+              isDefault: item.id === id,
+            })),
+          );
+        });
       }
-      patchListById<WarehouseListRow>(queryClient, inventoryKeys.warehouses(), id, (item) => ({
-        ...item,
-        code: input.code ? input.code.toUpperCase() : item.code,
-        name: input.name ?? item.name,
-        address: input.address !== undefined ? input.address : item.address,
-        city: input.city !== undefined ? input.city : item.city,
-        country: input.country !== undefined ? input.country : item.country,
-        phone: input.phone !== undefined ? input.phone : item.phone,
-        status: input.status
-          ? { label: input.status, variant: input.status === 'Active' ? 'success' : 'destructive' }
-          : item.status,
-        isDefault: input.isDefault ?? item.isDefault,
-        updated: 'Just now',
-      }));
+      patchWarehouseCaches(queryClient, (key) => {
+        patchListById<WarehouseListRow>(queryClient, key, id, (item) => ({
+          ...item,
+          code: input.code ? input.code.toUpperCase() : item.code,
+          name: input.name ?? item.name,
+          address: input.address !== undefined ? input.address : item.address,
+          city: input.city !== undefined ? input.city : item.city,
+          country: input.country !== undefined ? input.country : item.country,
+          phone: input.phone !== undefined ? input.phone : item.phone,
+          status: input.status
+            ? { label: input.status, variant: input.status === 'Active' ? 'success' : 'destructive' }
+            : item.status,
+          isDefault: input.isDefault ?? item.isDefault,
+          updated: 'Just now',
+        }));
+      });
     },
   });
 }

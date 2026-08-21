@@ -46,6 +46,8 @@ export const inventoryKeys = {
       : ([...inventoryKeys.all, 'options'] as const),
   settings: () => [...inventoryKeys.all, 'settings'] as const,
   warehouses: () => [...inventoryKeys.all, 'warehouses'] as const,
+  /** Includes skuCount/onHand; nested under warehouses so prefix invalidation still hits both. */
+  warehousesWithStats: () => [...inventoryKeys.all, 'warehouses', 'with-stats'] as const,
   warehouseStock: (warehouseId?: string) =>
     warehouseId
       ? ([...inventoryKeys.all, 'warehouse-stock', warehouseId] as const)
