@@ -577,6 +577,10 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
+  IF v_customer_id IS NOT NULL THEN
+    PERFORM inventory_assert_customer_active(v_customer_id);
+  END IF;
+
   v_pricing := inventory_compute_order_pricing(v_items);
 
   INSERT INTO inventory_orders (
@@ -701,6 +705,11 @@ BEGIN
     v_new_customer_id := NULLIF(payload->>'customer_id', '');
   ELSE
     v_new_customer_id := v_order.customer_id;
+  END IF;
+
+  -- Match POS/deposit gates when assigning or reassigning a customer.
+  IF v_new_customer_id IS NOT NULL AND v_new_customer_id IS DISTINCT FROM v_old_customer_id THEN
+    PERFORM inventory_assert_customer_active(v_new_customer_id);
   END IF;
 
   IF v_items IS NOT NULL THEN

@@ -157,6 +157,7 @@ export type ProductDeleteImpact = {
   order_items: number;
   pos_sale_items: number;
   stock_movements: number;
+  can_hard_delete: boolean;
 };
 
 export type CustomerDeleteImpact = {

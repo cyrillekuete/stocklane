@@ -94,6 +94,19 @@ async function main() {
 
     await expectError(
       client,
+      'dup_code',
+      () =>
+        client.query(
+          `INSERT INTO inventory_categories (id, name, code, status)
+           VALUES ($1, $2, $3, 'Active')`,
+          [`test_cat_c_${suffix}`, `Edge Cat C ${suffix}`, `EC-${suffix}`.slice(0, 16)],
+        ),
+      'unique',
+    );
+    passed += 1;
+
+    await expectError(
+      client,
       'bad_status',
       () =>
         client.query(`UPDATE inventory_categories SET status = 'Nope' WHERE id = $1`, [catA]),

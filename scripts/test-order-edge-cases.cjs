@@ -267,6 +267,33 @@ async function main() {
     assert(Number(stock.rows[0].reserved) === 1, 'only sibling reservation remains');
     passed += 1;
 
+    // Inactive customers cannot receive new orders.
+    const inactiveCust = `ord_cust_in_${suffix}`;
+    await client.query(
+      `INSERT INTO inventory_customers (id, code, name, email, status)
+       VALUES ($1, $2, $3, $4, 'Inactive')`,
+      [inactiveCust, `CI${suffix}`.slice(0, 10), `Inactive ${suffix}`, `in_${suffix}@example.com`],
+    );
+    await expectError(
+      client,
+      'sp_inactive_cust',
+      async () => {
+        await client.query(`SELECT inventory_create_order($1::jsonb)`, [
+          JSON.stringify({
+            id: `${orderId}_inact`,
+            order_number: `${orderNumber}-IN`,
+            date: '20 Aug, 2026',
+            customer_id: inactiveCust,
+            customer_name: 'Inactive',
+            warehouse_id: warehouseId,
+            items: [{ product_id: productId, price: 1000, quantity: 1 }],
+          }),
+        ]);
+      },
+      'must be active',
+    );
+    passed += 1;
+
     // Double reserve is idempotent on already-reserved order — create fresh
     const orderB = `${orderId}_b`;
     await client.query(`SELECT inventory_create_order($1::jsonb)`, [
@@ -283,6 +310,23 @@ async function main() {
     const r2 = await client.query(`SELECT inventory_reserve_order($1, $2) AS result`, [orderB, warehouseId]);
     assert(r1.rows[0].result.state === 'reserved', 'first reserve');
     assert(r2.rows[0].result.state === 'reserved', 'second reserve idempotent');
+    passed += 1;
+
+    await client.query(
+      `UPDATE inventory_customers SET status = 'Archived', deleted_at = now() WHERE id = $1`,
+      [inactiveCust],
+    );
+    await expectError(
+      client,
+      'sp_archived_cust',
+      async () => {
+        await client.query(`SELECT inventory_update_order($1, $2::jsonb)`, [
+          orderB,
+          JSON.stringify({ customer_id: inactiveCust, customer_name: 'Archived' }),
+        ]);
+      },
+      'archived',
+    );
     passed += 1;
 
     await expectError(

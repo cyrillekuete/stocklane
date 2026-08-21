@@ -18,51 +18,79 @@ FROM ranked
 WHERE c.id = ranked.id
   AND ranked.rn > 1;
 
--- Resolve duplicate / null codes.
+-- Fill missing codes with deterministic id-based values (always unique).
+UPDATE inventory_categories
+SET code = 'CAT-' || substr(replace(id, '-', ''), 1, 12),
+    updated_at = now()
+WHERE code IS NULL OR btrim(code) = '';
+
+-- Resolve duplicate codes (keep oldest; remap later copies with an id suffix).
 WITH ranked_codes AS (
   SELECT
     id,
     code,
     ROW_NUMBER() OVER (
-      PARTITION BY upper(coalesce(nullif(btrim(code), ''), id))
+      PARTITION BY upper(btrim(code))
       ORDER BY created_at ASC, id ASC
     ) AS rn
   FROM inventory_categories
   WHERE code IS NOT NULL AND btrim(code) <> ''
 )
 UPDATE inventory_categories c
-SET code = left(upper(btrim(c.code)), 12) || '-' || substr(replace(c.id, '-', ''), 1, 4),
+SET code = left(upper(btrim(c.code)), 8) || '-' || substr(replace(c.id, '-', ''), 1, 8),
     updated_at = now()
 FROM ranked_codes
 WHERE c.id = ranked_codes.id
   AND ranked_codes.rn > 1;
 
-UPDATE inventory_categories
-SET code = left(upper(regexp_replace(coalesce(nullif(btrim(name), ''), 'CAT'), '[^a-zA-Z0-9]+', '', 'g')), 8)
-           || '-' || substr(replace(id, '-', ''), 1, 4),
+-- Second pass: any remapped value that still collides gets a fully id-based code.
+WITH still_duped AS (
+  SELECT id
+  FROM (
+    SELECT
+      id,
+      ROW_NUMBER() OVER (
+        PARTITION BY upper(btrim(code))
+        ORDER BY created_at ASC, id ASC
+      ) AS rn
+    FROM inventory_categories
+    WHERE code IS NOT NULL AND btrim(code) <> ''
+  ) ranked
+  WHERE rn > 1
+)
+UPDATE inventory_categories c
+SET code = 'CAT-' || substr(replace(c.id, '-', ''), 1, 12),
     updated_at = now()
-WHERE code IS NULL OR btrim(code) = '';
+FROM still_duped
+WHERE c.id = still_duped.id;
 
 CREATE UNIQUE INDEX IF NOT EXISTS inventory_categories_name_lower_uidx
   ON inventory_categories (lower(btrim(name)));
 
--- Reinforced in case older installs missed the column unique constraint.
+-- Enforce code uniqueness. Fail closed if duplicates remain after remediation
+-- so Prisma's @unique on code matches the live database.
 DO $$
 BEGIN
-  IF NOT EXISTS (
+  IF EXISTS (
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'inventory_categories_code_key'
-  ) AND NOT EXISTS (
+  ) OR EXISTS (
     SELECT 1
     FROM pg_indexes
     WHERE indexname = 'inventory_categories_code_key'
   ) THEN
-    BEGIN
-      ALTER TABLE inventory_categories ADD CONSTRAINT inventory_categories_code_key UNIQUE (code);
-    EXCEPTION
-      WHEN duplicate_object THEN NULL;
-      WHEN unique_violation THEN NULL;
-    END;
+    RETURN;
   END IF;
+
+  BEGIN
+    ALTER TABLE inventory_categories ADD CONSTRAINT inventory_categories_code_key UNIQUE (code);
+  EXCEPTION
+    WHEN duplicate_object THEN
+      NULL;
+    WHEN unique_violation THEN
+      RAISE EXCEPTION
+        'inventory_categories.code still has duplicates after remediation; unique constraint not applied'
+        USING ERRCODE = '23505';
+  END;
 END $$;

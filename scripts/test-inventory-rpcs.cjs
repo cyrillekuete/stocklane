@@ -221,6 +221,34 @@ async function main() {
     assert(Number(toStock.qty) === 6 && Number(toStock.reserved) === 0, 'available units arrive at destination');
     passed += 1;
 
+    // Product hard delete must refuse history / on-hand stock, allow clean soft-deleted products.
+    const productHard = `test_prod_hd_${suffix}`;
+    await client.query(
+      `INSERT INTO inventory_products (id, sku, name, status)
+       VALUES ($1, $2, 'Hard Delete Product', 'Live')`,
+      [productHard, `SKU-HD-${suffix}`],
+    );
+    await client.query(`SELECT inventory_soft_delete_product($1)`, [productHard]);
+    const impactOk = (
+      await client.query(`SELECT inventory_product_delete_impact($1) AS impact`, [productHard])
+    ).rows[0].impact;
+    assert(impactOk.can_hard_delete === true, 'soft-deleted product with no history can hard delete');
+    await client.query(`SELECT inventory_hard_delete_product($1)`, [productHard]);
+    const gone = await client.query(`SELECT 1 FROM inventory_products WHERE id = $1`, [productHard]);
+    assert(gone.rowCount === 0, 'hard delete removes product');
+    passed += 1;
+
+    await expectError(
+      client,
+      'sp_hard_stock',
+      async () => {
+        await client.query(`SELECT inventory_soft_delete_product($1)`, [productId]);
+        await client.query(`SELECT inventory_hard_delete_product($1)`, [productId]);
+      },
+      'cannot be permanently deleted',
+    );
+    passed += 1;
+
     // --- Store settings upsert edge cases ---
     const settingsId = 'settings_default';
     const baseSettings = {

@@ -81,7 +81,12 @@ export function ProductHardDeleteDialog({
   }, [open]);
 
   const skuMatches = Boolean(product && skuConfirm.trim() === product.sku);
-  const canDelete = skuMatches && !hardDelete.isPending && !isLoading && !isError;
+  const canDelete =
+    skuMatches &&
+    Boolean(impact?.can_hard_delete) &&
+    !hardDelete.isPending &&
+    !isLoading &&
+    !isError;
 
   const handleConfirm = () => {
     if (!product || !canDelete) return;
@@ -109,6 +114,12 @@ export function ProductHardDeleteDialog({
               </p>
               {isLoading && <p>Loading impact…</p>}
               {isError && <p className="text-destructive">Unable to load delete impact.</p>}
+              {impact && !impact.can_hard_delete ? (
+                <p className="text-destructive">
+                  This product still has stock, shipments, sales history, or stock movements. Keep it
+                  archived instead of permanently deleting it.
+                </p>
+              ) : null}
               {impact && (
                 <ul className="list-disc ps-5 space-y-1">
                   <li>{impact.variants} variants</li>
@@ -116,8 +127,8 @@ export function ProductHardDeleteDialog({
                   <li>{impact.warehouse_stock} warehouse stock rows</li>
                   <li>{impact.inbound_shipments} inbound shipments</li>
                   <li>{impact.outbound_shipments} outbound shipments</li>
-                  <li>{impact.order_items} order line items (product link cleared)</li>
-                  <li>{impact.pos_sale_items} POS line items (product link cleared)</li>
+                  <li>{impact.order_items} order line items</li>
+                  <li>{impact.pos_sale_items} POS line items</li>
                   <li>{impact.stock_movements} stock movement ledger rows</li>
                 </ul>
               )}
@@ -129,6 +140,7 @@ export function ProductHardDeleteDialog({
                   onChange={(e) => setSkuConfirm(e.target.value)}
                   placeholder={product?.sku ?? 'SKU'}
                   autoComplete="off"
+                  disabled={!impact?.can_hard_delete}
                 />
               </div>
             </div>

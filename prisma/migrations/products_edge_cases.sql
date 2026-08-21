@@ -143,6 +143,13 @@ DECLARE
   v_sku TEXT;
   v_name TEXT;
   v_deleted_at TIMESTAMPTZ;
+  v_warehouse INTEGER;
+  v_inbound INTEGER;
+  v_outbound INTEGER;
+  v_orders INTEGER;
+  v_pos INTEGER;
+  v_movements INTEGER;
+  v_can_hard_delete BOOLEAN;
 BEGIN
   SELECT sku, name, deleted_at INTO v_sku, v_name, v_deleted_at
   FROM inventory_products
@@ -153,6 +160,38 @@ BEGIN
       USING ERRCODE = 'P0001';
   END IF;
 
+  SELECT COUNT(*)::INTEGER INTO v_warehouse
+  FROM inventory_warehouse_stock
+  WHERE product_id = p_product_id
+    AND (qty <> 0 OR COALESCE(reserved, 0) <> 0);
+
+  SELECT COUNT(*)::INTEGER INTO v_inbound
+  FROM inventory_inbound_shipments WHERE product_id = p_product_id;
+
+  SELECT COUNT(*)::INTEGER INTO v_outbound
+  FROM inventory_outbound_shipments WHERE product_id = p_product_id;
+
+  SELECT COUNT(*)::INTEGER INTO v_orders
+  FROM inventory_order_items WHERE product_id = p_product_id;
+
+  SELECT COUNT(*)::INTEGER INTO v_pos
+  FROM inventory_pos_sale_items WHERE product_id = p_product_id;
+
+  SELECT COUNT(*)::INTEGER INTO v_movements
+  FROM inventory_stock_movements
+  WHERE product_id = p_product_id
+    AND (delta <> 0 OR COALESCE(reserved_delta, 0) <> 0);
+
+  -- Variants/options and empty stock rows cascade. History / on-hand stock must block.
+  v_can_hard_delete :=
+    v_deleted_at IS NOT NULL
+    AND v_warehouse = 0
+    AND v_inbound = 0
+    AND v_outbound = 0
+    AND v_orders = 0
+    AND v_pos = 0
+    AND v_movements = 0;
+
   RETURN jsonb_build_object(
     'id', p_product_id,
     'sku', v_sku,
@@ -161,13 +200,12 @@ BEGIN
     'variants', (SELECT COUNT(*)::INTEGER FROM inventory_product_variants WHERE product_id = p_product_id),
     'options', (SELECT COUNT(*)::INTEGER FROM inventory_product_options WHERE product_id = p_product_id),
     'warehouse_stock', (SELECT COUNT(*)::INTEGER FROM inventory_warehouse_stock WHERE product_id = p_product_id),
-    'inbound_shipments', (SELECT COUNT(*)::INTEGER FROM inventory_inbound_shipments WHERE product_id = p_product_id),
-    'outbound_shipments', (SELECT COUNT(*)::INTEGER FROM inventory_outbound_shipments WHERE product_id = p_product_id),
-    'order_items', (SELECT COUNT(*)::INTEGER FROM inventory_order_items WHERE product_id = p_product_id),
-    'pos_sale_items', (SELECT COUNT(*)::INTEGER FROM inventory_pos_sale_items WHERE product_id = p_product_id),
-    'stock_movements', (
-      SELECT COUNT(*)::INTEGER FROM inventory_stock_movements WHERE product_id = p_product_id
-    )
+    'inbound_shipments', v_inbound,
+    'outbound_shipments', v_outbound,
+    'order_items', v_orders,
+    'pos_sale_items', v_pos,
+    'stock_movements', (SELECT COUNT(*)::INTEGER FROM inventory_stock_movements WHERE product_id = p_product_id),
+    'can_hard_delete', v_can_hard_delete
   );
 END;
 $$;
@@ -178,7 +216,18 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
   v_deleted_at TIMESTAMPTZ;
+  v_warehouse INTEGER;
+  v_inbound INTEGER;
+  v_outbound INTEGER;
+  v_orders INTEGER;
+  v_pos INTEGER;
+  v_movements INTEGER;
 BEGIN
+  IF p_product_id IS NULL OR btrim(p_product_id) = '' THEN
+    RAISE EXCEPTION 'Product id is required'
+      USING ERRCODE = 'P0001';
+  END IF;
+
   SELECT deleted_at INTO v_deleted_at
   FROM inventory_products
   WHERE id = p_product_id
@@ -191,6 +240,34 @@ BEGIN
 
   IF v_deleted_at IS NULL THEN
     RAISE EXCEPTION 'Soft-delete the product before permanently deleting it'
+      USING ERRCODE = 'P0001';
+  END IF;
+
+  SELECT COUNT(*)::INTEGER INTO v_warehouse
+  FROM inventory_warehouse_stock
+  WHERE product_id = p_product_id
+    AND (qty <> 0 OR COALESCE(reserved, 0) <> 0);
+
+  SELECT COUNT(*)::INTEGER INTO v_inbound
+  FROM inventory_inbound_shipments WHERE product_id = p_product_id;
+
+  SELECT COUNT(*)::INTEGER INTO v_outbound
+  FROM inventory_outbound_shipments WHERE product_id = p_product_id;
+
+  SELECT COUNT(*)::INTEGER INTO v_orders
+  FROM inventory_order_items WHERE product_id = p_product_id;
+
+  SELECT COUNT(*)::INTEGER INTO v_pos
+  FROM inventory_pos_sale_items WHERE product_id = p_product_id;
+
+  SELECT COUNT(*)::INTEGER INTO v_movements
+  FROM inventory_stock_movements
+  WHERE product_id = p_product_id
+    AND (delta <> 0 OR COALESCE(reserved_delta, 0) <> 0);
+
+  IF v_warehouse > 0 OR v_inbound > 0 OR v_outbound > 0
+     OR v_orders > 0 OR v_pos > 0 OR v_movements > 0 THEN
+    RAISE EXCEPTION 'Product has stock, shipments, sales, or movement history and cannot be permanently deleted'
       USING ERRCODE = 'P0001';
   END IF;
 
