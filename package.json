@@ -26,7 +26,8 @@
     "test:category-validation": "tsx scripts/test-category-validation.ts",
     "test:category-edge-cases": "node scripts/test-category-edge-cases.cjs",
     "test:warehouse-stock-edit": "tsx scripts/test-warehouse-stock-edit.ts",
-    "test:warehouse-fetch-split": "tsx scripts/test-warehouse-fetch-split.ts"
+    "test:warehouse-fetch-split": "tsx scripts/test-warehouse-fetch-split.ts",
+    "test:receive-stock-batch": "tsx scripts/test-receive-stock-batch.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -48,6 +49,8 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "formik": "^2.4.6",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.541.0",
     "mini-svg-data-uri": "^1.4.4",

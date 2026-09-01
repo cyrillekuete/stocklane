@@ -30,6 +30,7 @@ import {
   createCategory,
   createCustomer,
   createInboundShipment,
+  createInboundShipmentsBatch,
   createOrder,
   createOutboundShipment,
   createProduct,
@@ -821,6 +822,13 @@ export function useUpdateStockLevel() {
 export function useCreateInboundShipment() {
   return useCachedMutation({
     mutationFn: createInboundShipment,
+    keys: [inventoryKeys.inbound(), inventoryKeys.stock(), inventoryKeys.warehouseStock()],
+  });
+}
+
+export function useCreateInboundShipmentsBatch() {
+  return useCachedMutation({
+    mutationFn: createInboundShipmentsBatch,
     keys: [inventoryKeys.inbound(), inventoryKeys.stock(), inventoryKeys.warehouseStock()],
   });
 }

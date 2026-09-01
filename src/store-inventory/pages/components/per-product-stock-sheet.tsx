@@ -138,14 +138,6 @@ export function PerProductStockSheet({
     const thresholdQty = Number(threshold);
     const reorder = Number(reorderQty);
     const lead = Number(leadTimeDays);
-    if (!Number.isFinite(qty) || qty < 0) {
-      toast.error(t('Stock quantity cannot be negative'));
-      return;
-    }
-    if (reservedQty > 0 && qty < reservedQty) {
-      toast.error(t('Quantity cannot be below reserved amount ({rsvd})', { rsvd: reservedQty }));
-      return;
-    }
     if (!Number.isFinite(thresholdQty) || thresholdQty < 0) {
       toast.error(t('Threshold cannot be negative'));
       return;
@@ -164,8 +156,6 @@ export function PerProductStockSheet({
         productId: data.id,
         input: {
           warehouseId,
-          expectedQty,
-          qty,
           threshold: thresholdQty,
           reorder_qty: Number.isFinite(reorder) ? Math.max(0, Math.trunc(reorder)) : 0,
           lead_time_days: Number.isFinite(lead) ? Math.max(0, Math.trunc(lead)) : 0,
@@ -237,10 +227,13 @@ export function PerProductStockSheet({
                         type="number"
                         min={0}
                         value={stockQty}
-                        onChange={(e) => setStockQty(e.target.value)}
+                        readOnly
                         className="w-full"
-                        disabled={!warehouseStockReady}
+                        disabled
                       />
+                      <span className="text-xs text-muted-foreground">
+                        {t('On-hand quantity can only be increased with Receive Stock.')}
+                      </span>
                       {reservedQty > 0 && (
                         <span className="text-xs text-muted-foreground">
                           {t('Reserved: {rsvd}. Available: {available}.', {

@@ -53,6 +53,7 @@ async function main() {
     'prisma/migrations/order_rpc_security_notes.sql',
     'prisma/migrations/auth_profiles_and_roles.sql',
     'prisma/migrations/user_permissions.sql',
+    'prisma/migrations/stock_entry_history.sql',
   ];
 
   const client = new Client({

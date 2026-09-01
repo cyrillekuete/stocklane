@@ -121,13 +121,18 @@ export interface InboundStockRow {
   dateOrder: string;
   qty: number;
   stock: string;
+  stockValue?: number;
   status: {
     label: string;
     variant: BadgeTone;
   };
   arrivalDate: string;
+  createdAt?: string;
+  receivedAt?: string;
+  receivedBy?: string;
   carrier: string;
   warehouse?: string;
+  warehouseName?: string;
   warehouseId?: string | null;
   supplier: {
     logo: string;

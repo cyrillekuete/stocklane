@@ -172,6 +172,14 @@ export type CustomerDeleteImpact = {
   can_hard_delete: boolean;
 };
 
+export type InventoryProfileName = {
+  id?: string;
+  full_name?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+};
+
 export type InventoryInboundShipment = {
   id: string;
   product_id: string;
@@ -182,10 +190,14 @@ export type InventoryInboundShipment = {
   status: string;
   status_variant: string;
   arrival_date: string;
+  created_at?: string;
+  created_by?: string | null;
+  received_by_name?: string | null;
   product?: InventoryProduct | null;
   supplier?: InventorySupplier | null;
   carrier?: InventoryCarrier | null;
   warehouse?: InventoryWarehouse | null;
+  receiver?: InventoryProfileName | null;
 };
 
 export type InventoryOutboundShipment = {
@@ -548,7 +560,24 @@ export function mapStockPlanner(product: InventoryProduct): StockPlannerRow {
   };
 }
 
+function displayDateTime(value?: string | null) {
+  if (!value) return '';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return format(parsed, 'd MMM yyyy, HH:mm');
+}
+
+function displayProfileName(profile?: InventoryProfileName | null) {
+  const full = profile?.full_name?.trim();
+  if (full) return full;
+  const parts = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ').trim();
+  if (parts) return parts;
+  if (profile?.email?.trim()) return profile.email.trim();
+  return 'Unknown';
+}
+
 export function mapInbound(row: InventoryInboundShipment): InboundStockRow {
+  const stockValue = parseMoney(row.stock_value);
   return {
     id: row.id,
     productInfo: {
@@ -558,14 +587,19 @@ export function mapInbound(row: InventoryInboundShipment): InboundStockRow {
     },
     dateOrder: row.order_date,
     qty: row.qty,
-    stock: formatMoney(row.stock_value),
+    stock: formatMoney(stockValue),
+    stockValue,
     status: {
       label: row.status,
       variant: row.status_variant,
     },
     arrivalDate: row.arrival_date,
+    createdAt: row.created_at,
+    receivedAt: displayDateTime(row.created_at) || row.order_date,
+    receivedBy: row.received_by_name?.trim() || displayProfileName(row.receiver),
     carrier: row.carrier?.name ?? '',
     warehouse: row.warehouse?.code ?? '',
+    warehouseName: row.warehouse?.name ?? row.warehouse?.code ?? '',
     warehouseId: row.warehouse_id ?? row.warehouse?.id ?? null,
     supplier: {
       name: row.supplier?.name ?? '',
@@ -883,12 +917,21 @@ export async function fetchStockProducts() {
 
 export async function fetchInboundShipments() {
   const client = requireClient();
-  const { data, error } = await client
+  const baseSelect = `*, product:inventory_products(*, supplier:inventory_suppliers(*)), supplier:inventory_suppliers(*), carrier:inventory_carriers(*), warehouse:inventory_warehouses(*)`;
+  const withActorSelect = `${baseSelect}, receiver:inventory_profiles!created_by(id, full_name, first_name, last_name, email)`;
+  const withActor = await client
     .from('inventory_inbound_shipments')
-    .select(`*, product:inventory_products(*, supplier:inventory_suppliers(*)), supplier:inventory_suppliers(*), carrier:inventory_carriers(*), warehouse:inventory_warehouses(*)`)
-    .order('arrival_date', { ascending: false });
-  if (error) throw error;
-  return ((data ?? []) as InventoryInboundShipment[]).map(mapInbound);
+    .select(withActorSelect)
+    .order('created_at', { ascending: false });
+  if (!withActor.error) {
+    return ((withActor.data ?? []) as InventoryInboundShipment[]).map(mapInbound);
+  }
+  const fallback = await client
+    .from('inventory_inbound_shipments')
+    .select(baseSelect)
+    .order('created_at', { ascending: false });
+  if (fallback.error) throw withActor.error;
+  return ((fallback.data ?? []) as InventoryInboundShipment[]).map(mapInbound);
 }
 
 export async function fetchOutboundShipments() {
@@ -1438,6 +1481,17 @@ export async function updateStockLevel(
     if (!warehouse?.id || String(warehouse.status).toLowerCase() !== 'active') {
       throw new Error('Select an Active warehouse');
     }
+    const { data: currentStock, error: currentError } = await client
+      .from('inventory_warehouse_stock')
+      .select('qty')
+      .eq('warehouse_id', warehouseId)
+      .eq('product_id', productId)
+      .maybeSingle();
+    if (currentError) throw currentError;
+    const currentQty = Number(currentStock?.qty ?? 0);
+    if (stockPayload.qty > currentQty) {
+      throw new Error('Stock can only be added with Receive Stock');
+    }
     const { error: qtyError } = await client.rpc('inventory_set_warehouse_qty', {
       p_warehouse_id: warehouseId,
       p_product_id: productId,
@@ -1463,6 +1517,55 @@ export async function updateStockLevel(
 
 export async function deleteStockProduct(productId: string) {
   return deleteProduct(productId);
+}
+
+export type InboundShipmentLineInput = {
+  productId: string;
+  warehouseId: string;
+  qty: number;
+  unitValue: number;
+  productName: string;
+  productSku: string;
+  warehouseName: string;
+  supplierId?: string | null;
+  carrierId?: string | null;
+  orderDate?: string;
+  arrivalDate?: string;
+  status?: string;
+};
+
+export type InboundShipmentBatchLineResult = {
+  shipmentId: string;
+  productId: string;
+  productName: string;
+  productSku: string;
+  warehouseId: string;
+  warehouseName: string;
+  qty: number;
+  unitValue: number;
+  lineTotal: number;
+  orderDate: string;
+};
+
+export type InboundShipmentBatchResult = {
+  lines: InboundShipmentBatchLineResult[];
+  totalQty: number;
+  totalValue: number;
+  orderDate: string;
+};
+
+export class InboundShipmentBatchError extends Error {
+  readonly succeeded: number;
+  readonly total: number;
+  readonly results: InboundShipmentBatchLineResult[];
+
+  constructor(message: string, succeeded: number, total: number, results: InboundShipmentBatchLineResult[]) {
+    super(message);
+    this.name = 'InboundShipmentBatchError';
+    this.succeeded = succeeded;
+    this.total = total;
+    this.results = results;
+  }
 }
 
 export async function createInboundShipment(input: {
@@ -1508,6 +1611,76 @@ export async function createInboundShipment(input: {
   });
   if (error) throw error;
   return (typeof data === 'string' && data) || id;
+}
+
+/** Receive multiple add-only inbound lines sequentially. Stops on first failure. */
+export async function createInboundShipmentsBatch(
+  lines: InboundShipmentLineInput[],
+): Promise<InboundShipmentBatchResult> {
+  if (!lines.length) {
+    throw new Error('Add at least one stock line');
+  }
+
+  const orderDate = lines[0]?.orderDate ?? format(new Date(), 'd MMM, yyyy');
+  const results: InboundShipmentBatchLineResult[] = [];
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    const qty = Math.trunc(line.qty);
+    const unitValue = Number(line.unitValue);
+    if (!line.productId || !line.warehouseId || qty < 1 || !Number.isFinite(unitValue) || unitValue < 0) {
+      throw new InboundShipmentBatchError(
+        `Invalid stock line at row ${index + 1}`,
+        results.length,
+        lines.length,
+        results,
+      );
+    }
+
+    const lineTotal = unitValue * qty;
+    try {
+      const shipmentId = await createInboundShipment({
+        productId: line.productId,
+        warehouseId: line.warehouseId,
+        qty,
+        supplierId: line.supplierId,
+        carrierId: line.carrierId,
+        orderDate: line.orderDate ?? orderDate,
+        arrivalDate: line.arrivalDate,
+        stockValue: lineTotal,
+        status: line.status,
+      });
+      results.push({
+        shipmentId,
+        productId: line.productId,
+        productName: line.productName,
+        productSku: line.productSku,
+        warehouseId: line.warehouseId,
+        warehouseName: line.warehouseName,
+        qty,
+        unitValue,
+        lineTotal,
+        orderDate: line.orderDate ?? orderDate,
+      });
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Unable to receive stock';
+      throw new InboundShipmentBatchError(
+        results.length > 0
+          ? `${reason}. ${results.length} of ${lines.length} lines were received before the failure.`
+          : reason,
+        results.length,
+        lines.length,
+        results,
+      );
+    }
+  }
+
+  return {
+    lines: results,
+    totalQty: results.reduce((sum, row) => sum + row.qty, 0),
+    totalValue: results.reduce((sum, row) => sum + row.lineTotal, 0),
+    orderDate,
+  };
 }
 
 export async function deleteInboundShipment(id: string) {

@@ -445,6 +445,19 @@ export async function setWarehouseQty(
   expectedQty?: number | null,
 ) {
   const client = requireClient();
+  if (qty > 0) {
+    const { data: currentStock, error: currentError } = await client
+      .from('inventory_warehouse_stock')
+      .select('qty')
+      .eq('warehouse_id', warehouseId)
+      .eq('product_id', productId)
+      .maybeSingle();
+    if (currentError) throw mapWarehouseError(currentError, 'Unable to set warehouse quantity');
+    const currentQty = Number(currentStock?.qty ?? 0);
+    if (qty > currentQty) {
+      throw new Error('Stock can only be added with Receive Stock');
+    }
+  }
   const { data, error } = await client.rpc('inventory_set_warehouse_qty', {
     p_warehouse_id: warehouseId,
     p_product_id: productId,

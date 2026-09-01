@@ -12,12 +12,13 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { addDays, format, isWithinInterval, parse } from 'date-fns';
+import { endOfDay, format, isWithinInterval, startOfDay } from 'date-fns';
 import {
   ChevronDown,
   EllipsisVertical,
   Info,
   Pencil,
+  Printer,
   Search,
   Settings,
   Trash,
@@ -80,8 +81,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { inboundStockMockData } from '@/store-inventory/data/stock';
-import { formatMoney } from '@/store-inventory/lib/format';
+import { generateStockEntryHistoryPdf } from '@/store-inventory/lib/stock-entry-history-pdf';
 import { useDeleteInboundShipment } from '@/store-inventory/hooks/use-inventory';
+import { useStoreSettings } from '@/store-inventory/hooks/use-settings';
 import { TrackShippingSheet } from '../components/track-shipping-sheet';
 import { PerProductStockSheet } from '../components/per-product-stock-sheet';
 
@@ -99,13 +101,19 @@ export interface IData {
   dateOrder: string;
   qty: number;
   stock: string;
+  stockValue?: number;
   status: {
     label: string;
     variant: string;
   };
   arrivalDate: string;
+  createdAt?: string;
+  receivedAt?: string;
+  receivedBy?: string;
   carrier: string;
   warehouse?: string;
+  warehouseName?: string;
+  warehouseId?: string | null;
   supplier: {
     logo: string;
     name: string;
@@ -142,17 +150,26 @@ interface MappedStockData {
 
 const mockData: IData[] = inboundStockMockData;
 
+function inboundReceivedDate(row: IData): Date | null {
+  if (row.createdAt) {
+    const parsed = new Date(row.createdAt);
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+  }
+  return null;
+}
+
 const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
   const t = useT();
   const data = propsMockData || mockData;
   const deleteInbound = useDeleteInboundShipment();
+  const { data: settings } = useStoreSettings();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'dateOrder', desc: true },
+    { id: 'receivedAt', desc: true },
   ]);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedDateOrder] = useState<string[]>([]);
@@ -164,17 +181,8 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Date range picker state
-  const today = new Date();
-  const defaultDateRange: DateRange = {
-    from: addDays(today, -999), // Show last 30 days by default
-    to: today,
-  };
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(
-    defaultDateRange,
-  );
-  const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(
-    defaultDateRange,
-  );
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [tempDateRange, setTempDateRange] = useState<DateRange | undefined>(undefined);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const isApplyingRef = useRef(false);
 
@@ -263,10 +271,9 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
   // Date range picker handlers
   const handleDateRangeApply = () => {
     isApplyingRef.current = true;
-    if (tempDateRange) {
-      setDateRange(tempDateRange);
-    }
+    setDateRange(tempDateRange);
     setIsDatePickerOpen(false);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     setTimeout(() => {
       isApplyingRef.current = false;
     }, 100);
@@ -274,9 +281,8 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
 
   const handleDateRangeReset = () => {
     isApplyingRef.current = true;
-    setTempDateRange(defaultDateRange);
-    setDateRange(defaultDateRange);
-    // Reset pagination to first page when filters change
+    setTempDateRange(undefined);
+    setDateRange(undefined);
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     setIsDatePickerOpen(false);
     setTimeout(() => {
@@ -332,30 +338,28 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
           row.stock,
           row.arrivalDate,
           row.dateOrder,
+          row.receivedAt,
+          row.receivedBy,
+          row.warehouse,
+          row.warehouseName,
         ].some((field) =>
           field?.toString().toLowerCase().includes(searchQuery.toLowerCase()),
         );
 
-      // Date range filtering
       let matchesDateRange = true;
       if (dateRange && (dateRange.from || dateRange.to)) {
-        try {
-          // Parse the date from "DD MMM, YYYY" format
-          const rowDate = parse(row.arrivalDate, 'dd MMM, yyyy', new Date());
-
-          if (dateRange.from && dateRange.to) {
-            matchesDateRange = isWithinInterval(rowDate, {
-              start: dateRange.from,
-              end: dateRange.to,
-            });
-          } else if (dateRange.from) {
-            matchesDateRange = rowDate >= dateRange.from;
-          } else if (dateRange.to) {
-            matchesDateRange = rowDate <= dateRange.to;
-          }
-        } catch {
-          // If date parsing fails, include the row
-          matchesDateRange = true;
+        const rowDate = inboundReceivedDate(row);
+        if (!rowDate) {
+          matchesDateRange = false;
+        } else if (dateRange.from && dateRange.to) {
+          matchesDateRange = isWithinInterval(rowDate, {
+            start: startOfDay(dateRange.from),
+            end: endOfDay(dateRange.to),
+          });
+        } else if (dateRange.from) {
+          matchesDateRange = rowDate >= startOfDay(dateRange.from);
+        } else if (dateRange.to) {
+          matchesDateRange = rowDate <= endOfDay(dateRange.to);
         }
       }
 
@@ -375,6 +379,28 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
     searchQuery,
     dateRange,
   ]);
+
+  const handlePrintHistory = () => {
+    generateStockEntryHistoryPdf(filteredData, {
+      storeName: settings?.storeName ?? t('Store'),
+      dateFrom: dateRange?.from,
+      dateTo: dateRange?.to,
+      labels: {
+        title: t('Stock entry history'),
+        printed: t('Printed'),
+        dateRange: t('Date range'),
+        allTime: t('All time'),
+        datetime: t('Received'),
+        receivedBy: t('Received by'),
+        product: t('Product'),
+        warehouse: t('Warehouse'),
+        qty: t('QTY'),
+        lineValue: t('Stock'),
+        totalQty: t('Total qty'),
+        totalValue: t('Total value'),
+      },
+    });
+  };
 
   const ColumnInputFilter = <TData, TValue>({
     column,
@@ -466,16 +492,27 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
         },
       },
       {
-        id: 'dateOrder',
-        accessorFn: (row) => row.dateOrder,
+        id: 'receivedAt',
+        accessorFn: (row) => row.createdAt ?? row.receivedAt ?? row.dateOrder,
         header: ({ column }) => (
-          <DataGridColumnHeader title="Order Date" column={column} />
+          <DataGridColumnHeader title="Received" column={column} />
         ),
-        cell: (info) => {
-          return info.row.original.dateOrder;
-        },
+        cell: (info) => info.row.original.receivedAt || info.row.original.dateOrder || '—',
         enableSorting: true,
-        size: 120,
+        size: 150,
+        meta: {
+          cellClassName: '',
+        },
+      },
+      {
+        id: 'receivedBy',
+        accessorFn: (row) => row.receivedBy,
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Received by" column={column} />
+        ),
+        cell: (info) => info.row.original.receivedBy || t('Unknown'),
+        enableSorting: true,
+        size: 140,
         meta: {
           cellClassName: '',
         },
@@ -595,7 +632,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
         header: ({ column }) => (
           <DataGridColumnHeader title="Warehouse" column={column} />
         ),
-        cell: (info) => info.row.original.warehouse || '—',
+        cell: (info) => info.row.original.warehouseName || info.row.original.warehouse || '—',
         enableSorting: true,
         size: 100,
       },
@@ -624,7 +661,7 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
         id: 'actions',
         header: () => '',
         enableSorting: false,
-        cell: () => (
+        cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" mode="icon" size="sm">
@@ -944,7 +981,14 @@ const InboundStockTable = ({ mockData: propsMockData }: AllStockProps) => {
               </Popover>
             </CardHeading>
             <CardToolbar>
-              <Button variant="mono">{t('Stock Planner')}</Button>
+              <Button
+                variant="outline"
+                onClick={handlePrintHistory}
+                disabled={filteredData.length === 0}
+              >
+                <Printer />
+                {t('Print')}
+              </Button>
             </CardToolbar>
           </CardHeader>
           <CardTable>
