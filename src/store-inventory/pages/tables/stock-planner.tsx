@@ -23,7 +23,6 @@ import {
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useT } from '@/i18n/use-t';
-import { toAbsoluteUrl } from '@/lib/helpers';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -226,15 +225,6 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
 
           return (
             <div className="flex items-center gap-2.5">
-              <Card className="flex items-center justify-center rounded-md bg-accent/50 h-[40px] w-[50px] shadow-none shrink-0">
-                <img
-                  src={toAbsoluteUrl(
-                    `/media/store/client/1200x1200/${row.productInfo.image}`,
-                  )}
-                  className="cursor-pointer h-[40px]"
-                  alt={t('image')}
-                />
-              </Card>
               <div className="flex flex-col gap-1">
                 {row.productInfo.title.includes('…') ||
                 row.productInfo.title.includes('...') ? (
