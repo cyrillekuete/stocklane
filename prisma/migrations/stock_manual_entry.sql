@@ -60,6 +60,7 @@ BEGIN
 END;
 $$;
 
+-- Returns the applied entry quantity (signed), not the resulting on-hand.
 CREATE OR REPLACE FUNCTION inventory_apply_stock_entry(payload JSONB)
 RETURNS INTEGER
 LANGUAGE plpgsql
@@ -128,9 +129,10 @@ BEGIN
         USING ERRCODE = 'P0001';
     END IF;
 
-    RETURN inventory_adjust_warehouse_qty(
+    PERFORM inventory_adjust_warehouse_qty(
       v_warehouse_id, v_product_id, v_qty, 'initial_stock', 'stock_entry', v_id
     );
+    RETURN v_qty;
   END IF;
 
   IF v_entry_type = 'adjustment' THEN
@@ -139,9 +141,10 @@ BEGIN
         USING ERRCODE = 'P0001';
     END IF;
 
-    RETURN inventory_adjust_warehouse_qty(
+    PERFORM inventory_adjust_warehouse_qty(
       v_warehouse_id, v_product_id, v_qty, 'adjustment', 'stock_entry', v_id
     );
+    RETURN v_qty;
   END IF;
 
   RAISE EXCEPTION 'Entry type must be initial or adjustment'

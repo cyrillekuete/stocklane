@@ -34,6 +34,25 @@ export function parseStockEntryQty(type: StockEntryType, raw: string): number | 
   }
 }
 
+/** Applied entry qty returned by inventory_apply_stock_entry. */
+export function parseStockEntryRpcQty(data: unknown): number {
+  if (typeof data === 'number' && Number.isFinite(data)) {
+    return Math.trunc(data);
+  }
+  if (typeof data === 'string' && data.trim() !== '') {
+    const qty = Number(data);
+    if (Number.isFinite(qty)) return Math.trunc(qty);
+  }
+  throw new Error('Unable to apply stock entry');
+}
+
+export function stockEntryLineTotal(qty: number, unitValue: number): number {
+  const units = Math.trunc(qty);
+  const value = Number(unitValue);
+  if (!Number.isFinite(value)) return 0;
+  return value * units;
+}
+
 export function stockEntryHelpMessage(type: StockEntryType): string {
   switch (type) {
     case 'initial':

@@ -1,6 +1,11 @@
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
-import { parseStockEntryQty, type StockEntryType } from '../lib/stock-entry';
+import {
+  parseStockEntryQty,
+  parseStockEntryRpcQty,
+  stockEntryLineTotal,
+  type StockEntryType,
+} from '../lib/stock-entry';
 import { buildOrderDetail } from '../data/orders';
 import {
   assertNonNegativeMoney,
@@ -1797,7 +1802,7 @@ async function applyManualStockEntryLine(line: StockEntryLineInput, entryType: '
     throw new Error('Select an Active warehouse');
   }
 
-  const { error } = await client.rpc('inventory_apply_stock_entry', {
+  const { data, error } = await client.rpc('inventory_apply_stock_entry', {
     payload: {
       id: crypto.randomUUID(),
       product_id: line.productId,
@@ -1807,6 +1812,7 @@ async function applyManualStockEntryLine(line: StockEntryLineInput, entryType: '
     },
   });
   if (error) throw new Error(rpcErrorMessage(error, 'Unable to apply stock entry'));
+  return parseStockEntryRpcQty(data);
 }
 
 function toStockEntryLineResult(line: StockEntryLineInput, orderDate: string): StockEntryBatchLineResult {
@@ -1820,7 +1826,7 @@ function toStockEntryLineResult(line: StockEntryLineInput, orderDate: string): S
     warehouseName: line.warehouseName,
     qty,
     unitValue,
-    lineTotal: unitValue * Math.abs(qty),
+    lineTotal: stockEntryLineTotal(qty, unitValue),
     orderDate: line.orderDate ?? orderDate,
   };
 }
@@ -1909,8 +1915,8 @@ export async function applyStockEntries(
     }
 
     try {
-      await applyManualStockEntryLine({ ...line, qty }, type);
-      results.push(toStockEntryLineResult({ ...line, qty }, orderDate));
+      const appliedQty = await applyManualStockEntryLine({ ...line, qty }, type);
+      results.push(toStockEntryLineResult({ ...line, qty: appliedQty }, orderDate));
     } catch (error) {
       const reason = rpcErrorMessage(error, fallback);
       throw new StockEntryBatchError(

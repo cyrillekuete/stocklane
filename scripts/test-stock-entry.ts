@@ -6,6 +6,8 @@ import assert from 'node:assert/strict';
 import {
   defaultStockEntryQty,
   parseStockEntryQty,
+  parseStockEntryRpcQty,
+  stockEntryLineTotal,
   stockEntrySubmitLabel,
 } from '../src/store-inventory/lib/stock-entry';
 import {
@@ -24,6 +26,15 @@ assert.equal(parseStockEntryQty('adjustment', ''), null);
 assert.equal(defaultStockEntryQty('purchased'), '1');
 assert.equal(defaultStockEntryQty('adjustment'), '');
 assert.equal(stockEntrySubmitLabel('purchased'), 'Receive');
+
+assert.equal(parseStockEntryRpcQty(8), 8);
+assert.equal(parseStockEntryRpcQty(-3), -3);
+assert.equal(parseStockEntryRpcQty('12'), 12);
+assert.throws(() => parseStockEntryRpcQty(null));
+assert.throws(() => parseStockEntryRpcQty('x'));
+assert.equal(stockEntryLineTotal(8, 10), 80);
+assert.equal(stockEntryLineTotal(-50, 10), -500);
+assert.equal(stockEntryLineTotal(2, 1000), 2000);
 
 assert.equal(classifyStockMovementReason('inbound_receive', 5), 'purchased');
 assert.equal(classifyStockMovementReason('initial_stock', 12), 'ignore');

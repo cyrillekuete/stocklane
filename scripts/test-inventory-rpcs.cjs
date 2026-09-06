@@ -355,7 +355,12 @@ async function main() {
         entry_type: 'adjustment',
       }),
     ]);
-    assert(Number(adjusted.rows[0].qty) === 5, 'adjustment should decrease qty');
+    assert(Number(adjusted.rows[0].qty) === -3, 'adjustment should return applied qty');
+    const onHand = await client.query(
+      `SELECT qty FROM inventory_warehouse_stock WHERE warehouse_id = $1 AND product_id = $2`,
+      [warehouseA, productEntry],
+    );
+    assert(Number(onHand.rows[0].qty) === 5, 'adjustment should decrease on-hand to 5');
     passed += 1;
 
     await expectError(
