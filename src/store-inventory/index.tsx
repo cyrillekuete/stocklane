@@ -12,6 +12,9 @@ const AllStock = lazy(() =>
 const CurrentStock = lazy(() =>
   import('./pages/current-stock/page').then((m) => ({ default: m.CurrentStock })),
 );
+const StockEntryPage = lazy(() =>
+  import('./pages/stock-entry/page').then((m) => ({ default: m.StockEntryPage })),
+);
 const InboundStock = lazy(() =>
   import('./pages/inbound-stock/page').then((m) => ({ default: m.InboundStock })),
 );
@@ -98,6 +101,7 @@ export default function StoreInventoryModule() {
           <Route path="dark-sidebar" element={<Dashboard />} />
           <Route path="all-stock" element={<AllStock />} />
           <Route path="current-stock" element={<CurrentStock />} />
+          <Route path="stock-entry" element={<StockEntryPage />} />
           <Route path="inbound-stock" element={<InboundStock />} />
           <Route path="outbound-stock" element={<OutboundStock />} />
           <Route path="stock-planner" element={<StockPlanner />} />

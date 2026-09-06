@@ -202,6 +202,20 @@ export interface StockPlannerRow {
     date: string;
   };
   ar: boolean;
+  sum?: string;
+  lastMoved?: string;
+  handler?: string;
+  trend?: {
+    label: string;
+    variant: BadgeTone;
+  };
+  category?: string;
+  price?: string;
+  reorderQty?: number;
+  leadTimeDays?: number;
+  autoReorder?: boolean;
+  created?: string;
+  updated?: string;
 }
 
 export interface CustomerPaymentMethod {

@@ -31,6 +31,7 @@ import {
   createCustomer,
   createInboundShipment,
   createInboundShipmentsBatch,
+  applyStockEntries,
   createOrder,
   createOutboundShipment,
   createProduct,
@@ -91,8 +92,11 @@ import {
   type InventoryStockLevel,
   type OrderInput,
   type OrderItemInput,
+  type StockEntryLineInput,
 } from '../services/inventory';
 import { aggregateStockHistory } from '../lib/stock-history';
+import type { StockEntryType } from '../lib/stock-entry';
+import { stockDeltaFromQty } from '../lib/stock-delta';
 import { fetchWarehouseStock } from '../services/warehouses';
 import type {
   CategoryListRow,
@@ -434,13 +438,19 @@ function useStockWithWarehouseOverlay<T>(
     return stock.data.map((product) => {
       if (!warehouseId) return mapRow(product);
       const overlay = qtyMap.get(product.id);
+      const qty = overlay?.qty ?? 0;
+      const reserved = overlay?.reserved ?? 0;
+      const threshold = product.stock_level?.threshold ?? 0;
+      const delta = stockDeltaFromQty(qty, threshold);
       return mapRow({
         ...product,
         stock_level: product.stock_level
           ? {
               ...product.stock_level,
-              qty: overlay?.qty ?? 0,
-              reserved: overlay?.reserved ?? 0,
+              qty,
+              reserved,
+              delta_label: delta.label,
+              delta_variant: delta.variant,
             }
           : product.stock_level,
       });
@@ -467,11 +477,8 @@ export function useCurrentStock(warehouseId?: string | null) {
   return useStockWithWarehouseOverlay(warehouseId, mapCurrentStock);
 }
 
-export function useStockPlanner() {
-  return useQuery({
-    ...stockQuery,
-    select: (rows) => rows.map(mapStockPlanner),
-  });
+export function useStockPlanner(warehouseId?: string | null) {
+  return useStockWithWarehouseOverlay(warehouseId, mapStockPlanner);
 }
 
 export function useInboundStock() {
@@ -908,6 +915,14 @@ export function useCreateInboundShipment() {
 export function useCreateInboundShipmentsBatch() {
   return useCachedMutation({
     mutationFn: createInboundShipmentsBatch,
+    keys: [inventoryKeys.inbound(), inventoryKeys.stock(), inventoryKeys.warehouseStock()],
+  });
+}
+
+export function useApplyStockEntries() {
+  return useCachedMutation({
+    mutationFn: ({ type, lines }: { type: StockEntryType; lines: StockEntryLineInput[] }) =>
+      applyStockEntries(type, lines),
     keys: [inventoryKeys.inbound(), inventoryKeys.stock(), inventoryKeys.warehouseStock()],
   });
 }

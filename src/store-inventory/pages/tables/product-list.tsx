@@ -80,6 +80,7 @@ interface ProductListProps {
   isLoading?: boolean;
   isError?: boolean;
   onRowClick?: (productId: string) => void;
+  onProductOpen?: (product: ProductListRow) => void;
   displaySheet?: 'productDetails' | 'createProduct' | 'editProduct' | 'manageVariants';
   selectedProductId?: string;
 }
@@ -91,6 +92,7 @@ export function ProductListTable({
   isLoading = false,
   isError = false,
   onRowClick,
+  onProductOpen,
   displaySheet,
   selectedProductId,
 }: ProductListProps) {
@@ -150,6 +152,10 @@ export function ProductListTable({
   };
 
   const handleViewDetails = (product: ProductListRow) => {
+    if (onProductOpen) {
+      onProductOpen(product);
+      return;
+    }
     setSelectedProduct(product);
     setIsProductDetailsOpen(true);
   };
@@ -368,7 +374,7 @@ export function ProductListTable({
         size: 80,
       },
     ],
-    [restore, t],
+    [onProductOpen, restore, t],
   );
 
   const filteredData = useMemo(() => {
@@ -537,7 +543,13 @@ export function ProductListTable({
               <DataGrid
                 table={table}
                 recordCount={filteredData?.length || 0}
-                onRowClick={onRowClick ? (row: ProductListRow) => onRowClick(row.id) : undefined}
+                onRowClick={
+                  onProductOpen
+                    ? (row: ProductListRow) => onProductOpen(row)
+                    : onRowClick
+                      ? (row: ProductListRow) => onRowClick(row.id)
+                      : undefined
+                }
                 tableLayout={{
                   columnsPinnable: true,
                   columnsMovable: true,

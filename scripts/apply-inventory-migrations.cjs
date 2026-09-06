@@ -54,6 +54,7 @@ async function main() {
     'prisma/migrations/auth_profiles_and_roles.sql',
     'prisma/migrations/user_permissions.sql',
     'prisma/migrations/stock_entry_history.sql',
+    'prisma/migrations/stock_manual_entry.sql',
   ];
 
   const client = new Client({

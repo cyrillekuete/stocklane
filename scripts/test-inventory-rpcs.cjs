@@ -313,6 +313,103 @@ async function main() {
     assert(again.rows[0].row.store_name.includes('Again'), 'singleton upsert updates fields');
     passed += 1;
 
+    const productEntry = `test_prod_entry_${suffix}`;
+    await client.query(
+      `INSERT INTO inventory_products (id, sku, name, status)
+       VALUES ($1, $2, 'Stock Entry Product', 'Live')`,
+      [productEntry, `SKU-SE-${suffix}`],
+    );
+
+    const initialQty = await client.query(`SELECT inventory_apply_stock_entry($1::jsonb) AS qty`, [
+      JSON.stringify({
+        product_id: productEntry,
+        warehouse_id: warehouseA,
+        qty: 8,
+        entry_type: 'initial',
+      }),
+    ]);
+    assert(Number(initialQty.rows[0].qty) === 8, 'initial stock should set qty to 8');
+    passed += 1;
+
+    await expectError(
+      client,
+      'sp_initial_again',
+      () =>
+        client.query(`SELECT inventory_apply_stock_entry($1::jsonb)`, [
+          JSON.stringify({
+            product_id: productEntry,
+            warehouse_id: warehouseA,
+            qty: 2,
+            entry_type: 'initial',
+          }),
+        ]),
+      'on-hand quantity is 0',
+    );
+    passed += 1;
+
+    const adjusted = await client.query(`SELECT inventory_apply_stock_entry($1::jsonb) AS qty`, [
+      JSON.stringify({
+        product_id: productEntry,
+        warehouse_id: warehouseA,
+        qty: -3,
+        entry_type: 'adjustment',
+      }),
+    ]);
+    assert(Number(adjusted.rows[0].qty) === 5, 'adjustment should decrease qty');
+    passed += 1;
+
+    await expectError(
+      client,
+      'sp_adj_zero',
+      () =>
+        client.query(`SELECT inventory_apply_stock_entry($1::jsonb)`, [
+          JSON.stringify({
+            product_id: productEntry,
+            warehouse_id: warehouseA,
+            qty: 0,
+            entry_type: 'adjustment',
+          }),
+        ]),
+      'cannot be 0',
+    );
+    passed += 1;
+
+    await expectError(
+      client,
+      'sp_set_increase',
+      () =>
+        client.query(`SELECT inventory_set_warehouse_qty($1, $2, 9, NULL, 'test')`, [
+          warehouseA,
+          productEntry,
+        ]),
+      'stock entry',
+    );
+    passed += 1;
+
+    await client.query(`SELECT inventory_apply_stock_entry($1::jsonb)`, [
+      JSON.stringify({
+        product_id: productEntry,
+        warehouse_id: warehouseA,
+        qty: -5,
+        entry_type: 'adjustment',
+      }),
+    ]);
+    await expectError(
+      client,
+      'sp_initial_history',
+      () =>
+        client.query(`SELECT inventory_apply_stock_entry($1::jsonb)`, [
+          JSON.stringify({
+            product_id: productEntry,
+            warehouse_id: warehouseA,
+            qty: 4,
+            entry_type: 'initial',
+          }),
+        ]),
+      'no stock history',
+    );
+    passed += 1;
+
     await client.query('ROLLBACK');
     process.stdout.write(`inventory rpc tests passed: ${passed}\n`);
   } catch (error) {

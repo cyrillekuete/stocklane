@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { toAbsoluteUrl } from '@/lib/helpers';
-import { resolveProductImageSrc } from '@/store-inventory/lib/format';
+import { resolveProductImageSrc, formatMoney } from '@/store-inventory/lib/format';
 import { resolveProductWarehouseStock } from '@/store-inventory/lib/warehouse-stock-edit';
+import { stockDeltaFromQty } from '@/store-inventory/lib/stock-delta';
 import { Badge, BadgeDot } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input, InputWrapper } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatMoney } from '@/store-inventory/lib/format';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Select,
@@ -129,12 +129,17 @@ export function PerProductStockSheet({
       ? imageSrc
       : toAbsoluteUrl(imageSrc);
 
+  const thresholdQty = Number(threshold);
+  const warehouseDelta = stockDeltaFromQty(
+    expectedQty,
+    Number.isFinite(thresholdQty) && thresholdQty >= 0 ? thresholdQty : 0,
+  );
+
   const handleSave = async () => {
     if (!data?.id) {
       toast.error(t('Select a product first'));
       return;
     }
-    const qty = Number(stockQty);
     const thresholdQty = Number(threshold);
     const reorder = Number(reorderQty);
     const lead = Number(leadTimeDays);
@@ -232,7 +237,7 @@ export function PerProductStockSheet({
                         disabled
                       />
                       <span className="text-xs text-muted-foreground">
-                        {t('On-hand quantity can only be increased with Receive Stock.')}
+                        {t('On-hand quantity can only be increased with Stock Entry.')}
                       </span>
                       {reservedQty > 0 && (
                         <span className="text-xs text-muted-foreground">
@@ -304,7 +309,7 @@ export function PerProductStockSheet({
                     <div className="flex items-center flex-wrap lg:gap-10 gap-5">
                       {[
                         { label: t('Status'), value: expectedQty > 0 ? t('In Stock') : t('Out of Stock'), isStatus: true },
-                        { label: t('Delta'), value: data?.delta?.label || '0' },
+                        { label: t('Delta'), value: warehouseDelta.label },
                         { label: t('Trend'), value: data?.trend?.label ? t(data.trend.label) : t('Steady') },
                         { label: t('Last Moved'), value: data?.lastMoved || '—' },
                         { label: t('Updated By'), value: data?.handler || '—' },

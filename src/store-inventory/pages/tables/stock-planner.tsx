@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react';
 import {
   Column,
   ColumnDef,
@@ -23,6 +23,7 @@ import {
 import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useT } from '@/i18n/use-t';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import { Alert, AlertIcon, AlertTitle } from '@/components/ui/alert';
 import { Badge, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -76,77 +77,61 @@ import {
 } from '@/components/ui/tooltip';
 import { stockPlannerMockData } from '@/store-inventory/data/stock';
 import { PerProductStockSheet } from '../components/per-product-stock-sheet';
-import { ProductDetailsAnalyticsSheet } from '../components/product-details-analytics-sheet';
-import { useUpdateStockLevel } from '@/store-inventory/hooks/use-inventory';
+import { ProductSoftDeleteDialog } from '../components/product-delete-dialogs';
+import { useDeleteProduct, useUpdateStockLevel } from '@/store-inventory/hooks/use-inventory';
+import { useStoreSettings } from '@/store-inventory/hooks/use-settings';
+import { generateStockPlannerPdf } from '@/store-inventory/lib/stock-planner-pdf';
+import type { StockPlannerRow } from '@/store-inventory/types';
+import type { StockEntryPrefillLine } from '@/store-inventory/lib/stock-entry';
 
 interface IColumnFilterProps<TData, TValue> {
   column: Column<TData, TValue>;
 }
 
-export interface IData {
-  id: string;
-  productInfo: {
-    image: string;
-    title: string;
-    label: string;
-    tooltip: string;
-  };
-  stock: number;
-  rsvd: number;
-  tlvl: number;
-  delta: {
-    label: string;
-    variant: string;
-  };
-  flow: number;
-  reorderIn: {
-    days: number;
-    date: string;
-  };
-  reorder: number;
-  leadTime: {
-    days: number;
-    date: string;
-  };
-  ar: boolean;
-}
+export type IData = StockPlannerRow;
 
 interface StockPlannerProps {
-  mockData?: IData[];
+  mockData?: StockPlannerRow[];
   warehouseId?: string | null;
+  isLoading?: boolean;
+  isError?: boolean;
+  exportPdfRef?: MutableRefObject<(() => void) | null>;
+  selectedReorderLinesRef?: MutableRefObject<StockEntryPrefillLine[]>;
 }
 
-const mockData: IData[] = stockPlannerMockData;
+const mockData: StockPlannerRow[] = stockPlannerMockData;
 
-const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlannerProps) => {
+const StockPlannerTable = ({
+  mockData: propsMockData,
+  warehouseId,
+  isLoading = false,
+  isError = false,
+  exportPdfRef,
+  selectedReorderLinesRef,
+}: StockPlannerProps) => {
   const t = useT();
-  const data = propsMockData || mockData;
+  const data = isSupabaseConfigured ? (propsMockData ?? []) : (propsMockData || mockData);
   const updateStock = useUpdateStockLevel();
+  const deleteProduct = useDeleteProduct();
+  const { data: settings } = useStoreSettings();
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   });
   const [isStockSheetOpen, setIsStockSheetOpen] = useState(false);
-  const [selectedStockProduct, setSelectedStockProduct] = useState<(typeof data)[number] | undefined>();
+  const [selectedStockProduct, setSelectedStockProduct] = useState<StockPlannerRow | undefined>();
+  const [productToDelete, setProductToDelete] = useState<StockPlannerRow | null>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
-
-  // Modal state
-  const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'id', desc: false },
-  ]);
+  const [sorting, setSorting] = useState<SortingState>([{ id: 'id', desc: false }]);
   const [searchQuery, setSearchQuery] = useState('');
-
-  // Search input state
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sync inputValue with searchQuery when searchQuery changes externally
   useEffect(() => {
     setInputValue(searchQuery);
   }, [searchQuery]);
   const [selectedStocks, setSelectedStocks] = useState<string[]>([]);
-  const [selectedUpdated, setSelectedUpdated] = useState<string[]>([]);
+  const [selectedReorderDays, setSelectedReorderDays] = useState<string[]>([]);
 
   const ColumnInputFilter = <TData, TValue>({
     column,
@@ -162,36 +147,81 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
     );
   };
 
-  // Apply search, stock levels, and reorder filters
   const filteredData = useMemo(() => {
     let result = [...data];
 
-    // Apply search filter - only search in product title
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter((item) =>
-        item.productInfo.title.toLowerCase().includes(query),
-      );
+      const query = searchQuery.toLowerCase().trim();
+      if (query) {
+        result = result.filter(
+          (item) =>
+            item.productInfo.title.toLowerCase().includes(query) ||
+            item.productInfo.label.toLowerCase().includes(query),
+        );
+      }
     }
 
-    // Apply stock level filter
     if (selectedStocks.length > 0) {
-      result = result.filter((row) =>
-        selectedStocks.includes(row.stock.toString()),
-      );
+      result = result.filter((row) => selectedStocks.includes(row.stock.toString()));
     }
 
-    // Apply reorder filter
-    if (selectedUpdated.length > 0) {
+    if (selectedReorderDays.length > 0) {
       result = result.filter((row) =>
-        selectedUpdated.includes(row.reorder.toString()),
+        selectedReorderDays.includes(row.reorderIn.days.toString()),
       );
     }
 
     return result;
-  }, [data, searchQuery, selectedStocks, selectedUpdated]);
+  }, [data, searchQuery, selectedStocks, selectedReorderDays]);
 
-  const columns = useMemo<ColumnDef<IData>[]>(
+  const handleProductClick = (row: StockPlannerRow) => {
+    setSelectedStockProduct(row);
+    setIsStockSheetOpen(true);
+  };
+
+  const handleDownloadPdf = () => {
+    generateStockPlannerPdf(filteredData, {
+      storeName: settings?.storeName ?? t('Store'),
+      labels: {
+        title: t('Stock Planner'),
+        printed: t('Printed'),
+        product: t('Product'),
+        sku: t('SKU'),
+        stock: t('Stock'),
+        reserved: t('Rsvd'),
+        targetLevel: t('T-Lvl'),
+        delta: t('Delta'),
+        flow: t('Flow'),
+        reorderIn: t('Reorder In'),
+        reorder: t('Reorder'),
+        leadTime: t('Lead Time'),
+        autoReorder: t('AR'),
+        on: t('On'),
+        off: t('Off'),
+        days: t('days'),
+        itemsPerDay: t('items/day'),
+      },
+    });
+  };
+
+  useEffect(() => {
+    if (exportPdfRef) {
+      exportPdfRef.current = handleDownloadPdf;
+    }
+  });
+
+  useEffect(() => {
+    if (!selectedReorderLinesRef) return;
+    const selectedIds = Object.keys(rowSelection);
+    selectedReorderLinesRef.current = filteredData
+      .filter((row) => selectedIds.includes(row.id))
+      .map((row) => ({
+        productId: row.id,
+        qty: Math.max(row.reorder, 1),
+      }));
+  }, [rowSelection, filteredData, selectedReorderLinesRef]);
+
+  const columns = useMemo<ColumnDef<StockPlannerRow>[]>(
     () => [
       {
         accessorKey: 'id',
@@ -218,10 +248,6 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
         ),
         cell: (info) => {
           const row = info.row.original;
-          const handleProductClick = () => {
-            setSelectedStockProduct(row);
-            setIsStockSheetOpen(true);
-          };
 
           return (
             <div className="flex items-center gap-2.5">
@@ -232,7 +258,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                     <TooltipTrigger asChild>
                       <Link
                         to="#"
-                        onClick={() => handleProductClick()}
+                        onClick={() => handleProductClick(row)}
                         className="text-sm font-medium text-foreground hover:text-primary leading-3.5 text-left"
                       >
                         {row.productInfo.title}
@@ -248,7 +274,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                 ) : (
                   <Link
                     to="#"
-                    onClick={() => handleProductClick()}
+                    onClick={() => handleProductClick(row)}
                     className="text-sm font-medium text-foreground hover:text-primary leading-3.5 text-left"
                   >
                     {row.productInfo.title}
@@ -264,11 +290,12 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
             </div>
           );
         },
-        filterFn: (row, filterValue) => {
+        filterFn: (row, _columnId, filterValue) => {
           const title = row.original.productInfo.title.toLowerCase();
+          const sku = row.original.productInfo.label.toLowerCase();
           const query = ((filterValue as string) || '').toLowerCase();
           if (!query) return true;
-          return title.includes(query);
+          return title.includes(query) || sku.includes(query);
         },
         enableSorting: true,
         size: 260,
@@ -456,9 +483,9 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
         cell: (info) => (
           <div className="text-center">
             <Switch
-              id="size-sm"
+              id={`ar-${info.row.original.id}`}
               size="sm"
-              defaultChecked={info.row.original.ar}
+              checked={info.row.original.ar}
               onCheckedChange={(checked) => {
                 updateStock.mutate({
                   productId: info.row.original.id,
@@ -467,49 +494,28 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
                     ...(warehouseId ? { warehouseId } : {}),
                   },
                 });
-                if (checked) {
-                  toast.custom(
-                    (toastId) => (
-                      <Alert
-                        variant="mono"
-                        icon="success"
-                        close={true}
-                        onClose={() => toast.dismiss(toastId)}
-                      >
-                        <AlertIcon>
-                          <Info />
-                        </AlertIcon>
-                        <AlertTitle>
-                          {t('Auto-reorder enabled for this product.')}
-                        </AlertTitle>
-                      </Alert>
-                    ),
-                    {
-                      duration: 5000,
-                    },
-                  );
-                } else {
-                  toast.custom(
-                    (toastId) => (
-                      <Alert
-                        variant="mono"
-                        icon="success"
-                        close={true}
-                        onClose={() => toast.dismiss(toastId)}
-                      >
-                        <AlertIcon>
-                          <Info />
-                        </AlertIcon>
-                        <AlertTitle>
-                          {t('Auto-reorder disabled for this product.')}
-                        </AlertTitle>
-                      </Alert>
-                    ),
-                    {
-                      duration: 5000,
-                    },
-                  );
-                }
+                toast.custom(
+                  (toastId) => (
+                    <Alert
+                      variant="mono"
+                      icon="success"
+                      close={true}
+                      onClose={() => toast.dismiss(toastId)}
+                    >
+                      <AlertIcon>
+                        <Info />
+                      </AlertIcon>
+                      <AlertTitle>
+                        {checked
+                          ? t('Auto-reorder enabled for this product.')
+                          : t('Auto-reorder disabled for this product.')}
+                      </AlertTitle>
+                    </Alert>
+                  ),
+                  {
+                    duration: 5000,
+                  },
+                );
               }}
             />
           </div>
@@ -524,7 +530,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
         id: 'actions',
         header: () => '',
         enableSorting: false,
-        cell: () => (
+        cell: (info) => (
           <div className="text-center">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -535,18 +541,21 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
               <DropdownMenuContent align="end" side="bottom">
                 <DropdownMenuLabel>{t('Actions')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleProductClick(info.row.original)}>
                   <Settings />
                   {t('Settings')}
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleProductClick(info.row.original)}>
                   <Pencil />
                   {t('Edit')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem variant="destructive">
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setProductToDelete(info.row.original)}
+                >
                   <Trash />
-                  {t('Delete')}
+                  {t('Move to trash')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -579,6 +588,8 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
       sorting,
       rowSelection,
     },
+    enableRowSelection: true,
+    getRowId: (row) => row.id,
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
     onRowSelectionChange: setRowSelection,
@@ -592,30 +603,29 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
       setSelectedStocks((prev) =>
         isChecked ? [...prev, stock] : prev.filter((s) => s !== stock),
       );
-      // Reset pagination to first page when filters change
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     };
 
-    const handleUpdatedChange = (isChecked: boolean, updated: string) => {
-      setSelectedUpdated((prev) =>
-        isChecked ? [...prev, updated] : prev.filter((u) => u !== updated),
+    const handleReorderInChange = (isChecked: boolean, days: string) => {
+      setSelectedReorderDays((prev) =>
+        isChecked ? [...prev, days] : prev.filter((value) => value !== days),
       );
-      // Reset pagination to first page when filters change
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     };
 
-    // Search input handlers
     const handleClearInput = () => {
       setInputValue('');
       setSearchQuery('');
-      // Reset pagination to first page when filters change
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
       inputRef.current?.focus();
     };
 
+    const uniqueReorderDays = Array.from(
+      new Set(data.map((row) => row.reorderIn.days)),
+    );
+
     return (
       <CardHeading className="flex items-center flex-wrap gap-2.5 space-y-0">
-        {/* Search */}
         <div className="w-full max-w-[200px]">
           <InputWrapper>
             <Search />
@@ -641,14 +651,13 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
           </InputWrapper>
         </div>
 
-        {/* Reorder In Filter */}
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="relative">
               {t('Reorder In: 7 days')}
-              {selectedUpdated.length > 0 && (
+              {selectedReorderDays.length > 0 && (
                 <Badge variant="outline" size="sm">
-                  {selectedUpdated.length}
+                  {selectedReorderDays.length}
                 </Badge>
               )}
               <ChevronDown className="size-5 pt-0.5 -m-0.5" />
@@ -660,63 +669,50 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
               <CommandList>
                 <CommandEmpty>{t('No Reorder In found.')}</CommandEmpty>
                 <CommandGroup>
-                  {Array.from(new Set(data.map((row) => row.reorder))).map(
-                    (reorder) => {
-                      const reorderObj = data.find(
-                        (row) => row.reorder === reorder,
-                      );
-                      const reorderIn = reorderObj?.reorderIn;
-                      const count = data.filter(
-                        (row) => row.reorder === reorder,
-                      ).length;
-                      return (
-                        <CommandItem
-                          key={reorder}
-                          value={reorder.toString()}
-                          className="flex items-center gap-2.5 bg-transparent!"
-                          onSelect={() => {}}
-                          data-disabled="true"
+                  {uniqueReorderDays.map((days) => {
+                    const sample = data.find((row) => row.reorderIn.days === days);
+                    const count = data.filter((row) => row.reorderIn.days === days).length;
+                    return (
+                      <CommandItem
+                        key={days}
+                        value={days.toString()}
+                        className="flex items-center gap-2.5 bg-transparent!"
+                        onSelect={() => {}}
+                        data-disabled="true"
+                      >
+                        <Checkbox
+                          id={`reorder-in-${days}`}
+                          checked={selectedReorderDays.includes(days.toString())}
+                          onCheckedChange={(checked) =>
+                            handleReorderInChange(checked === true, days.toString())
+                          }
+                          size="sm"
+                        />
+                        <Label
+                          htmlFor={`reorder-in-${days}`}
+                          className="grow flex items-center justify-between font-normal gap-1.5"
                         >
-                          <Checkbox
-                            id={reorder.toString()}
-                            checked={selectedUpdated.includes(
-                              reorder.toString(),
-                            )}
-                            onCheckedChange={(checked) =>
-                              handleUpdatedChange(
-                                checked === true,
-                                reorder.toString(),
-                              )
-                            }
-                            size="sm"
-                          />
-                          <Label
-                            htmlFor={reorder.toString()}
-                            className="grow flex items-center justify-between font-normal gap-1.5"
-                          >
-                            <div className="flex flex-col">
-                              <span className="text-sm font-normal text-foreground">
-                                {t('{days} days', { days: reorderIn?.days ?? 0 })}
-                              </span>
-                              <span className="text-xs font-normal text-secondary-foreground">
-                                {reorderIn?.date}
-                              </span>
-                            </div>
-                            <span className="text-muted-foreground font-semibold me-2.5">
-                              {count}
+                          <div className="flex flex-col">
+                            <span className="text-sm font-normal text-foreground">
+                              {t('{days} days', { days })}
                             </span>
-                          </Label>
-                        </CommandItem>
-                      );
-                    },
-                  )}
+                            <span className="text-xs font-normal text-secondary-foreground">
+                              {sample?.reorderIn.date}
+                            </span>
+                          </div>
+                          <span className="text-muted-foreground font-semibold me-2.5">
+                            {count}
+                          </span>
+                        </Label>
+                      </CommandItem>
+                    );
+                  })}
                 </CommandGroup>
               </CommandList>
             </Command>
           </PopoverContent>
         </Popover>
 
-        {/* Stock Level Filter */}
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" className="relative">
@@ -735,40 +731,40 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
               <CommandList>
                 <CommandEmpty>{t('No stock levels found.')}</CommandEmpty>
                 <CommandGroup>
-                  {Array.from(
-                    new Set(data.map((row) => row.stock.toString())),
-                  ).map((stock) => {
-                    const count = data.filter(
-                      (row) => row.stock.toString() === stock,
-                    ).length;
-                    return (
-                      <CommandItem
-                        key={stock}
-                        value={stock}
-                        className="flex items-center gap-2.5 bg-transparent!"
-                        onSelect={() => {}}
-                        data-disabled="true"
-                      >
-                        <Checkbox
-                          id={stock}
-                          checked={selectedStocks.includes(stock)}
-                          onCheckedChange={(checked) =>
-                            handleStockChange(checked === true, stock)
-                          }
-                          size="sm"
-                        />
-                        <Label
-                          htmlFor={stock}
-                          className="grow flex items-center justify-between font-normal gap-1.5"
+                  {Array.from(new Set(data.map((row) => row.stock.toString()))).map(
+                    (stock) => {
+                      const count = data.filter(
+                        (row) => row.stock.toString() === stock,
+                      ).length;
+                      return (
+                        <CommandItem
+                          key={stock}
+                          value={stock}
+                          className="flex items-center gap-2.5 bg-transparent!"
+                          onSelect={() => {}}
+                          data-disabled="true"
                         >
-                          <span className="text-xs font-medium">{stock}</span>
-                          <span className="text-muted-foreground font-semibold me-2.5">
-                            {count}
-                          </span>
-                        </Label>
-                      </CommandItem>
-                    );
-                  })}
+                          <Checkbox
+                            id={stock}
+                            checked={selectedStocks.includes(stock)}
+                            onCheckedChange={(checked) =>
+                              handleStockChange(checked === true, stock)
+                            }
+                            size="sm"
+                          />
+                          <Label
+                            htmlFor={stock}
+                            className="grow flex items-center justify-between font-normal gap-1.5"
+                          >
+                            <span className="text-xs font-medium">{stock}</span>
+                            <span className="text-muted-foreground font-semibold me-2.5">
+                              {count}
+                            </span>
+                          </Label>
+                        </CommandItem>
+                      );
+                    },
+                  )}
                 </CommandGroup>
               </CommandList>
             </Command>
@@ -779,17 +775,22 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
   }, [
     inputValue,
     selectedStocks,
-    selectedUpdated,
+    selectedReorderDays,
     data,
-    setPagination,
-    setInputValue,
-    setSearchQuery,
     t,
   ]);
 
   return (
     <TooltipProvider>
-      <>
+      <div className="space-y-3">
+        {isError && (
+          <p className="text-sm text-destructive">
+            {t('Unable to load warehouse stock. Check your connection and try again.')}
+          </p>
+        )}
+        {isLoading && (
+          <p className="text-sm text-muted-foreground">{t('Loading stock...')}</p>
+        )}
         <DataGrid
           table={table}
           recordCount={filteredData?.length || 0}
@@ -804,13 +805,7 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
             <CardHeader className="py-3.5">
               {Title}
               <CardToolbar>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedStockProduct(filteredData[0]);
-                    setIsStockSheetOpen(true);
-                  }}
-                >
+                <Button variant="outline" onClick={handleDownloadPdf}>
                   {t('Reports')}
                 </Button>
               </CardToolbar>
@@ -832,21 +827,62 @@ const StockPlannerTable = ({ mockData: propsMockData, warehouseId }: StockPlanne
           data={
             selectedStockProduct
               ? {
-                  ...selectedStockProduct,
+                  id: selectedStockProduct.id,
+                  productInfo: selectedStockProduct.productInfo,
+                  stock: selectedStockProduct.stock,
+                  rsvd: selectedStockProduct.rsvd,
+                  tlvl: selectedStockProduct.tlvl,
+                  delta: selectedStockProduct.delta,
+                  sum: selectedStockProduct.sum ?? '',
+                  lastMoved: selectedStockProduct.lastMoved ?? '—',
+                  handler: selectedStockProduct.handler ?? '—',
+                  trend: selectedStockProduct.trend ?? {
+                    label: 'Steady',
+                    variant: 'secondary',
+                  },
+                  category: selectedStockProduct.category,
+                  price: selectedStockProduct.price,
+                  created: selectedStockProduct.created,
+                  updated: selectedStockProduct.updated,
                   reorderQty: selectedStockProduct.reorder,
                   leadTimeDays: selectedStockProduct.leadTime.days,
                   autoReorder: selectedStockProduct.ar,
                 }
               : undefined
           }
+          initialWarehouseId={warehouseId}
         />
-
-        {/* Product Details Analytics Modal */}
-        <ProductDetailsAnalyticsSheet
-          open={isProductDetailsOpen}
-          onOpenChange={setIsProductDetailsOpen}
+        <ProductSoftDeleteDialog
+          open={Boolean(productToDelete)}
+          onOpenChange={(open) => {
+            if (!open) setProductToDelete(null);
+          }}
+          product={
+            productToDelete
+              ? {
+                  id: productToDelete.id,
+                  title: productToDelete.productInfo.title,
+                  sku: productToDelete.productInfo.label,
+                }
+              : null
+          }
+          confirming={deleteProduct.isPending}
+          onConfirm={() => {
+            if (!productToDelete) return;
+            deleteProduct.mutate(productToDelete.id, {
+              onSuccess: () => {
+                toast.success(t('Product moved to trash'));
+                setProductToDelete(null);
+              },
+              onError: (error) => {
+                toast.error(
+                  error instanceof Error ? t(error.message) : t('Unable to delete product'),
+                );
+              },
+            });
+          }}
         />
-      </>
+      </div>
     </TooltipProvider>
   );
 };

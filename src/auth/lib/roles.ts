@@ -140,6 +140,7 @@ export function permissionForPath(pathname: string): AppPermission | null {
   if (
     path.startsWith('all-stock') ||
     path.startsWith('current-stock') ||
+    path.startsWith('stock-entry') ||
     path.startsWith('inbound-stock') ||
     path.startsWith('outbound-stock') ||
     path.startsWith('stock-planner') ||

@@ -41,6 +41,7 @@ export const MENU_SIDEBAR: InventoryMenuItem[] = [
     children: [
       { title: 'All Stock', path: '/store-inventory/all-stock', permission: 'inventory' },
       { title: 'Current Stock', path: '/store-inventory/current-stock', permission: 'inventory' },
+      { title: 'Stock Entry', path: '/store-inventory/stock-entry', permission: 'inventory' },
       { title: 'Inbound Stock', path: '/store-inventory/inbound-stock', permission: 'inventory' },
       { title: 'Outbound Stock', path: '/store-inventory/outbound-stock', permission: 'inventory' },
       { title: 'Stock Planner', path: '/store-inventory/stock-planner', permission: 'inventory' },

@@ -21,6 +21,8 @@ export function classifyStockMovementReason(reason: string, delta: number): Move
   switch (reason) {
     case 'inbound_receive':
       return 'purchased';
+    case 'initial_stock':
+      return 'ignore';
     case 'pos_sale':
     case 'pos_void':
     case 'fulfill':

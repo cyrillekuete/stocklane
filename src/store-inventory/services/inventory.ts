@@ -1,5 +1,6 @@
 import { format } from 'date-fns';
 import { supabase } from '@/lib/supabase';
+import { parseStockEntryQty, type StockEntryType } from '../lib/stock-entry';
 import { buildOrderDetail } from '../data/orders';
 import {
   assertNonNegativeMoney,
@@ -1528,7 +1529,7 @@ export async function updateStockLevel(
     if (currentError) throw currentError;
     const currentQty = Number(currentStock?.qty ?? 0);
     if (stockPayload.qty > currentQty) {
-      throw new Error('Stock can only be added with Receive Stock');
+      throw new Error('Stock can only be added with Stock Entry');
     }
     const { error: qtyError } = await client.rpc('inventory_set_warehouse_qty', {
       p_warehouse_id: warehouseId,
@@ -1714,6 +1715,218 @@ export async function createInboundShipmentsBatch(
   }
 
   return {
+    lines: results,
+    totalQty: results.reduce((sum, row) => sum + row.qty, 0),
+    totalValue: results.reduce((sum, row) => sum + row.lineTotal, 0),
+    orderDate,
+  };
+}
+
+export type StockEntryLineInput = {
+  productId: string;
+  warehouseId: string;
+  qty: number;
+  unitValue: number;
+  productName: string;
+  productSku: string;
+  warehouseName: string;
+  orderDate?: string;
+};
+
+export type StockEntryBatchLineResult = {
+  productId: string;
+  productName: string;
+  productSku: string;
+  warehouseId: string;
+  warehouseName: string;
+  qty: number;
+  unitValue: number;
+  lineTotal: number;
+  orderDate: string;
+  shipmentId?: string;
+};
+
+export type StockEntryBatchResult = {
+  type: StockEntryType;
+  lines: StockEntryBatchLineResult[];
+  totalQty: number;
+  totalValue: number;
+  orderDate: string;
+};
+
+export class StockEntryBatchError extends Error {
+  readonly type: StockEntryType;
+  readonly succeeded: number;
+  readonly total: number;
+  readonly results: StockEntryBatchLineResult[];
+
+  constructor(
+    message: string,
+    type: StockEntryType,
+    succeeded: number,
+    total: number,
+    results: StockEntryBatchLineResult[],
+  ) {
+    super(message);
+    this.name = 'StockEntryBatchError';
+    this.type = type;
+    this.succeeded = succeeded;
+    this.total = total;
+    this.results = results;
+  }
+}
+
+function rpcErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = (error as { message: unknown }).message;
+    if (typeof message === 'string' && message.trim()) return message;
+  }
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
+}
+
+async function applyManualStockEntryLine(line: StockEntryLineInput, entryType: 'initial' | 'adjustment') {
+  const client = requireClient();
+  const { data: warehouse, error: warehouseError } = await client
+    .from('inventory_warehouses')
+    .select('id, status')
+    .eq('id', line.warehouseId)
+    .maybeSingle();
+  if (warehouseError) throw warehouseError;
+  if (!warehouse?.id || String(warehouse.status).toLowerCase() !== 'active') {
+    throw new Error('Select an Active warehouse');
+  }
+
+  const { error } = await client.rpc('inventory_apply_stock_entry', {
+    payload: {
+      id: crypto.randomUUID(),
+      product_id: line.productId,
+      warehouse_id: line.warehouseId,
+      qty: line.qty,
+      entry_type: entryType,
+    },
+  });
+  if (error) throw new Error(rpcErrorMessage(error, 'Unable to apply stock entry'));
+}
+
+function toStockEntryLineResult(line: StockEntryLineInput, orderDate: string): StockEntryBatchLineResult {
+  const qty = Math.trunc(line.qty);
+  const unitValue = Number(line.unitValue) || 0;
+  return {
+    productId: line.productId,
+    productName: line.productName,
+    productSku: line.productSku,
+    warehouseId: line.warehouseId,
+    warehouseName: line.warehouseName,
+    qty,
+    unitValue,
+    lineTotal: unitValue * Math.abs(qty),
+    orderDate: line.orderDate ?? orderDate,
+  };
+}
+
+/** Apply Initial, Purchased, or Adjustment lines. Purchased writes inbound receipts. */
+export async function applyStockEntries(
+  type: StockEntryType,
+  lines: StockEntryLineInput[],
+): Promise<StockEntryBatchResult> {
+  if (!lines.length) {
+    throw new Error('Add at least one stock line');
+  }
+
+  if (type === 'purchased') {
+    try {
+      const batch = await createInboundShipmentsBatch(
+        lines.map((line) => ({
+          productId: line.productId,
+          warehouseId: line.warehouseId,
+          qty: line.qty,
+          unitValue: line.unitValue,
+          productName: line.productName,
+          productSku: line.productSku,
+          warehouseName: line.warehouseName,
+          orderDate: line.orderDate,
+        })),
+      );
+      return {
+        type,
+        lines: batch.lines.map((line) => ({
+          productId: line.productId,
+          productName: line.productName,
+          productSku: line.productSku,
+          warehouseId: line.warehouseId,
+          warehouseName: line.warehouseName,
+          qty: line.qty,
+          unitValue: line.unitValue,
+          lineTotal: line.lineTotal,
+          orderDate: line.orderDate,
+          shipmentId: line.shipmentId,
+        })),
+        totalQty: batch.totalQty,
+        totalValue: batch.totalValue,
+        orderDate: batch.orderDate,
+      };
+    } catch (error) {
+      if (error instanceof InboundShipmentBatchError) {
+        throw new StockEntryBatchError(
+          error.message,
+          type,
+          error.succeeded,
+          error.total,
+          error.results.map((line) => ({
+            productId: line.productId,
+            productName: line.productName,
+            productSku: line.productSku,
+            warehouseId: line.warehouseId,
+            warehouseName: line.warehouseName,
+            qty: line.qty,
+            unitValue: line.unitValue,
+            lineTotal: line.lineTotal,
+            orderDate: line.orderDate,
+            shipmentId: line.shipmentId,
+          })),
+        );
+      }
+      throw error;
+    }
+  }
+
+  const orderDate = lines[0]?.orderDate ?? format(new Date(), 'd MMM, yyyy');
+  const results: StockEntryBatchLineResult[] = [];
+  const fallback = type === 'initial' ? 'Unable to apply initial stock' : 'Unable to apply adjustment';
+
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index]!;
+    const qty = parseStockEntryQty(type, String(line.qty));
+    if (!line.productId || !line.warehouseId || qty === null) {
+      throw new StockEntryBatchError(
+        `Invalid stock line at row ${index + 1}`,
+        type,
+        results.length,
+        lines.length,
+        results,
+      );
+    }
+
+    try {
+      await applyManualStockEntryLine({ ...line, qty }, type);
+      results.push(toStockEntryLineResult({ ...line, qty }, orderDate));
+    } catch (error) {
+      const reason = rpcErrorMessage(error, fallback);
+      throw new StockEntryBatchError(
+        results.length > 0
+          ? `${reason}. ${results.length} of ${lines.length} lines were applied before the failure.`
+          : reason,
+        type,
+        results.length,
+        lines.length,
+        results,
+      );
+    }
+  }
+
+  return {
+    type,
     lines: results,
     totalQty: results.reduce((sum, row) => sum + row.qty, 0),
     totalValue: results.reduce((sum, row) => sum + row.lineTotal, 0),
