@@ -96,7 +96,7 @@ import {
 } from '../services/inventory';
 import { aggregateStockHistory } from '../lib/stock-history';
 import type { StockEntryType } from '../lib/stock-entry';
-import { stockDeltaFromQty } from '../lib/stock-delta';
+import { overlayWarehouseStockLevel } from '../lib/stock-delta';
 import { fetchWarehouseStock } from '../services/warehouses';
 import type {
   CategoryListRow,
@@ -438,21 +438,13 @@ function useStockWithWarehouseOverlay<T>(
     return stock.data.map((product) => {
       if (!warehouseId) return mapRow(product);
       const overlay = qtyMap.get(product.id);
-      const qty = overlay?.qty ?? 0;
-      const reserved = overlay?.reserved ?? 0;
-      const threshold = product.stock_level?.threshold ?? 0;
-      const delta = stockDeltaFromQty(qty, threshold);
       return mapRow({
         ...product,
-        stock_level: product.stock_level
-          ? {
-              ...product.stock_level,
-              qty,
-              reserved,
-              delta_label: delta.label,
-              delta_variant: delta.variant,
-            }
-          : product.stock_level,
+        stock_level: overlayWarehouseStockLevel(
+          product.stock_level,
+          overlay?.qty ?? 0,
+          overlay?.reserved ?? 0,
+        ),
       });
     });
   }, [stock.data, overlayReady, warehouseId, warehouseStock.data, mapRow]);
