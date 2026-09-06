@@ -10,6 +10,9 @@ export const SESSION_TIMEOUT_MAX = 1440;
 export const PASSWORD_MIN_LENGTH_MIN = 6;
 export const PASSWORD_MIN_LENGTH_MAX = 128;
 
+export const STORE_STATUSES = ['Live', 'Draft', 'Archived'] as const;
+export type StoreStatus = (typeof STORE_STATUSES)[number];
+
 const optionalEmail = z
   .union([z.string().email('Enter a valid email'), z.literal(''), z.null()])
   .transform((value) => (value === '' || value == null ? null : value));
@@ -41,8 +44,13 @@ export const storeSettingsSchema = z.object({
   id: z.string().min(1),
   storeName: z.string().trim().min(1, 'Store name is required').max(120, 'Store name is too long'),
   storeCode: z.string().trim().min(1, 'Store code is required').max(64),
-  status: z.string().default('Live'),
-  establishedAt: z.string().min(1),
+  status: z.string().trim().min(1, 'Status is required').default('Live'),
+  establishedAt: z
+    .string()
+    .min(1, 'Established date is required')
+    .refine((value) => !Number.isNaN(Date.parse(value)), {
+      message: 'Enter a valid date',
+    }),
   logo: z
     .string()
     .nullable()
@@ -246,4 +254,36 @@ export function formatZodSettingsError(error: unknown): string {
   }
   if (error instanceof Error) return error.message;
   return 'Invalid settings';
+}
+
+/**
+ * Validate a raw draft (no clamping/normalization) and map the first issue
+ * per field to a key addressable by the settings form.
+ * Nested keys: `shippingZone:<id>:name|rate|estimatedDays`, `location:<id>:name`.
+ */
+export function getSettingsFieldErrors(input: StoreSettings): Record<string, string> {
+  const result = storeSettingsSchema.safeParse(input);
+  if (result.success) return {};
+  const errors: Record<string, string> = {};
+  for (const issue of result.error.issues) {
+    const path = issue.path as Array<string | number>;
+    const root = path[0];
+    let key: string | null = null;
+    if (typeof root === 'string' && path.length === 1) {
+      key = root;
+    } else if (root === 'shippingZones' && typeof path[1] === 'number') {
+      const zone = input.shippingZones?.[path[1] as number];
+      const sub = typeof path[2] === 'string' ? (path[2] as string) : 'name';
+      key = `shippingZone:${zone?.id ?? (path[1] as number)}:${sub}`;
+    } else if (root === 'locations' && typeof path[1] === 'number') {
+      const location = input.locations?.[path[1] as number];
+      key = `location:${location?.id ?? (path[1] as number)}:name`;
+    } else if (typeof root === 'string') {
+      key = root;
+    }
+    if (key && !errors[key]) {
+      errors[key] = issue.message;
+    }
+  }
+  return errors;
 }

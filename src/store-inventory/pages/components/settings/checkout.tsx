@@ -8,10 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useSettingsForm } from "./settings-form-context";
 import { checkoutCountries } from "./components/general-settings/basics";
 import { useT } from '@/i18n/use-t';
+import { FieldError } from "./components/number-field";
 
 export function Checkout() {
   const t = useT();
-  const { draft, updateDraft } = useSettingsForm();
+  const { draft, updateDraft, fieldErrors } = useSettingsForm();
 
   return (
     <div className="space-y-5">
@@ -114,13 +115,13 @@ export function Checkout() {
                 <Label className="text-2sm font-medium shrink-0">{t('Default checkout country')}</Label>
                 <span className="text-xs font-normal text-muted-foreground">{t('Pre-selected country on the checkout form')}</span>
               </div>
-              <div className="basis-2/3">
+              <div className="basis-2/3 space-y-1.5">
                 <Select
                   value={draft.defaultCheckoutCountry}
                   onValueChange={(defaultCheckoutCountry) => updateDraft({ defaultCheckoutCountry })}
                   indicatorPosition="right"
                 >
-                  <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full" aria-invalid={Boolean(fieldErrors.defaultCheckoutCountry)}>
                     <SelectValue placeholder={t('Select country')} />
                   </SelectTrigger>
                   <SelectContent>
@@ -131,6 +132,7 @@ export function Checkout() {
                     ))}
                   </SelectContent>
                 </Select>
+                <FieldError message={fieldErrors.defaultCheckoutCountry} />
               </div>
             </div>
           </div>

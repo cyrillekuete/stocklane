@@ -30,10 +30,20 @@ export function CardPayment() {
       {paymentMethods.map((method) => (
         <Card
           key={method.id}
+          role="checkbox"
+          tabIndex={0}
+          aria-checked={draft.cardMethods.includes(method.id)}
+          aria-label={method.name}
           className={`p-2 rounded-md cursor-pointer ${
             draft.cardMethods.includes(method.id) ? 'border-muted-foreground/40' : ''
           }`}
           onClick={() => toggleMethod(method.id)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              toggleMethod(method.id);
+            }
+          }}
         >
           <div className="flex items-center justify-between mb-3">
             <Card className="flex items-center justify-center rounded-md size-[36px] shadow-xs shrink-0">

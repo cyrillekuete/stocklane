@@ -50,6 +50,11 @@ export const MENU_SIDEBAR: InventoryMenuItem[] = [
         permission: 'inventory',
       },
       {
+        title: 'Stock History',
+        path: '/store-inventory/stock-history',
+        permission: 'inventory',
+      },
+      {
         title: 'Track Shipping',
         path: '/store-inventory/track-shipping',
         permission: 'inventory',

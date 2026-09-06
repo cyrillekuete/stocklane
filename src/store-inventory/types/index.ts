@@ -160,6 +160,22 @@ export interface OutboundStockRow {
   carrier: string;
 }
 
+export interface StockHistoryRow {
+  id: string;
+  item: string;
+  sku: string;
+  unitPrice: number;
+  initialQty: number;
+  purchasedQty: number;
+  soldQty: number;
+  adjustmentQty: number;
+  finalQty: number;
+  initialAmt: number;
+  purchasedAmt: number;
+  soldAmt: number;
+  finalAmt: number;
+}
+
 export interface StockPlannerRow {
   id: string;
   productInfo: {
@@ -484,8 +500,8 @@ export interface StoreSettings {
   applePay: boolean;
   googlePay: boolean;
   paypal: boolean;
-  taxRateScope: string;
-  taxCalculation: string;
+  taxRateScope: 'country' | 'state' | 'city';
+  taxCalculation: 'inclusive' | 'exclusive';
   taxPercent: number;
   automaticInvoice: boolean;
   noReplyEmail: string | null;

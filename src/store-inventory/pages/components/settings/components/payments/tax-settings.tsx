@@ -6,15 +6,14 @@ import { Separator } from "@/components/ui/separator";
 import { FilePlus, FileMinus, Globe, Globe2 } from "lucide-react";
 import { RiMapPinLine } from "@remixicon/react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { clampTaxPercent } from "@/store-inventory/lib/settings-validation";
 import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "../../settings-form-context";
+import { NumberField } from "../number-field";
 
 export function TaxSettings() {
   const t = useT();
-  const { draft, saved, updateDraft } = useSettingsForm();
+  const { draft, saved, updateDraft, fieldErrors } = useSettingsForm();
   const taxChanged =
     draft.taxPercent !== saved.taxPercent || draft.taxCalculation !== saved.taxCalculation;
 
@@ -44,7 +43,7 @@ export function TaxSettings() {
               <span className="text-xs font-normal text-muted-foreground">{t('How tax rates are applied to orders')}</span>
             </div>
             <div className="basis-2/3">
-              <Select value={draft.taxRateScope} onValueChange={(taxRateScope) => updateDraft({ taxRateScope })} indicatorPosition="right">
+              <Select value={draft.taxRateScope} onValueChange={(value) => updateDraft({ taxRateScope: value as typeof draft.taxRateScope })} indicatorPosition="right">
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={t('Apply per country')} />
                 </SelectTrigger>
@@ -80,16 +79,15 @@ export function TaxSettings() {
               <span className="text-xs font-normal text-muted-foreground">{t('Used at POS checkout')}</span>
             </div>
             <div className="basis-2/3">
-              <Input
-                type="number"
+              <NumberField
+                id="settings-tax-percent"
+                value={draft.taxPercent}
                 min={0}
                 max={100}
                 step="0.01"
-                value={draft.taxPercent}
-                onChange={(event) => {
-                  const raw = Number(event.target.value);
-                  updateDraft({ taxPercent: Number.isFinite(raw) ? clampTaxPercent(raw) : 0 });
-                }}
+                ariaLabel={t('Tax Percent')}
+                error={fieldErrors.taxPercent}
+                onCommit={(taxPercent) => updateDraft({ taxPercent })}
               />
               {taxChanged ? (
                 <p className="mt-2 text-xs text-muted-foreground">
@@ -107,14 +105,23 @@ export function TaxSettings() {
               <span className="text-xs font-normal text-muted-foreground">{t('Whether prices already include tax')}</span>
             </div>
             <div className="basis-2/3">
-              <RadioGroup className="gap-1" value={draft.taxCalculation} onValueChange={(taxCalculation) => updateDraft({ taxCalculation })}>
+              <RadioGroup className="gap-1" value={draft.taxCalculation} onValueChange={(value) => updateDraft({ taxCalculation: value as typeof draft.taxCalculation })}>
                 {taxOptions.map((option) => (
                   <Card
                     key={option.id}
+                    role="radio"
+                    tabIndex={0}
+                    aria-checked={draft.taxCalculation === option.id}
                     className={`py-3 px-5 border-none shadow-none cursor-pointer ${
                       option.id === 'inclusive' ? 'rounded-b-none' : 'rounded-t-none'
                     } ${draft.taxCalculation === option.id ? 'bg-secondary' : 'bg-accent/50'}`}
-                    onClick={() => updateDraft({ taxCalculation: option.id })}
+                    onClick={() => updateDraft({ taxCalculation: option.id as typeof draft.taxCalculation })}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        updateDraft({ taxCalculation: option.id as typeof draft.taxCalculation });
+                      }
+                    }}
                   >
                     <div className="flex items-center gap-5.5">
                       <RadioGroupItem value={option.id} id={option.id} />

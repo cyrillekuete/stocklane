@@ -8,10 +8,11 @@ import { Switch } from "@/components/ui/switch";
 import { Mail } from "lucide-react";
 import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "./settings-form-context";
+import { FieldError } from "./components/number-field";
 
 export function Notification() {
   const t = useT();
-  const { draft, updateDraft } = useSettingsForm();
+  const { draft, updateDraft, fieldErrors } = useSettingsForm();
 
   return (
     <div className="space-y-5">
@@ -119,17 +120,21 @@ export function Notification() {
                 <Label className="text-2sm font-medium shrink-0">{t('Staff notify email')}</Label>
                 <span className="text-xs font-normal text-muted-foreground">{t('Inbox that receives operational alerts')}</span>
               </div>
-              <InputGroup className="basis-2/3">
-                <InputAddon mode="icon">
-                  <Mail />
-                </InputAddon>
-                <Input
-                  type="email"
-                  placeholder="ops@mystore.io"
-                  value={draft.notifyEmail ?? ''}
-                  onChange={(e) => updateDraft({ notifyEmail: e.target.value })}
-                />
-              </InputGroup>
+              <div className="basis-2/3 space-y-1.5">
+                <InputGroup>
+                  <InputAddon mode="icon">
+                    <Mail />
+                  </InputAddon>
+                  <Input
+                    type="email"
+                    placeholder="ops@mystore.io"
+                    value={draft.notifyEmail ?? ''}
+                    onChange={(e) => updateDraft({ notifyEmail: e.target.value })}
+                    aria-invalid={Boolean(fieldErrors.notifyEmail)}
+                  />
+                </InputGroup>
+                <FieldError message={fieldErrors.notifyEmail} />
+              </div>
             </div>
           </div>
         </CardContent>

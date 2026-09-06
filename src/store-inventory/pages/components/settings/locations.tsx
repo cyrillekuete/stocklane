@@ -9,11 +9,12 @@ import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "./settings-form-context";
+import { FieldError } from "./components/number-field";
 import type { StoreLocation } from "@/store-inventory/types";
 
 export function Locations() {
   const t = useT();
-  const { draft, updateDraft } = useSettingsForm();
+  const { draft, updateDraft, fieldErrors } = useSettingsForm();
 
   const updateLocation = (id: string, patch: Partial<StoreLocation>) => {
     if (patch.isDefault === false) {
@@ -80,12 +81,17 @@ export function Locations() {
             ) : (
               draft.locations.map((location) => (
                 <div key={location.id} className="space-y-3 rounded-md border border-border p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <Input
-                      value={location.name}
-                      onChange={(e) => updateLocation(location.id, { name: e.target.value })}
-                      placeholder={t('Location name')}
-                    />
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="grow space-y-1.5">
+                      <Input
+                        value={location.name}
+                        onChange={(e) => updateLocation(location.id, { name: e.target.value })}
+                        placeholder={t('Location name')}
+                        aria-label={t('Location name')}
+                        aria-invalid={Boolean(fieldErrors[`location:${location.id}:name`])}
+                      />
+                      <FieldError message={fieldErrors[`location:${location.id}:name`]} />
+                    </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <Switch
                         size="sm"

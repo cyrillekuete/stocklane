@@ -36,6 +36,9 @@ const EditProductPage = lazy(() =>
 const PerProductStockPage = lazy(() =>
   import('./pages/per-product-stock/page').then((m) => ({ default: m.PerProductStockPage })),
 );
+const StockHistory = lazy(() =>
+  import('./pages/stock-history/page').then((m) => ({ default: m.StockHistory })),
+);
 const TrackShippingPage = lazy(() =>
   import('./pages/track-shipping/page').then((m) => ({ default: m.TrackShippingPage })),
 );
@@ -103,6 +106,7 @@ export default function StoreInventoryModule() {
           <Route path="create-product" element={<CreateProductPage />} />
           <Route path="edit-product" element={<EditProductPage />} />
           <Route path="per-product-stock" element={<PerProductStockPage />} />
+          <Route path="stock-history" element={<StockHistory />} />
           <Route path="track-shipping" element={<TrackShippingPage />} />
           <Route path="product-info" element={<ProductInfoPage />} />
           <Route path="customer-list" element={<CustomerList />} />

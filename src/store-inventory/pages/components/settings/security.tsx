@@ -1,20 +1,16 @@
 'use client';
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import {
-  clampPasswordMinLength,
-  clampSessionTimeout,
-} from "@/store-inventory/lib/settings-validation";
 import { useSettingsForm } from "./settings-form-context";
+import { NumberField } from "./components/number-field";
 import { useT } from '@/i18n/use-t';
 
 export function Security() {
   const t = useT();
-  const { draft, updateDraft } = useSettingsForm();
+  const { draft, updateDraft, fieldErrors } = useSettingsForm();
 
   return (
     <div className="space-y-5">
@@ -45,19 +41,25 @@ export function Security() {
                 <Label className="text-2sm font-medium shrink-0">{t('Session timeout')}</Label>
                 <span className="text-xs font-normal text-muted-foreground">{t('Minutes of inactivity before sign-out')}</span>
               </div>
-              <Input
-                className="basis-2/3"
-                type="number"
-                min={5}
-                max={1440}
-                value={draft.sessionTimeoutMinutes}
-                onChange={(e) => {
-                  const raw = Number(e.target.value);
-                  updateDraft({
-                    sessionTimeoutMinutes: Number.isFinite(raw) ? clampSessionTimeout(raw) : 5,
-                  });
-                }}
-              />
+              <div className="basis-2/3">
+                <NumberField
+                  id="settings-session-timeout"
+                  value={draft.sessionTimeoutMinutes}
+                  min={5}
+                  max={1440}
+                  step={1}
+                  error={fieldErrors.sessionTimeoutMinutes}
+                  hint={t('Minutes of inactivity before sign-out (5–1440)')}
+                  ariaLabel={t('Session timeout')}
+                  onCommit={(value) =>
+                    updateDraft({
+                      sessionTimeoutMinutes: Number.isFinite(value)
+                        ? Math.trunc(value)
+                        : Number.NaN,
+                    })
+                  }
+                />
+              </div>
             </div>
 
             <Separator />
@@ -85,19 +87,25 @@ export function Security() {
                 <Label className="text-2sm font-medium shrink-0">{t('Minimum password length')}</Label>
                 <span className="text-xs font-normal text-muted-foreground">{t('Characters required for staff passwords')}</span>
               </div>
-              <Input
-                className="basis-2/3"
-                type="number"
-                min={6}
-                max={128}
-                value={draft.passwordMinLength}
-                onChange={(e) => {
-                  const raw = Number(e.target.value);
-                  updateDraft({
-                    passwordMinLength: Number.isFinite(raw) ? clampPasswordMinLength(raw) : 6,
-                  });
-                }}
-              />
+              <div className="basis-2/3">
+                <NumberField
+                  id="settings-password-min-length"
+                  value={draft.passwordMinLength}
+                  min={6}
+                  max={128}
+                  step={1}
+                  error={fieldErrors.passwordMinLength}
+                  hint={t('Characters required for staff passwords (6–128)')}
+                  ariaLabel={t('Minimum password length')}
+                  onCommit={(value) =>
+                    updateDraft({
+                      passwordMinLength: Number.isFinite(value)
+                        ? Math.trunc(value)
+                        : Number.NaN,
+                    })
+                  }
+                />
+              </div>
             </div>
 
             <Separator />

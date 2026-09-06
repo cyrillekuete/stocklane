@@ -9,7 +9,7 @@ import {
 } from '@tanstack/react-query';
 import { withCustomerProfile } from '../data/customer-profile';
 import { generateCategoryCode } from '../lib/category-validation';
-import { formatMoney } from '../lib/format';
+import { formatMoney, parseMoney } from '../lib/format';
 import { computeOrderPricing } from '../lib/order-pricing';
 import { mapOrderError } from '../lib/order-errors';
 import {
@@ -71,6 +71,7 @@ import {
   fetchDeletedProducts,
   fetchProductsByCategory,
   fetchStockProducts,
+  fetchStockMovements,
   fetchVariants,
   mapAllStock,
   mapCurrentStock,
@@ -91,6 +92,7 @@ import {
   type OrderInput,
   type OrderItemInput,
 } from '../services/inventory';
+import { aggregateStockHistory } from '../lib/stock-history';
 import { fetchWarehouseStock } from '../services/warehouses';
 import type {
   CategoryListRow,
@@ -102,6 +104,7 @@ import type {
   ProductListRow,
   ProductOptionCard,
   ProductVariantRow,
+  StockHistoryRow,
 } from '../types';
 
 const stockQuery = {
@@ -485,6 +488,82 @@ export function useOutboundStock() {
     queryFn: fetchOutboundShipments,
     enabled: isSupabaseConfigured,
   });
+}
+
+function productOnHandQty(product: InventoryProduct): number {
+  const level = product.stock_level as InventoryStockLevel | InventoryStockLevel[] | null | undefined;
+  const row = Array.isArray(level) ? level[0] : level;
+  return Number(row?.qty ?? 0);
+}
+
+export function useStockHistory(
+  warehouseId: string | null | undefined,
+  rangeStart: Date,
+  rangeEnd: Date,
+) {
+  const fromIso = rangeStart.toISOString();
+  const products = useQuery({
+    ...stockQuery,
+  });
+  const warehouseStock = useQuery({
+    queryKey: inventoryKeys.warehouseStock(warehouseId ?? ''),
+    queryFn: () => fetchWarehouseStock(warehouseId!),
+    enabled: isSupabaseConfigured && Boolean(warehouseId),
+  });
+  const movements = useQuery({
+    queryKey: inventoryKeys.stockHistory(warehouseId ?? null, fromIso),
+    queryFn: () =>
+      fetchStockMovements({
+        from: rangeStart,
+        warehouseId: warehouseId ?? null,
+      }),
+    enabled: isSupabaseConfigured,
+  });
+
+  const needsOverlay = isSupabaseConfigured && Boolean(warehouseId);
+  const overlayReady = !needsOverlay || warehouseStock.isSuccess;
+
+  const data = useMemo((): StockHistoryRow[] | undefined => {
+    if (!isSupabaseConfigured) return [];
+    if (!products.data || !movements.data || !overlayReady) return undefined;
+    const qtyMap = new Map((warehouseStock.data ?? []).map((row) => [row.productId, row.qty]));
+    return aggregateStockHistory({
+      products: products.data.map((product) => ({
+        id: product.id,
+        name: product.name,
+        sku: product.sku,
+        unitPrice: parseMoney(product.price),
+        currentQty: warehouseId ? (qtyMap.get(product.id) ?? 0) : productOnHandQty(product),
+      })),
+      movements: movements.data.map((movement) => ({
+        productId: movement.product_id,
+        delta: movement.delta,
+        reason: movement.reason,
+        createdAt: movement.created_at,
+      })),
+      rangeStart,
+      rangeEnd,
+    });
+  }, [
+    products.data,
+    movements.data,
+    overlayReady,
+    warehouseId,
+    warehouseStock.data,
+    rangeStart,
+    rangeEnd,
+  ]);
+
+  return {
+    data,
+    isLoading:
+      products.isLoading ||
+      movements.isLoading ||
+      (needsOverlay && warehouseStock.isLoading) ||
+      data === undefined,
+    isError: products.isError || movements.isError || (needsOverlay && warehouseStock.isError),
+    error: products.error ?? movements.error ?? warehouseStock.error,
+  };
 }
 
 export function useCustomers() {

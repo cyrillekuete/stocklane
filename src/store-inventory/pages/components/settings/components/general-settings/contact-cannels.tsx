@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input, InputAddon, InputGroup, InputWrapper } from "@/components/ui/input";
+import { Input, InputAddon, InputWrapper } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toAbsoluteUrl } from "@/lib/helpers";
 import { CircleCheck, SquarePlus } from "lucide-react";
@@ -92,44 +92,6 @@ export function ContactChannels() {
                   </InputWrapper>
                 );
               })}
-
-              {!draft.contactChannels.some((channel) => channel.provider === 'twitch') && (
-                <InputGroup>
-                  <InputAddon className="rounded-r-none border-s-0 border-e-border text-muted-foreground bg-muted/50">
-                    <img
-                      src={toAbsoluteUrl('/media/brand-logos/twitch-purple.svg')}
-                      alt="Twitch"
-                      className="size-4.5 me-1.5 -ms-1"
-                    />
-                    twitch.tv/
-                  </InputAddon>
-                  <Input
-                    type="text"
-                    placeholder={t('Enter your social link')}
-                    value=""
-                    onChange={(e) => updateHandle('twitch', e.target.value)}
-                  />
-                </InputGroup>
-              )}
-
-              {!draft.contactChannels.some((channel) => channel.provider === 'slack') && (
-                <InputGroup>
-                  <InputAddon className="rounded-r-none border-s-0 border-e-border text-muted-foreground bg-muted/50">
-                    <img
-                      src={toAbsoluteUrl('/media/brand-logos/slack.svg')}
-                      alt="Slack"
-                      className="size-4.5 me-1.5 -ms-1"
-                    />
-                    slack.com/
-                  </InputAddon>
-                  <Input
-                    type="text"
-                    placeholder={t('Enter your social link')}
-                    value=""
-                    onChange={(e) => updateHandle('slack', e.target.value)}
-                  />
-                </InputGroup>
-              )}
             </div>
           </div>
         </div>

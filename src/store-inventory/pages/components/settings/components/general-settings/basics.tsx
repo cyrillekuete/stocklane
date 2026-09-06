@@ -1,15 +1,24 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Input, InputAddon, InputGroup } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Separator } from "@/components/ui/separator";
 import { toAbsoluteUrl } from "@/lib/helpers";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useT } from '@/i18n/use-t';
-import { LOGO_MAX_CHARS } from "@/store-inventory/lib/settings-validation";
+import { LOGO_MAX_CHARS, STORE_STATUSES } from "@/store-inventory/lib/settings-validation";
 import { useSettingsForm } from "../../settings-form-context";
+import { FieldError } from "../number-field";
 
 const countries = [
   { code: "US", name: "United States", dialCode: "+1", flag: "/media/flags/usa.svg" },
@@ -47,6 +56,18 @@ const countries = [
 
 export const checkoutCountries = countries.map(({ code, name }) => ({ code, name }));
 
+function toDateInputValue(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+}
+
+function fromDateInputValue(value: string) {
+  if (!value) return '';
+  const date = new Date(`${value}T12:00:00Z`);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toISOString();
+}
 function logoSrc(logo: string | null) {
   if (!logo) return toAbsoluteUrl('/media/avatars/300-1.png');
   if (logo.startsWith('data:') || logo.startsWith('blob:') || logo.startsWith('http')) return logo;
@@ -69,7 +90,7 @@ function PhoneNumberInput({
   const currentCountry = findCountryByPhoneNumber(value) || countries.find((country) => country.code === 'FR') || countries[0];
 
   const handlePhoneChange = (inputValue: string) => {
-    const cleanValue = inputValue.replace(/[^\d+]/g, "");
+    const cleanValue = inputValue.replace(/[^\d+\s\-().]/g, "");
     onChange(cleanValue);
   };
 
@@ -95,7 +116,25 @@ function PhoneNumberInput({
 
 export function Basics() {
   const t = useT();
-  const { draft, updateDraft } = useSettingsForm();
+  const { draft, updateDraft, fieldErrors } = useSettingsForm();
+  const [tagsText, setTagsText] = useState<string | null>(null);
+  const tagsFocusedRef = useRef(false);
+  const tagsJoined = draft.tags.join(', ');
+
+  useEffect(() => {
+    if (!tagsFocusedRef.current) {
+      setTagsText(null);
+    }
+  }, [tagsJoined]);
+
+  const commitTags = (raw: string) => {
+    updateDraft({
+      tags: raw
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+    });
+  };
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -130,15 +169,81 @@ export function Basics() {
         <div className="bg-background rounded-md m-1 mt-0 border border-input p-5 space-y-5 h-full">
           <div className="flex items-center gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">{t('Company Name')}</Label>
+              <Label htmlFor="settings-store-name" className="text-2sm font-medium shrink-0">{t('Company Name')}</Label>
               <span className="text-xs font-normal text-muted-foreground">{t('Store name shown across the app')}</span>
             </div>
-            <Input
-              placeholder="Bob’s Shoes Store"
-              value={draft.storeName}
-              onChange={(e) => updateDraft({ storeName: e.target.value })}
-              className="basis-2/3"
-            />
+            <div className="basis-2/3 space-y-1.5">
+              <Input
+                id="settings-store-name"
+                placeholder="Bob’s Shoes Store"
+                value={draft.storeName}
+                onChange={(e) => updateDraft({ storeName: e.target.value })}
+                aria-invalid={Boolean(fieldErrors.storeName)}
+              />
+              <FieldError message={fieldErrors.storeName} />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center gap-5">
+            <div className="flex flex-col gap-0.5 basis-1/3">
+              <Label htmlFor="settings-store-code" className="text-2sm font-medium shrink-0">{t('Store Code')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Unique identifier shown in the header')}</span>
+            </div>
+            <div className="basis-2/3 space-y-1.5">
+              <Input
+                id="settings-store-code"
+                placeholder="583920-XT"
+                value={draft.storeCode}
+                onChange={(e) => updateDraft({ storeCode: e.target.value })}
+                aria-invalid={Boolean(fieldErrors.storeCode)}
+              />
+              <FieldError message={fieldErrors.storeCode} />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center gap-5">
+            <div className="flex flex-col gap-0.5 basis-1/3">
+              <Label className="text-2sm font-medium shrink-0">{t('Store Status')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Badge shown next to the store name')}</span>
+            </div>
+            <div className="basis-2/3 space-y-1.5">
+              <Select value={draft.status} onValueChange={(status) => updateDraft({ status })} indicatorPosition="right">
+                <SelectTrigger aria-invalid={Boolean(fieldErrors.status)}>
+                  <SelectValue placeholder={t('Select status')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {STORE_STATUSES.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {t(status)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FieldError message={fieldErrors.status} />
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="flex items-center gap-5">
+            <div className="flex flex-col gap-0.5 basis-1/3">
+              <Label htmlFor="settings-established" className="text-2sm font-medium shrink-0">{t('Established date')}</Label>
+              <span className="text-xs font-normal text-muted-foreground">{t('Date shown in the header')}</span>
+            </div>
+            <div className="basis-2/3 space-y-1.5">
+              <Input
+                id="settings-established"
+                type="date"
+                value={toDateInputValue(draft.establishedAt)}
+                onChange={(e) => updateDraft({ establishedAt: fromDateInputValue(e.target.value) })}
+                aria-invalid={Boolean(fieldErrors.establishedAt)}
+              />
+              <FieldError message={fieldErrors.establishedAt} />
+            </div>
           </div>
 
           <Separator />
@@ -213,39 +318,50 @@ export function Basics() {
 
           <div className="flex items-center gap-5">
             <div className="flex flex-col gap-0.5 lg:basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">{t('Contact Email')}</Label>
+              <Label htmlFor="settings-contact-email" className="text-2sm font-medium shrink-0">{t('Contact Email')}</Label>
               <span className="text-xs font-normal text-muted-foreground">{t('Email for customer inquiries')}</span>
             </div>
-            <Input
-              placeholder="hello@mystore.io"
-              className="basis-2/3"
-              type="email"
-              value={draft.contactEmail ?? ''}
-              onChange={(e) => updateDraft({ contactEmail: e.target.value })}
-            />
+            <div className="basis-2/3 space-y-1.5">
+              <Input
+                id="settings-contact-email"
+                placeholder="hello@mystore.io"
+                type="email"
+                value={draft.contactEmail ?? ''}
+                onChange={(e) => updateDraft({ contactEmail: e.target.value })}
+                aria-invalid={Boolean(fieldErrors.contactEmail)}
+              />
+              <FieldError message={fieldErrors.contactEmail} />
+            </div>
           </div>
 
           <Separator />
 
           <div className="flex items-center gap-5">
             <div className="flex flex-col gap-0.5 basis-1/3">
-              <Label className="text-2sm font-medium shrink-0">{t('What do you do?')}</Label>
+              <Label htmlFor="settings-tags" className="text-2sm font-medium shrink-0">{t('What do you do?')}</Label>
               <span className="text-xs font-normal text-muted-foreground">{t('Tags describing store products')}</span>
             </div>
-            <Input
-              placeholder={t('Start typing tags')}
-              className="basis-2/3"
-              type="text"
-              value={draft.tags.join(', ')}
-              onChange={(e) =>
-                updateDraft({
-                  tags: e.target.value
-                    .split(',')
-                    .map((tag) => tag.trim())
-                    .filter(Boolean),
-                })
-              }
-            />
+            <div className="basis-2/3">
+              <Input
+                id="settings-tags"
+                placeholder={t('Start typing tags')}
+                type="text"
+                value={tagsText ?? tagsJoined}
+                onChange={(e) => {
+                  tagsFocusedRef.current = true;
+                  setTagsText(e.target.value);
+                }}
+                onBlur={(e) => {
+                  tagsFocusedRef.current = false;
+                  commitTags(e.target.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    (e.target as HTMLInputElement).blur();
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
       </CardContent>

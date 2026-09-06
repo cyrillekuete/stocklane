@@ -144,6 +144,7 @@ export function permissionForPath(pathname: string): AppPermission | null {
     path.startsWith('outbound-stock') ||
     path.startsWith('stock-planner') ||
     path.startsWith('per-product-stock') ||
+    path.startsWith('stock-history') ||
     path.startsWith('track-shipping') ||
     path.startsWith('create-shipping-label')
   ) {

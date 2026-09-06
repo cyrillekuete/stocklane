@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useT } from '@/i18n/use-t';
 import { Badge, BadgeDot } from '@/components/ui/badge';
@@ -50,10 +50,19 @@ function SettingsSheetBody({
   initialTab?: string;
 }) {
   const t = useT();
-  const { draft, lastOrderLabel, dirty, saving, loading, resetDraft, save } = useSettingsForm();
+  const { draft, lastOrderLabel, dirty, saving, loading, fieldErrors, resetDraft, save } =
+    useSettingsForm();
   const [activeTab, setActiveTab] = useState(
     SETTINGS_TABS.some((tab) => tab.value === initialTab) ? initialTab! : 'general-settings',
   );
+
+  useEffect(() => {
+    if (initialTab && SETTINGS_TABS.some((tab) => tab.value === initialTab)) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
+
+  const errorCount = Object.keys(fieldErrors).length;
 
   const confirmDiscard = () => {
     if (!dirty) return true;
@@ -135,6 +144,12 @@ function SettingsSheetBody({
                 </div>
 
                 <ScrollArea className="px-3">
+                  {errorCount > 0 ? (
+                    <p role="alert" aria-live="polite" className="px-1 pb-1 text-xs font-normal text-destructive">
+                      {t('{count} fields need attention', { count: errorCount })}
+                    </p>
+                  ) : null}
+                  <fieldset disabled={saving} className="contents">
                   <TabsContent value="general-settings" className="lg:h-[calc(100dvh-22.5rem)] h-[calc(100dvh-27.2rem)]">
                     <GeneralSettings />
                   </TabsContent>
@@ -156,6 +171,7 @@ function SettingsSheetBody({
                   <TabsContent value="notification" className="lg:h-[calc(100dvh-22.4rem)] h-[calc(100dvh-27.1rem)]">
                     <Notification />
                   </TabsContent>
+                  </fieldset>
                 </ScrollArea>
               </Tabs>
               )}

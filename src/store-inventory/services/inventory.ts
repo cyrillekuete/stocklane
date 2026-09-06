@@ -915,6 +915,44 @@ export async function fetchStockProducts() {
   return (data ?? []) as InventoryProduct[];
 }
 
+export type InventoryStockMovement = {
+  product_id: string;
+  warehouse_id: string | null;
+  delta: number;
+  reason: string;
+  created_at: string;
+};
+
+export async function fetchStockMovements(input: {
+  from: Date;
+  warehouseId?: string | null;
+}): Promise<InventoryStockMovement[]> {
+  const client = requireClient();
+  const pageSize = 1000;
+  const rows: InventoryStockMovement[] = [];
+  let fromIdx = 0;
+
+  while (true) {
+    let query = client
+      .from('inventory_stock_movements')
+      .select('product_id, warehouse_id, delta, reason, created_at')
+      .gte('created_at', input.from.toISOString())
+      .order('created_at', { ascending: true })
+      .range(fromIdx, fromIdx + pageSize - 1);
+    if (input.warehouseId) {
+      query = query.eq('warehouse_id', input.warehouseId);
+    }
+    const { data, error } = await query;
+    if (error) throw error;
+    const page = (data ?? []) as InventoryStockMovement[];
+    rows.push(...page);
+    if (page.length < pageSize) break;
+    fromIdx += pageSize;
+  }
+
+  return rows;
+}
+
 export async function fetchInboundShipments() {
   const client = requireClient();
   const baseSelect = `*, product:inventory_products(*, supplier:inventory_suppliers(*)), supplier:inventory_suppliers(*), carrier:inventory_carriers(*), warehouse:inventory_warehouses(*)`;

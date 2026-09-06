@@ -141,6 +141,14 @@ function asJsonArray<T>(value: unknown, fallback: T[]): T[] {
   return fallback;
 }
 
+function asTaxRateScope(value: unknown): 'country' | 'state' | 'city' {
+  return value === 'state' || value === 'city' ? value : 'country';
+}
+
+function asTaxCalculation(value: unknown): 'inclusive' | 'exclusive' {
+  return value === 'exclusive' ? 'exclusive' : 'inclusive';
+}
+
 export function storeSettingsToRow(settings: StoreSettings): Record<string, unknown> {
   return {
     id: settings.id,
@@ -223,8 +231,8 @@ export function storeSettingsFromRow(row: Record<string, unknown>): StoreSetting
     applePay: asBoolean(row.apple_pay, true),
     googlePay: asBoolean(row.google_pay, false),
     paypal: asBoolean(row.paypal, false),
-    taxRateScope: asString(row.tax_rate_scope, 'country'),
-    taxCalculation: asString(row.tax_calculation, 'inclusive'),
+    taxRateScope: asTaxRateScope(row.tax_rate_scope),
+    taxCalculation: asTaxCalculation(row.tax_calculation),
     taxPercent: asNumber(row.tax_percent, 20),
     automaticInvoice: asBoolean(row.automatic_invoice, false),
     noReplyEmail: asStringOrNull(row.no_reply_email),

@@ -34,20 +34,40 @@ export function DigitalWallets() {
     },
   ];
 
+  const toggleWallet = (id: 'applePay' | 'googlePay' | 'paypal', enabled: boolean) => {
+    updateDraft({ [id]: enabled } as Partial<typeof draft>);
+  };
+
   return (
     <div className="space-y-0.5">
       {wallets.map((wallet) => (
         <Card
           key={wallet.id}
+          role="checkbox"
+          tabIndex={0}
+          aria-checked={wallet.enabled}
+          aria-label={wallet.name}
           className={`py-3 px-4 border-none shadow-none cursor-pointer ${
             wallet.id === 'applePay' ? 'rounded-b-none' :
             wallet.id === 'googlePay' ? 'rounded-none' :
             'rounded-t-none'
           } ${wallet.enabled ? 'bg-secondary' : 'bg-accent/50'}`}
-          onClick={() => updateDraft({ [wallet.id]: !wallet.enabled })}
+          onClick={() => toggleWallet(wallet.id, !wallet.enabled)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              toggleWallet(wallet.id, !wallet.enabled);
+            }
+          }}
         >
           <div className="flex items-center gap-3.5">
-            <Switch checked={wallet.enabled} size="sm" />
+            <Switch
+              checked={wallet.enabled}
+              size="sm"
+              aria-label={wallet.name}
+              onCheckedChange={(checked) => toggleWallet(wallet.id, checked)}
+              onClick={(event) => event.stopPropagation()}
+            />
             <div className="flex items-center gap-3.5">
               <Card className="flex items-center justify-center rounded-md size-[36px] shadow-xs shrink-0">
                 <div className="flex items-center justify-center bg-accent/70 rounded-md size-[30px]">

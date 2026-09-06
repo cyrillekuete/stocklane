@@ -8,16 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
-import { clampNonNegativeNumber } from "@/store-inventory/lib/settings-validation";
 import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "./settings-form-context";
+import { FieldError, NumberField } from "./components/number-field";
 import type { ShippingZone } from "@/store-inventory/types";
 
 const carriers = ['DHL', 'FedEx', 'UPS', 'USPS', 'Chronopost', 'Colissimo'];
 
 export function ShippingDelivery() {
   const t = useT();
-  const { draft, updateDraft } = useSettingsForm();
+  const { draft, updateDraft, fieldErrors } = useSettingsForm();
 
   const updateZone = (id: string, patch: Partial<ShippingZone>) => {
     updateDraft({
@@ -65,18 +65,15 @@ export function ShippingDelivery() {
                   />
                   <Label htmlFor="free-shipping">{draft.freeShippingEnabled ? t('Active') : t('Inactive')}</Label>
                 </div>
-                <Input
-                  type="number"
+                <NumberField
+                  id="settings-free-shipping-min"
+                  value={draft.freeShippingMin}
                   min={0}
                   disabled={!draft.freeShippingEnabled}
-                  value={draft.freeShippingMin}
-                  onChange={(e) => {
-                    const raw = Number(e.target.value);
-                    updateDraft({
-                      freeShippingMin: Number.isFinite(raw) ? clampNonNegativeNumber(raw) : 0,
-                    });
-                  }}
+                  error={fieldErrors.freeShippingMin}
                   placeholder={t('Minimum order amount')}
+                  ariaLabel={t('Minimum order amount')}
+                  onCommit={(freeShippingMin) => updateDraft({ freeShippingMin })}
                 />
               </div>
             </div>
@@ -166,20 +163,21 @@ export function ShippingDelivery() {
                 <Label className="text-2sm font-medium shrink-0">{t('Handling days')}</Label>
                 <span className="text-xs font-normal text-muted-foreground">{t('Days needed to prepare an order')}</span>
               </div>
-              <Input
-                className="basis-2/3"
-                type="number"
-                min={0}
-                value={draft.handlingDays}
-                onChange={(e) => {
-                  const raw = Number(e.target.value);
-                  updateDraft({
-                    handlingDays: Number.isFinite(raw)
-                      ? Math.trunc(clampNonNegativeNumber(raw))
-                      : 0,
-                  });
-                }}
-              />
+              <div className="basis-2/3">
+                <NumberField
+                  id="settings-handling-days"
+                  value={draft.handlingDays}
+                  min={0}
+                  step={1}
+                  error={fieldErrors.handlingDays}
+                  ariaLabel={t('Handling days')}
+                  onCommit={(value) =>
+                    updateDraft({
+                      handlingDays: Number.isFinite(value) ? Math.trunc(value) : Number.NaN,
+                    })
+                  }
+                />
+              </div>
             </div>
           </div>
         </CardContent>
@@ -200,23 +198,26 @@ export function ShippingDelivery() {
             ) : (
               draft.shippingZones.map((zone) => (
                 <div key={zone.id} className="grid gap-3 rounded-md border border-border p-4 md:grid-cols-4">
-                  <Input
-                    value={zone.name}
-                    onChange={(e) => updateZone(zone.id, { name: e.target.value })}
-                    placeholder={t('Zone name')}
-                  />
-                  <Input
-                    type="number"
-                    min={0}
-                    value={zone.rate}
-                    onChange={(e) => {
-                      const raw = Number(e.target.value);
-                      updateZone(zone.id, {
-                        rate: Number.isFinite(raw) ? clampNonNegativeNumber(raw) : 0,
-                      });
-                    }}
-                    placeholder={t('Rate')}
-                  />
+                  <div className="space-y-1.5">
+                    <Input
+                      value={zone.name}
+                      onChange={(e) => updateZone(zone.id, { name: e.target.value })}
+                      placeholder={t('Zone name')}
+                      aria-label={t('Zone name')}
+                      aria-invalid={Boolean(fieldErrors[`shippingZone:${zone.id}:name`])}
+                    />
+                    <FieldError message={fieldErrors[`shippingZone:${zone.id}:name`]} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <NumberField
+                      value={zone.rate}
+                      min={0}
+                      error={fieldErrors[`shippingZone:${zone.id}:rate`]}
+                      placeholder={t('Rate')}
+                      ariaLabel={t('Rate')}
+                      onCommit={(rate) => updateZone(zone.id, { rate })}
+                    />
+                  </div>
                   <Input
                     value={zone.estimatedDays}
                     onChange={(e) => updateZone(zone.id, { estimatedDays: e.target.value })}

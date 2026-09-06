@@ -8,10 +8,11 @@ import { Separator } from "@/components/ui/separator";
 import { Mail } from "lucide-react";
 import { useT } from '@/i18n/use-t';
 import { useSettingsForm } from "../../settings-form-context";
+import { FieldError } from "../number-field";
 
 export function InvoicesReceipts() {
   const t = useT();
-  const { draft, updateDraft } = useSettingsForm();
+  const { draft, updateDraft, fieldErrors } = useSettingsForm();
 
   return (
     <Card className="bg-accent/70 rounded-md shadow-none h-full flex flex-col">
@@ -48,7 +49,7 @@ export function InvoicesReceipts() {
               <Label className="text-2sm font-medium text-foreground">{t('No-reply Email Address')}</Label>
               <span className="text-xs text-muted-foreground">{t('Sender address for receipts and invoices')}</span>
             </div>
-            <div className="basis-2/3">
+            <div className="basis-2/3 space-y-1.5">
               <InputGroup>
                 <InputAddon mode="icon">
                   <Mail />
@@ -58,8 +59,10 @@ export function InvoicesReceipts() {
                   placeholder="no-reply@mystore.io"
                   value={draft.noReplyEmail ?? ''}
                   onChange={(e) => updateDraft({ noReplyEmail: e.target.value })}
+                  aria-invalid={Boolean(fieldErrors.noReplyEmail)}
                 />
               </InputGroup>
+              <FieldError message={fieldErrors.noReplyEmail} />
             </div>
           </div>
         </div>

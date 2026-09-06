@@ -11,6 +11,8 @@ export const inventoryKeys = {
       : ([...inventoryKeys.all, 'category-products'] as const),
   brands: () => [...inventoryKeys.all, 'brands'] as const,
   stock: () => [...inventoryKeys.all, 'stock'] as const,
+  stockHistory: (warehouseId: string | null, fromIso: string) =>
+    [...inventoryKeys.stock(), 'history', warehouseId, fromIso] as const,
   inbound: () => [...inventoryKeys.all, 'inbound'] as const,
   outbound: () => [...inventoryKeys.all, 'outbound'] as const,
   customers: () => [...inventoryKeys.all, 'customers'] as const,
